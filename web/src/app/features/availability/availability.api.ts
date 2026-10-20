@@ -1,0 +1,17 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../../environments/environment';
+import { CourtDayAvailability, IsoDate } from '../../shared/models';
+
+/** REST client for computed availability — see docs/api.md#availability. */
+@Injectable({ providedIn: 'root' })
+export class AvailabilityApi {
+  private readonly http = inject(HttpClient);
+
+  getCourtDay(courtId: number, date: IsoDate): Observable<CourtDayAvailability> {
+    const params = new HttpParams().set('date', date);
+    return this.http.get<CourtDayAvailability>(`${environment.apiBaseUrl}/courts/${courtId}/availability`, { params });
+  }
+}
