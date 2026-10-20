@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC: a registered user (CLIENT or ADMIN) logs in with email + password. */
+/** UC: a registered user (CLIENT or OWNER) logs in with email + password. */
 @Service
 public class LoginUseCase {
 

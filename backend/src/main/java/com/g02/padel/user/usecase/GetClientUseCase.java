@@ -5,7 +5,7 @@ import com.g02.padel.user.dto.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (admin): get one client by id. */
+/** UC (owner): get one client by id. */
 @Service
 public class GetClientUseCase {
 

@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
-/** UC (admin): booking KPIs for a date range. */
+/** UC (owner): booking KPIs for a date range. */
 @Service
 public class GetDashboardSummaryUseCase {
 

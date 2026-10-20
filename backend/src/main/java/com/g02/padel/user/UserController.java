@@ -25,7 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('OWNER')")
 public class UserController {
 
     private final ListClientsUseCase listClients;

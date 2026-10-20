@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/courts", "/api/v1/courts/*").permitAll()
-                        // TODO: fine-grained role rules (ADMIN vs CLIENT) — see docs/api.md#authorization
+                        // TODO: fine-grained role rules (OWNER vs CLIENT) — see docs/api.md#authorization
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

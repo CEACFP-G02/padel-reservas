@@ -31,7 +31,7 @@ public class ScheduleController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public ScheduleResponse update(@PathVariable Long courtId, @Valid @RequestBody UpdateScheduleRequest request) {
         return updateSchedule.execute(courtId, request);
     }

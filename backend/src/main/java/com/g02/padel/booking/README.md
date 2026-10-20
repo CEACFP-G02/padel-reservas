@@ -7,12 +7,12 @@ Base path: `/api/v1` — authenticated.
 
 | Use case | Class | Endpoint | Access |
 |---|---|---|---|
-| Create booking | `CreateBookingUseCase` | `POST /bookings` | CLIENT, ADMIN |
-| List bookings | `ListBookingsUseCase` | `GET /bookings?courtId=&date=` | ADMIN |
-| Get booking | `GetBookingUseCase` | `GET /bookings/{id}` | owner, ADMIN |
+| Create booking | `CreateBookingUseCase` | `POST /bookings` | CLIENT, OWNER |
+| List bookings | `ListBookingsUseCase` | `GET /bookings?courtId=&date=` | OWNER |
+| Get booking | `GetBookingUseCase` | `GET /bookings/{id}` | booking's client, OWNER |
 | Get my bookings | `GetMyBookingsUseCase` | `GET /me/bookings` | CLIENT |
-| Cancel booking | `CancelBookingUseCase` | `PATCH /bookings/{id}/cancel` | owner, ADMIN |
-| Reschedule booking | `RescheduleBookingUseCase` | `PATCH /bookings/{id}/reschedule` | owner, ADMIN |
+| Cancel booking | `CancelBookingUseCase` | `PATCH /bookings/{id}/cancel` | booking's client, OWNER |
+| Reschedule booking | `RescheduleBookingUseCase` | `PATCH /bookings/{id}/reschedule` | booking's client, OWNER |
 
 Rules:
 - A taken or blocked slot → `SlotNotAvailableException` → **409 Conflict**.

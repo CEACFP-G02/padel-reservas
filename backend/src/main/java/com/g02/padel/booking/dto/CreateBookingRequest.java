@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
-/** {@code userId} is only honoured for ADMIN (booking on behalf of a client); clients book for themselves. */
+/** {@code userId} is only honoured for OWNER (booking on behalf of a client); clients book for themselves. */
 public record CreateBookingRequest(
         @NotNull Long courtId,
         @NotNull @FutureOrPresent LocalDate date,

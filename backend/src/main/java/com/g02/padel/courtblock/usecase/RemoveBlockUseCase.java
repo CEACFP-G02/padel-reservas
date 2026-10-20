@@ -4,7 +4,7 @@ import com.g02.padel.courtblock.CourtBlockRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (admin): remove a court block. */
+/** UC (owner): remove a court block. */
 @Service
 public class RemoveBlockUseCase {
 

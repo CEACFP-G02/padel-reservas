@@ -6,7 +6,7 @@ import com.g02.padel.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC: get one booking (its owner or an ADMIN). */
+/** UC: get one booking (the client who made it, or the OWNER). */
 @Service
 public class GetBookingUseCase {
 
@@ -20,7 +20,7 @@ public class GetBookingUseCase {
 
     @Transactional(readOnly = true)
     public BookingResponse execute(Long id, String requesterEmail) {
-        // TODO: findById else NotFoundException; non-owner CLIENT -> NotFoundException (don't leak existence)
+        // TODO: findById else NotFoundException; a CLIENT who did not make it -> NotFoundException (don't leak existence)
         //  — see docs/api.md#get-apiv1bookingsid
         throw new UnsupportedOperationException("TODO: GetBooking — see docs/api.md#get-apiv1bookingsid");
     }

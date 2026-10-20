@@ -1,8 +1,8 @@
 # dashboard
 
-Admin KPIs. Read-only; no own entity or repository — aggregates `BookingRepository`.
+Owner KPIs. Read-only; no own entity or repository — aggregates `BookingRepository`.
 
-Base path: `/api/v1/dashboard` — role `ADMIN`.
+Base path: `/api/v1/dashboard` — role `OWNER`.
 
 | Use case | Class | Endpoint |
 |---|---|---|

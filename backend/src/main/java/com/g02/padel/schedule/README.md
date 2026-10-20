@@ -8,6 +8,6 @@ Base path: `/api/v1/courts/{courtId}/schedule`
 | Use case | Class | Endpoint | Access |
 |---|---|---|---|
 | Get schedule | `GetScheduleUseCase` | `GET /` | authenticated |
-| Update schedule | `UpdateScheduleUseCase` | `PUT /` (full replace) | ADMIN |
+| Update schedule | `UpdateScheduleUseCase` | `PUT /` (full replace) | OWNER |
 
 Contract details: `docs/api.md`.

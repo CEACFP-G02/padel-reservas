@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC: cancel a booking. Clients must respect the minimum notice; ADMIN may cancel any time. */
+/** UC: cancel a booking. Clients must respect the minimum notice; OWNER may cancel any time. */
 @Service
 public class CancelBookingUseCase {
 

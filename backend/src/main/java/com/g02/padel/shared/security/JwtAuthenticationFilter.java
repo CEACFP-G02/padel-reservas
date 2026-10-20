@@ -23,7 +23,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         // TODO: if Bearer header present and jwtService.isValid(token), load user by subject and set
-        //  UsernamePasswordAuthenticationToken with ROLE_<role> authority — see docs/api.md#authentication
+        //  UsernamePasswordAuthenticationToken with authority Role.valueOf(claim).authority() (e.g. ROLE_OWNER)
+        //  — see docs/api.md#authentication
         chain.doFilter(request, response);
     }
 }

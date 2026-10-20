@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-/** Admin-defined period in which a court cannot be booked (maintenance, tournament...). */
+/** Owner-defined period in which a court cannot be booked (maintenance, tournament...). */
 @Entity
 @Table(name = "court_block")
 @Getter

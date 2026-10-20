@@ -8,9 +8,9 @@ Base path: `/api/v1/courts`
 |---|---|---|---|
 | List courts | `ListCourtsUseCase` | `GET /?includeInactive=` | public |
 | Get court | `GetCourtUseCase` | `GET /{id}` | public |
-| Create court | `CreateCourtUseCase` | `POST /` | ADMIN |
-| Update court | `UpdateCourtUseCase` | `PUT /{id}` | ADMIN |
-| Deactivate court | `DeactivateCourtUseCase` | `PATCH /{id}/deactivate` | ADMIN |
+| Create court | `CreateCourtUseCase` | `POST /` | OWNER |
+| Update court | `UpdateCourtUseCase` | `PUT /{id}` | OWNER |
+| Deactivate court | `DeactivateCourtUseCase` | `PATCH /{id}/deactivate` | OWNER |
 
 Courts are never hard-deleted (bookings reference them); deactivation hides them from booking.
 

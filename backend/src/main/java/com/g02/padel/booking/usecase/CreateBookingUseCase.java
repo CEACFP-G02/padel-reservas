@@ -34,7 +34,7 @@ public class CreateBookingUseCase {
 
     @Transactional
     public BookingResponse execute(String requesterEmail, CreateBookingRequest request) {
-        // TODO: resolve booking owner (requester, or request.userId if requester is ADMIN); court must be active;
+        // TODO: resolve the booking's client (requester, or request.userId if requester is OWNER); court must be active;
         //  slots must be contiguous and inside the court's opening hours; if any slot overlaps a non-CANCELLED
         //  booking or a court block -> throw SlotNotAvailableException (409); totalPrice = pricePerHour * hours;
         //  save as CONFIRMED — see docs/api.md#post-apiv1bookings

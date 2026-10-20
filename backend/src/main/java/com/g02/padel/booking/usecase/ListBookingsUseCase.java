@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/** UC (admin): list bookings, optionally filtered by court and/or date. */
+/** UC (owner): list bookings, optionally filtered by court and/or date. */
 @Service
 public class ListBookingsUseCase {
 

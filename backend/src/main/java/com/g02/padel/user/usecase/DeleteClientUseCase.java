@@ -4,7 +4,7 @@ import com.g02.padel.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (admin): delete a client. */
+/** UC (owner): delete a client. */
 @Service
 public class DeleteClientUseCase {
 

@@ -24,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('OWNER')")
 public class CourtBlockController {
 
     private final ListBlocksUseCase listBlocks;

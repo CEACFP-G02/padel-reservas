@@ -19,7 +19,7 @@ public class ListCourtsUseCase {
 
     @Transactional(readOnly = true)
     public List<CourtResponse> execute(boolean includeInactive) {
-        // TODO: findAll or findByActiveTrue (inactive only for ADMIN) -> map — see docs/api.md#get-apiv1courts
+        // TODO: findAll or findByActiveTrue (inactive only for OWNER) -> map — see docs/api.md#get-apiv1courts
         throw new UnsupportedOperationException("TODO: ListCourts — see docs/api.md#get-apiv1courts");
     }
 }

@@ -1,9 +1,9 @@
 # user
 
-Client management by the administrator. Owns the `User` entity (table `app_user`)
+Client management by the owner. Owns the `User` entity (table `app_user`)
 and `UserRepository` (also used by `auth`, `booking`).
 
-Base path: `/api/v1/users` — all endpoints require role `ADMIN`.
+Base path: `/api/v1/users` — all endpoints require role `OWNER`.
 
 | Use case | Class | Endpoint |
 |---|---|---|

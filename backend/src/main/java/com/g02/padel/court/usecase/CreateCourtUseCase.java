@@ -6,7 +6,7 @@ import com.g02.padel.court.dto.CourtResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC: admin creates a court. */
+/** UC: owner creates a court. */
 @Service
 public class CreateCourtUseCase {
 

@@ -56,7 +56,7 @@ public class BookingController {
     }
 
     @GetMapping("/bookings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public List<BookingResponse> list(
             @RequestParam(required = false) Long courtId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {

@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/** UC (admin): list blocks of a court, optionally for one date. */
+/** UC (owner): list blocks of a court, optionally for one date. */
 @Service
 public class ListBlocksUseCase {
 

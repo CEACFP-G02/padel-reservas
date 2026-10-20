@@ -1,10 +1,10 @@
 # courtblock
 
-Admin-defined periods in which a court cannot be booked (maintenance, tournaments...).
+Owner-defined periods in which a court cannot be booked (maintenance, tournaments...).
 Owns `CourtBlock` (N:1 `Court`) and `CourtBlockRepository` (also read by `availability`
 and `booking`).
 
-Base path: `/api/v1` — all endpoints require role `ADMIN`.
+Base path: `/api/v1` — all endpoints require role `OWNER`.
 
 | Use case | Class | Endpoint |
 |---|---|---|

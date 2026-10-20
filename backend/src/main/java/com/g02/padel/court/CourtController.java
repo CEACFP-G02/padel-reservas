@@ -54,20 +54,20 @@ public class CourtController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public CourtResponse create(@Valid @RequestBody CourtRequest request) {
         return createCourt.execute(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public CourtResponse update(@PathVariable Long id, @Valid @RequestBody CourtRequest request) {
         return updateCourt.execute(id, request);
     }
 
     @PatchMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public void deactivate(@PathVariable Long id) {
         deactivateCourt.execute(id);
     }

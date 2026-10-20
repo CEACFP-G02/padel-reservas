@@ -23,7 +23,8 @@ public class JwtService {
     }
 
     public String generateAccessToken(User user) {
-        // TODO: sign HS256 with subject=email, claims {uid, role}, exp=now+accessTokenTtl — see docs/api.md#authentication
+        // TODO: sign HS256 with subject=email, claims {uid, role=user.getRole().name() ("OWNER"/"CLIENT")},
+        //  exp=now+accessTokenTtl — see docs/api.md#authentication
         throw new UnsupportedOperationException("TODO: JwtService.generateAccessToken — see docs/api.md#authentication");
     }
 

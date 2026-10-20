@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('OWNER')")
 public class DashboardController {
 
     private final GetDashboardSummaryUseCase getDashboardSummary;

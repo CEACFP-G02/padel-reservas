@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** UC (admin): list all clients. */
+/** UC (owner): list all clients. */
 @Service
 public class ListClientsUseCase {
 

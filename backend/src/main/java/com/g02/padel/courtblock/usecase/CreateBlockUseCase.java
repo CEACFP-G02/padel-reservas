@@ -7,7 +7,7 @@ import com.g02.padel.courtblock.dto.CourtBlockResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (admin): block a court for a time range on a date. */
+/** UC (owner): block a court for a time range on a date. */
 @Service
 public class CreateBlockUseCase {
 

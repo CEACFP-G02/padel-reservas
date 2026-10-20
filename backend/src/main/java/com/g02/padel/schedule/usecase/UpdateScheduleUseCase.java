@@ -7,7 +7,7 @@ import com.g02.padel.schedule.dto.UpdateScheduleRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (admin): create or replace the weekly opening schedule of a court. */
+/** UC (owner): create or replace the weekly opening schedule of a court. */
 @Service
 public class UpdateScheduleUseCase {
 

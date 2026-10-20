@@ -6,7 +6,7 @@ import com.g02.padel.user.dto.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (admin): update a client profile. */
+/** UC (owner): update a client profile. */
 @Service
 public class UpdateClientUseCase {
 
