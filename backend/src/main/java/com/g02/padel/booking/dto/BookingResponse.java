@@ -12,6 +12,7 @@ public record BookingResponse(
         Long courtId,
         String courtName,
         Long userId,
+        String userName,
         LocalDate date,
         BookingStatus status,
         BigDecimal totalPrice,

@@ -37,7 +37,7 @@ public class CreateBookingUseCase {
         // TODO: resolve the booking's client (requester, or request.userId if requester is OWNER); court must be active;
         //  slots must be contiguous and inside the court's opening hours; if any slot overlaps a non-CANCELLED
         //  booking or a court block -> throw SlotNotAvailableException (409); totalPrice = schedule price * number of slots;
-        //  save as CONFIRMED — see docs/api.md#post-apiv1bookings
+        //  save as CONFIRMED, return BookingMapper.toResponse — see docs/api.md#post-apiv1bookings
         throw new UnsupportedOperationException("TODO: CreateBooking — see docs/api.md#post-apiv1bookings");
     }
 }

@@ -27,7 +27,7 @@ public class GetMyBookingsUseCase {
     public Page<BookingResponse> execute(String requesterEmail, BookingStatus status, LocalDate from, LocalDate to,
                                          Pageable pageable) {
         // TODO: resolve user by email; paged query by userId + optional status and date range (default sort
-        //  date desc); map to BookingResponse — see docs/api.md#bookings--apiv1bookings
+        //  date desc); map with BookingMapper::toResponse — see docs/api.md#bookings--apiv1bookings
         throw new UnsupportedOperationException("TODO: GetMyBookings — see docs/api.md#get-apiv1mebookings");
     }
 }

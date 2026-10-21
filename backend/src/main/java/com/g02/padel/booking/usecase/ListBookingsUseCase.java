@@ -23,7 +23,8 @@ public class ListBookingsUseCase {
     @Transactional(readOnly = true)
     public Page<BookingResponse> execute(LocalDate date, Long courtId, Long userId, BookingStatus status,
                                          Pageable pageable) {
-        // TODO: paged query with the non-null filters (e.g. a JpaSpecificationExecutor); map to BookingResponse
+        // TODO: paged query with the non-null filters (e.g. a JpaSpecificationExecutor);
+        //  map with BookingMapper::toResponse
         //  — see docs/api.md#bookings--apiv1bookings
         throw new UnsupportedOperationException("TODO: ListBookings — see docs/api.md#get-apiv1bookings");
     }

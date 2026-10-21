@@ -31,7 +31,7 @@ class BookingJsonTest {
     @Test
     void serializesBookingResponse() throws Exception {
         var response = new BookingResponse(
-                5001L, 3L, "Court 3", 42L, LocalDate.of(2026, 6, 8), BookingStatus.CONFIRMED,
+                5001L, 3L, "Court 3", 42L, "Demo Client", LocalDate.of(2026, 6, 8), BookingStatus.CONFIRMED,
                 new BigDecimal("16.00"), Instant.parse("2026-05-30T10:15:00Z"),
                 List.of(new BookingSlotResponse(LocalTime.of(7, 0), LocalTime.of(8, 0), new BigDecimal("16.00"))));
 
@@ -41,6 +41,7 @@ class BookingJsonTest {
                   "courtId": 3,
                   "courtName": "Court 3",
                   "userId": 42,
+                  "userName": "Demo Client",
                   "date": "2026-06-08",
                   "status": "CONFIRMED",
                   "totalPrice": 16.00,
