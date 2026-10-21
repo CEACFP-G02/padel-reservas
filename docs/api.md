@@ -140,6 +140,7 @@ Booking response (also returned by `GET /bookings/{id}`, and as the items of the
   "courtId": 3,
   "courtName": "Court 3",
   "userId": 42,
+  "userName": "Demo Client",
   "date": "2026-06-08",
   "status": "CONFIRMED",
   "totalPrice": 16.00,
