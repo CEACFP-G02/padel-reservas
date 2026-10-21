@@ -62,7 +62,9 @@ import { BookingFormDialog } from './booking-form.dialog';
       </ng-container>
       <ng-container matColumnDef="client">
         <th mat-header-cell *matHeaderCellDef>Cliente</th>
-        <td mat-cell *matCellDef="let b"><a [routerLink]="['/clients', b.userId]">#{{ b.userId }}</a></td>
+        <td mat-cell *matCellDef="let b">
+          <a data-testid="booking-client" [routerLink]="['/clients', b.userId]">{{ b.userName }}</a>
+        </td>
       </ng-container>
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef>Estado</th>

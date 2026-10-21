@@ -5,6 +5,7 @@ export const bookingFixture: Booking = {
   courtId: 3,
   courtName: 'Court 3',
   userId: 42,
+  userName: 'Demo Client',
   date: '2026-06-08',
   status: BookingStatus.CONFIRMED,
   totalPrice: 16,
