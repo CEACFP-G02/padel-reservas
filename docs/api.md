@@ -86,12 +86,14 @@ Core feature. Computed from schedule − bookings − blocks.
   "courtsRequested": 2,
   "available": true,
   "slots": [
-    { "start": "07:00", "end": "08:00", "courtsFree": 3, "price": 16.00 },
-    { "start": "08:00", "end": "09:00", "courtsFree": 2, "price": 16.00 }
+    { "start": "07:00", "end": "08:00", "courtsFree": 3, "courtIds": [1, 2, 3], "price": 16.00 },
+    { "start": "08:00", "end": "09:00", "courtsFree": 2, "courtIds": [1, 3], "price": 16.00 }
   ],
   "alternativeDays": []
 }
 ```
+
+Each slot lists `courtIds`, the ids of the courts free in that slot (`courtsFree` is its length). To book, the client picks one of those ids and sends it as `courtId` to `POST /bookings` — the server does not auto-assign a court.
 
 When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby days that have room, searched in a **±7-day window clamped to today** — i.e. from `max(today, date−7)` to `date+7`, never in the past:
 ```json
@@ -114,7 +116,7 @@ When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby
 | Method | Path | Role | Purpose |
 |---|---|---|---|
 | GET | `/bookings` | OWNER | All bookings. Query: `date`, `courtId`, `userId`, `status`, pagination |
-| GET | `/me/bookings` | CLIENT | Own bookings (upcoming + history). Query: `status`, `from`, `to` |
+| GET | `/me/bookings` | CLIENT | Own bookings (upcoming + history), paginated. Query: `status`, `from`, `to`, pagination |
 | GET | `/bookings/{id}` | OWNER, CLIENT* | Single booking (*client: only own) |
 | POST | `/bookings` | OWNER, CLIENT | Create. Client books for self; owner books manually for any client |
 | PATCH | `/bookings/{id}` | OWNER, CLIENT* | Change status / reschedule |
@@ -129,7 +131,22 @@ Create body:
   "clientId": 42
 }
 ```
-`clientId` optional/ignored for CLIENT (taken from token); required for OWNER manual booking. Multiple consecutive slots allowed in one booking. Returns `409` if any slot is no longer free.
+`courtId` is required: it is one of the `courtIds` the availability endpoint reported free for those slots. `clientId` is optional/ignored for CLIENT (taken from token) and required for OWNER manual booking. One booking covers one court with one or more consecutive slots. Returns `409` if any slot is no longer free on that court.
+
+Booking response (also returned by `GET /bookings/{id}`, and as the items of the paginated lists):
+```json
+{
+  "id": 5001,
+  "courtId": 3,
+  "courtName": "Court 3",
+  "userId": 42,
+  "date": "2026-06-08",
+  "status": "CONFIRMED",
+  "totalPrice": 16.00,
+  "createdAt": "2026-05-30T10:15:00Z",
+  "slots": [ { "start": "07:00", "end": "08:00", "price": 16.00 } ]
+}
+```
 
 `status`: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
 
