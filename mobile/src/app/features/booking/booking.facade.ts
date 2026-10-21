@@ -1,4 +1,6 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { Booking, CreateBookingRequest, MyBookingsQuery } from '../../shared/models';
 import { todo } from '../../shared/util/todo';
@@ -19,11 +21,21 @@ export class BookingFacade {
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
-  /** UC: Create booking (for self). 409 = a slot is no longer free. */
-  async createBooking(request: CreateBookingRequest): Promise<void> {
-    // TODO: api.create(request) -> prepend to _myBookings; map 409 to a Spanish message in _error
-    //  — see docs/api.md#bookings--apiv1bookings
-    todo('BookingFacade.createBooking', 'bookings--apiv1bookings');
+  /** UC: Create booking (for self) on one court. Resolves to `null` on failure, with `error` set. */
+  async createBooking(request: CreateBookingRequest): Promise<Booking | null> {
+    this._loading.set(true);
+    this._error.set(null);
+    try {
+      const booking = await firstValueFrom(this.api.create(request));
+      this._myBookings.update((bookings) => [booking, ...bookings]);
+      return booking;
+    } catch (err) {
+      const slotTaken = err instanceof HttpErrorResponse && err.status === 409;
+      this._error.set(slotTaken ? 'Ese turno ya no está libre en esa pista. Vuelve a buscar.' : 'No se pudo crear la reserva.');
+      return null;
+    } finally {
+      this._loading.set(false);
+    }
   }
 
   /** UC: Get my bookings. */

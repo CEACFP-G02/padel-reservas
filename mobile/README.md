@@ -4,9 +4,9 @@ Ionic + Angular app for the **CLIENT** actor of padel-reservas. It talks to the 
 (`/api/v1`) specified in `../docs/api.md`, which is the source of truth for every model and
 endpoint here.
 
-> Scaffold: facade methods and the `AuthService` login/register/refresh flows are TODO stubs
-> that throw `TODO: … — see docs/api.md#<section>`. API services, the JWT interceptor, the
-> client guard and token storage are implemented and tested.
+> Scaffold: facade methods (except `BookingFacade.createBooking`) and the `AuthService`
+> login/register/refresh flows are TODO stubs that throw `TODO: … — see docs/api.md#<section>`. API services, the JWT interceptor, the
+> client guard, token storage and booking from a slot are implemented and tested.
 
 ## Run
 
@@ -100,8 +100,10 @@ when `available=false`, the `alternativeDays`. The ±7-day window is computed se
 
 ## Open points against docs/api.md
 
-- **Booking from a slot:** availability slots expose `courtsFree` but no court ids, while
-  `POST /bookings` needs `courtId`. Decide whether the server assigns courts or availability
-  returns their ids (`AvailabilitySearchPage.book`).
-- **Response shapes not spelled out:** the booking response and `/me/bookings` pagination are
-  assumed (`Page<Booking>`, per the list-endpoint convention).
+Both earlier gaps are resolved by the refined contract:
+
+- **Booking from a slot:** each availability slot lists the `courtIds` free in it. "Reservar" sends
+  `POST /bookings` with one of them as `courtId`: directly when only one court is free, otherwise the
+  user picks it in an `ion-alert` (`AvailabilitySearchPage.book`). The server never auto-assigns a court.
+- **Response shapes:** the booking response (`courtName`, `userId`, `totalPrice`, `createdAt`,
+  per-slot `price`) is specified, and `/me/bookings` is paginated (`Page<Booking>`, `page`/`size`/`sort`).

@@ -1,10 +1,17 @@
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideIonicAngular } from '@ionic/angular';
+import { AlertController, provideIonicAngular, ToastController } from '@ionic/angular';
 
-import { AvailabilityQuery, AvailabilityResponse } from '../../../shared/models';
+import {
+  AvailabilityQuery,
+  AvailabilityResponse,
+  Booking,
+  CreateBookingRequest,
+  SlotResponse,
+} from '../../../shared/models';
 import { toIsoDate } from '../../../shared/util/date';
+import { bookingFixture } from '../../../testing/fixtures';
 import { BookingFacade } from '../../booking/booking.facade';
 import { AvailabilityFacade } from '../availability.facade';
 import { AvailabilitySearchPage } from './availability-search.page';
@@ -21,6 +28,21 @@ describe('AvailabilitySearchPage', () => {
     getAvailability,
   };
 
+  type CreateBooking = (request: CreateBookingRequest) => Promise<Booking | null>;
+  type Dismiss = { role?: string; data?: { values?: unknown } };
+  let createBooking: ReturnType<typeof vi.fn<CreateBooking>>;
+  let bookingError: ReturnType<typeof signal<string | null>>;
+  let alertCreate: ReturnType<typeof vi.fn>;
+  let toastCreate: ReturnType<typeof vi.fn>;
+
+  function dismissPickerWith(dismiss: Dismiss): void {
+    alertCreate.mockResolvedValue({ present: vi.fn(), onDidDismiss: vi.fn().mockResolvedValue(dismiss) });
+  }
+
+  function slot(courtIds: number[]): SlotResponse {
+    return { start: '07:00', end: '08:00', courtsFree: courtIds.length, courtIds, price: 16 };
+  }
+
   function render() {
     TestBed.configureTestingModule({
       imports: [AvailabilitySearchPage],
@@ -28,7 +50,9 @@ describe('AvailabilitySearchPage', () => {
         provideRouter([]),
         provideIonicAngular(),
         { provide: AvailabilityFacade, useValue: facade },
-        { provide: BookingFacade, useValue: { createBooking: vi.fn() } },
+        { provide: BookingFacade, useValue: { createBooking, error: bookingError } },
+        { provide: AlertController, useValue: { create: alertCreate } },
+        { provide: ToastController, useValue: { create: toastCreate } },
       ],
     });
     const fixture = TestBed.createComponent(AvailabilitySearchPage);
@@ -39,6 +63,10 @@ describe('AvailabilitySearchPage', () => {
   beforeEach(() => {
     result.set(null);
     getAvailability.mockClear();
+    createBooking = vi.fn<CreateBooking>().mockResolvedValue(bookingFixture());
+    bookingError = signal<string | null>(null);
+    alertCreate = vi.fn();
+    toastCreate = vi.fn().mockResolvedValue({ present: vi.fn() });
   });
 
   it('searches today for one court by default', () => {
@@ -61,7 +89,7 @@ describe('AvailabilitySearchPage', () => {
       requestedDate: '2026-06-08',
       courtsRequested: 2,
       available: true,
-      slots: [{ start: '07:00', end: '08:00', courtsFree: 3, price: 16 }],
+      slots: [slot([1, 2, 3])],
       alternativeDays: [],
     });
     fixture.detectChanges();
@@ -88,5 +116,76 @@ describe('AvailabilitySearchPage', () => {
 
     expect(fixture.componentInstance['date']()).toBe('2026-06-09');
     expect(getAvailability).toHaveBeenLastCalledWith({ date: '2026-06-09', courts: 2 });
+  });
+
+  describe('booking a slot', () => {
+    const request = (courtId: number): CreateBookingRequest => ({
+      courtId,
+      date: '2026-06-08',
+      slots: [{ start: '07:00', end: '08:00' }],
+    });
+
+    it('books the only free court directly, for the searched date', async () => {
+      const page = render().componentInstance;
+      page['date'].set('2026-06-10');
+      await page['book']('2026-06-08', slot([3]));
+
+      expect(alertCreate).not.toHaveBeenCalled();
+      expect(createBooking).toHaveBeenCalledWith(request(3));
+      expect(toastCreate).toHaveBeenCalledWith(expect.objectContaining({ message: 'Reserva confirmada: Court 3, 07:00' }));
+    });
+
+    it('lets the user pick one of several free courts, and books the chosen one', async () => {
+      dismissPickerWith({ role: 'confirm', data: { values: 3 } });
+      const page = render().componentInstance;
+      await page['book']('2026-06-08', slot([1, 3]));
+
+      const options = alertCreate.mock.calls[0][0] as { inputs: { type: string; value: number; label: string }[] };
+      expect(options.inputs.map(({ type, value, label }) => ({ type, value, label }))).toEqual([
+        { type: 'radio', value: 1, label: 'Pista 1' },
+        { type: 'radio', value: 3, label: 'Pista 3' },
+      ]);
+      expect(createBooking).toHaveBeenCalledWith(request(3));
+    });
+
+    it('does not book when the court picker is cancelled', async () => {
+      dismissPickerWith({ role: 'cancel' });
+      const page = render().componentInstance;
+      await page['book']('2026-06-08', slot([1, 3]));
+
+      expect(createBooking).not.toHaveBeenCalled();
+      expect(toastCreate).not.toHaveBeenCalled();
+    });
+
+    it('shows the booking error when the booking fails', async () => {
+      createBooking.mockImplementation(async () => {
+        bookingError.set('Ese turno ya no está libre en esa pista. Vuelve a buscar.');
+        return null;
+      });
+      const page = render().componentInstance;
+      await page['book']('2026-06-08', slot([3]));
+
+      expect(toastCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Ese turno ya no está libre en esa pista. Vuelve a buscar.', color: 'danger' }),
+      );
+    });
+
+    it('wires the Reservar button of each slot to book it', () => {
+      const fixture = render();
+      const page = fixture.componentInstance as unknown as { book: (date: string, slot: SlotResponse) => Promise<void> };
+      const book = vi.spyOn(page, 'book').mockResolvedValue();
+      result.set({
+        requestedDate: '2026-06-08',
+        courtsRequested: 1,
+        available: true,
+        slots: [slot([3])],
+        alternativeDays: [],
+      });
+      fixture.detectChanges();
+
+      (fixture.nativeElement.querySelector('[data-testid="book-slot"]') as HTMLElement).click();
+
+      expect(book).toHaveBeenCalledWith('2026-06-08', slot([3]));
+    });
   });
 });

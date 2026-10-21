@@ -2,6 +2,7 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  AlertController,
   IonButton,
   IonButtons,
   IonContent,
@@ -98,7 +99,9 @@ import { AvailabilityFacade } from '../availability.facade';
                   {{ slot.start }} – {{ slot.end }}
                   <p>{{ slot.courtsFree }} pistas libres · {{ slot.price | currency: 'EUR' }}</p>
                 </ion-label>
-                <ion-button slot="end" (click)="book(slot)">Reservar</ion-button>
+                <ion-button slot="end" data-testid="book-slot" (click)="book(result.requestedDate, slot)">
+                  Reservar
+                </ion-button>
               </ion-item>
             }
           </ion-list>
@@ -122,7 +125,8 @@ import { AvailabilityFacade } from '../availability.facade';
 export class AvailabilitySearchPage {
   protected readonly facade = inject(AvailabilityFacade);
   private readonly bookings = inject(BookingFacade);
-  private readonly toast = inject(ToastController);
+  private readonly alerts = inject(AlertController);
+  private readonly toasts = inject(ToastController);
 
   protected readonly today = toIsoDate(new Date());
   protected readonly courtOptions = [1, 2, 3, 4];
@@ -144,10 +148,31 @@ export class AvailabilitySearchPage {
     this.search();
   }
 
-  protected async book(slot: SlotResponse): Promise<void> {
-    // TODO: bookings.createBooking({ courtId, date, slots: [slot] }) for each requested court.
-    //  Contract gap: availability slots carry `courtsFree` but no court ids — see docs/api.md#availability--apiv1availability-
-    const toast = await this.toast.create({ message: `Reserva ${slot.start} pendiente de implementar`, duration: 2000 });
-    await toast.present();
+  /** Books one court for the slot: the only free one, or the one the user picks. */
+  protected async book(date: IsoDate, slot: SlotResponse): Promise<void> {
+    const courtId = slot.courtIds.length === 1 ? slot.courtIds[0] : await this.pickCourt(slot);
+    if (courtId === null) {
+      return;
+    }
+    const booking = await this.bookings.createBooking({ courtId, date, slots: [{ start: slot.start, end: slot.end }] });
+    const toast = booking
+      ? { message: `Reserva confirmada: ${booking.courtName}, ${slot.start}`, color: 'success' }
+      : { message: this.bookings.error() ?? 'No se pudo crear la reserva.', color: 'danger' };
+    await (await this.toasts.create({ ...toast, duration: 2500 })).present();
+  }
+
+  private async pickCourt(slot: SlotResponse): Promise<number | null> {
+    const alert = await this.alerts.create({
+      header: 'Elige pista',
+      subHeader: `${slot.start} – ${slot.end}`,
+      inputs: slot.courtIds.map((id, index) => ({ type: 'radio', label: `Pista ${id}`, value: id, checked: index === 0 })),
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Reservar', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role, data } = await alert.onDidDismiss<{ values: number }>();
+    return role === 'confirm' && data ? data.values : null;
   }
 }

@@ -9,7 +9,10 @@ export interface AvailabilityQuery {
 export interface SlotResponse {
   start: IsoTime;
   end: IsoTime;
+  /** Always `courtIds.length`. */
   courtsFree: number;
+  /** Courts free in this slot; the client books one of them via `POST /bookings`. */
+  courtIds: number[];
   price: number;
 }
 

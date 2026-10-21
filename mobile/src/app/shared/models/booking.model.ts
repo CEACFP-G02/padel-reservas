@@ -1,29 +1,39 @@
-import { IsoDate, IsoTime } from './common';
+import { IsoDate, IsoTime, IsoTimestamp, PageRequest } from './common';
 import { BookingStatus } from './enums';
 
-export interface BookingSlot {
+export interface TimeRange {
   start: IsoTime;
   end: IsoTime;
 }
 
-/** docs/api.md does not spell out the booking response; fields follow the create body + status. */
+export interface BookingSlot extends TimeRange {
+  price: number;
+}
+
+/** Booking response: `POST /bookings`, `GET /bookings/{id}` and the items of `/me/bookings`. */
 export interface Booking {
   id: number;
   courtId: number;
-  clientId: number;
+  courtName: string;
+  userId: number;
   date: IsoDate;
-  slots: BookingSlot[];
   status: BookingStatus;
+  totalPrice: number;
+  createdAt: IsoTimestamp;
+  slots: BookingSlot[];
 }
 
-/** `clientId` is taken from the token for a CLIENT, so it is not sent. */
+/**
+ * `courtId` is one of the slot's free `courtIds` from `/availability`.
+ * `clientId` is taken from the token for a CLIENT, so it is not sent.
+ */
 export interface CreateBookingRequest {
   courtId: number;
   date: IsoDate;
-  slots: BookingSlot[];
+  slots: TimeRange[];
 }
 
-export interface MyBookingsQuery {
+export interface MyBookingsQuery extends PageRequest {
   status?: BookingStatus;
   from?: IsoDate;
   to?: IsoDate;
