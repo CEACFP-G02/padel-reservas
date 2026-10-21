@@ -16,6 +16,7 @@ export interface Booking {
   courtId: number;
   courtName: string;
   userId: number;
+  userName: string;
   date: IsoDate;
   status: BookingStatus;
   totalPrice: number;
