@@ -6,7 +6,7 @@ Base path: `/api/v1/courts`
 
 | Use case | Class | Endpoint | Access |
 |---|---|---|---|
-| List courts | `ListCourtsUseCase` | `GET /?includeInactive=` | public |
+| List courts | `ListCourtsUseCase` | `GET /?type=&active=` (paged) | public |
 | Get court | `GetCourtUseCase` | `GET /{id}` | public |
 | Create court | `CreateCourtUseCase` | `POST /` | OWNER |
 | Update court | `UpdateCourtUseCase` | `PUT /{id}` | OWNER |

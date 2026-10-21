@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Availability of all active courts for a date. {@code nearbyAvailableDays} is only filled
- * when {@code date} has no free slot at all.
+ * Slots of {@code requestedDate} with at least {@code courtsRequested} free courts. When {@code available} is
+ * false, {@code slots} is empty and {@code alternativeDays} lists nearby days that have room.
  */
 public record AvailabilityResponse(
-        LocalDate date,
-        List<CourtDayAvailabilityResponse> courts,
-        List<LocalDate> nearbyAvailableDays
+        LocalDate requestedDate,
+        int courtsRequested,
+        boolean available,
+        List<SlotResponse> slots,
+        List<AlternativeDay> alternativeDays
 ) {
 }

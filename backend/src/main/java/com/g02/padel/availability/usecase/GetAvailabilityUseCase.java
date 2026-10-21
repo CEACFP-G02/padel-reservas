@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 /**
- * UC: free slots of every active court on a date (computed, not stored).
- * slots = schedule/opening hours of that weekday − non-cancelled booking slots − court blocks.
+ * UC: slots of a date with at least {@code courts} free courts (computed, not stored).
+ * Free courts per slot = schedule/opening hours of that weekday − non-cancelled booking slots − court blocks.
  */
 @Service
 public class GetAvailabilityUseCase {
@@ -37,12 +37,13 @@ public class GetAvailabilityUseCase {
     }
 
     @Transactional(readOnly = true)
-    public AvailabilityResponse execute(LocalDate date) {
+    public AvailabilityResponse execute(LocalDate date, int courts) {
         // TODO: reject dates in the past (IllegalArgumentException -> 400).
-        //  For each active court compute its day slots (same algorithm as GetCourtDayAvailabilityUseCase).
-        //  If NO slot is free on `date`, fill nearbyAvailableDays with the days that do have a free slot in
-        //  [max(today, date - nearbyDaysWindow), date + nearbyDaysWindow], excluding `date`, never in the past,
-        //  ordered by distance to `date` — see docs/api.md#get-apiv1availability
+        //  For each active court compute its day slots (same algorithm as GetCourtDayAvailabilityUseCase);
+        //  keep the slots with >= `courts` free courts as SlotResponse(start, end, courtsFree, courtIds, price).
+        //  If none, available=false, slots=[] and alternativeDays = days with such a slot (freeSlotCount) in
+        //  [max(today, date - nearbyDaysWindow), date + nearbyDaysWindow], excluding `date`, ordered by date
+        //  — see docs/api.md#availability--apiv1availability-
         throw new UnsupportedOperationException("TODO: GetAvailability — see docs/api.md#get-apiv1availability");
     }
 }

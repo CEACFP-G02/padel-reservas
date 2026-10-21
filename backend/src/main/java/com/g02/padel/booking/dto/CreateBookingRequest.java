@@ -8,11 +8,14 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
-/** {@code userId} is only honoured for OWNER (booking on behalf of a client); clients book for themselves. */
+/**
+ * {@code courtId} is one of the slot's free {@code courtIds} from {@code GET /availability}.
+ * {@code clientId} is ignored for CLIENT (taken from the token) and required for an OWNER manual booking.
+ */
 public record CreateBookingRequest(
         @NotNull Long courtId,
         @NotNull @FutureOrPresent LocalDate date,
-        @NotEmpty List<@Valid BookingSlotDto> slots,
-        Long userId
+        @NotEmpty List<@Valid TimeSlotRequest> slots,
+        Long clientId
 ) {
 }

@@ -10,7 +10,7 @@ Base path: `/api/v1` — authenticated.
 
 | Use case | Class | Endpoint |
 |---|---|---|
-| Get availability (all courts) | `GetAvailabilityUseCase` | `GET /availability?date=YYYY-MM-DD` |
+| Get availability (all courts) | `GetAvailabilityUseCase` | `GET /availability?date=YYYY-MM-DD&courts=N` |
 | Get court-day availability | `GetCourtDayAvailabilityUseCase` | `GET /courts/{courtId}/availability?date=YYYY-MM-DD` |
 
 **Nearby days**: when `date` is fully booked, `GetAvailability` proposes days with free slots

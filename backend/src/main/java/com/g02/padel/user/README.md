@@ -7,7 +7,7 @@ Base path: `/api/v1/users` — all endpoints require role `OWNER`.
 
 | Use case | Class | Endpoint |
 |---|---|---|
-| List clients | `ListClientsUseCase` | `GET /` |
+| List clients | `ListClientsUseCase` | `GET /?search=` (paged) |
 | Get client | `GetClientUseCase` | `GET /{id}` |
 | Create client | `CreateClientUseCase` | `POST /` |
 | Update client | `UpdateClientUseCase` | `PUT /{id}` |

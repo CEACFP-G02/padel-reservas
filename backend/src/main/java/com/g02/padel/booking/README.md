@@ -8,9 +8,9 @@ Base path: `/api/v1` — authenticated.
 | Use case | Class | Endpoint | Access |
 |---|---|---|---|
 | Create booking | `CreateBookingUseCase` | `POST /bookings` | CLIENT, OWNER |
-| List bookings | `ListBookingsUseCase` | `GET /bookings?courtId=&date=` | OWNER |
+| List bookings | `ListBookingsUseCase` | `GET /bookings?date=&courtId=&userId=&status=` (paged) | OWNER |
 | Get booking | `GetBookingUseCase` | `GET /bookings/{id}` | booking's client, OWNER |
-| Get my bookings | `GetMyBookingsUseCase` | `GET /me/bookings` | CLIENT |
+| Get my bookings | `GetMyBookingsUseCase` | `GET /me/bookings?status=&from=&to=` (paged) | CLIENT |
 | Cancel booking | `CancelBookingUseCase` | `PATCH /bookings/{id}/cancel` | booking's client, OWNER |
 | Reschedule booking | `RescheduleBookingUseCase` | `PATCH /bookings/{id}/reschedule` | booking's client, OWNER |
 

@@ -4,6 +4,7 @@ import com.g02.padel.availability.dto.AvailabilityResponse;
 import com.g02.padel.availability.dto.CourtDayAvailabilityResponse;
 import com.g02.padel.availability.usecase.GetAvailabilityUseCase;
 import com.g02.padel.availability.usecase.GetCourtDayAvailabilityUseCase;
+import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,8 +29,9 @@ public class AvailabilityController {
 
     @GetMapping("/availability")
     public AvailabilityResponse availability(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return getAvailability.execute(date);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "1") @Min(1) int courts) {
+        return getAvailability.execute(date, courts);
     }
 
     @GetMapping("/courts/{courtId}/availability")

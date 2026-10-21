@@ -12,6 +12,6 @@ import java.util.List;
 public record RescheduleBookingRequest(
         Long courtId,
         @NotNull @FutureOrPresent LocalDate date,
-        @NotEmpty List<@Valid BookingSlotDto> slots
+        @NotEmpty List<@Valid TimeSlotRequest> slots
 ) {
 }

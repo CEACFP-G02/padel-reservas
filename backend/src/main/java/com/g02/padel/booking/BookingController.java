@@ -9,7 +9,11 @@ import com.g02.padel.booking.usecase.GetBookingUseCase;
 import com.g02.padel.booking.usecase.GetMyBookingsUseCase;
 import com.g02.padel.booking.usecase.ListBookingsUseCase;
 import com.g02.padel.booking.usecase.RescheduleBookingUseCase;
+import com.g02.padel.shared.enums.BookingStatus;
+import com.g02.padel.shared.web.PageResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +29,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -57,10 +60,13 @@ public class BookingController {
 
     @GetMapping("/bookings")
     @PreAuthorize("hasRole('OWNER')")
-    public List<BookingResponse> list(
+    public PageResponse<BookingResponse> list(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Long courtId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return listBookings.execute(courtId, date);
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) BookingStatus status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return PageResponse.of(listBookings.execute(date, courtId, userId, status, pageable));
     }
 
     @GetMapping("/bookings/{id}")
@@ -69,8 +75,13 @@ public class BookingController {
     }
 
     @GetMapping("/me/bookings")
-    public List<BookingResponse> myBookings(Authentication authentication) {
-        return getMyBookings.execute(authentication.getName());
+    public PageResponse<BookingResponse> myBookings(
+            Authentication authentication,
+            @RequestParam(required = false) BookingStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return PageResponse.of(getMyBookings.execute(authentication.getName(), status, from, to, pageable));
     }
 
     @PatchMapping("/bookings/{id}/cancel")

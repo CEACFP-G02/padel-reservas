@@ -2,13 +2,15 @@ package com.g02.padel.booking.usecase;
 
 import com.g02.padel.booking.BookingRepository;
 import com.g02.padel.booking.dto.BookingResponse;
+import com.g02.padel.shared.enums.BookingStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 
-/** UC (owner): list bookings, optionally filtered by court and/or date. */
+/** UC (owner): list bookings, optionally filtered by date, court, client and status. */
 @Service
 public class ListBookingsUseCase {
 
@@ -19,9 +21,10 @@ public class ListBookingsUseCase {
     }
 
     @Transactional(readOnly = true)
-    public List<BookingResponse> execute(Long courtId, LocalDate date) {
-        // TODO: both filters -> findByCourtIdAndDate; otherwise filtered query / findAll; map
-        //  — see docs/api.md#get-apiv1bookings
+    public Page<BookingResponse> execute(LocalDate date, Long courtId, Long userId, BookingStatus status,
+                                         Pageable pageable) {
+        // TODO: paged query with the non-null filters (e.g. a JpaSpecificationExecutor); map to BookingResponse
+        //  — see docs/api.md#bookings--apiv1bookings
         throw new UnsupportedOperationException("TODO: ListBookings — see docs/api.md#get-apiv1bookings");
     }
 }

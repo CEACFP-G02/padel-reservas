@@ -7,6 +7,6 @@ public record CourtDayAvailabilityResponse(
         Long courtId,
         String courtName,
         LocalDate date,
-        List<SlotResponse> slots
+        List<CourtSlotResponse> slots
 ) {
 }
