@@ -19,7 +19,7 @@ import { Booking } from '../../../shared/models';
         @if (!booking) {
           <mat-form-field>
             <mat-label>ID cliente</mat-label>
-            <input matInput type="number" formControlName="userId" />
+            <input matInput type="number" formControlName="clientId" />
           </mat-form-field>
         }
         <mat-form-field>
@@ -34,11 +34,11 @@ import { Booking } from '../../../shared/models';
         </mat-form-field>
         <mat-form-field>
           <mat-label>Inicio</mat-label>
-          <input matInput type="time" formControlName="startTime" />
+          <input matInput type="time" formControlName="start" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Fin</mat-label>
-          <input matInput type="time" formControlName="endTime" />
+          <input matInput type="time" formControlName="end" />
         </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
@@ -53,15 +53,16 @@ export class BookingFormDialog {
   protected readonly booking = inject<Booking | null>(MAT_DIALOG_DATA, { optional: true });
 
   protected readonly form = inject(FormBuilder).group({
-    userId: [null as number | null, this.booking ? [] : [Validators.required]],
+    clientId: [null as number | null, this.booking ? [] : [Validators.required]],
     courtId: [this.booking?.courtId ?? null, Validators.required],
     date: [null as Date | null, Validators.required],
-    startTime: ['', Validators.required],
-    endTime: ['', Validators.required],
+    start: ['', Validators.required],
+    end: ['', Validators.required],
   });
 
   protected submit(): void {
-    // TODO: build CreateBookingRequest / RescheduleBookingRequest (toIsoDate, HH:mm:00) and close with it;
-    //  pick court/slots from the availability grid instead of raw ids — see docs/api.md#post-apiv1bookings
+    // TODO: build CreateBookingRequest { courtId, date: toIsoDate, slots: [{ start, end }] (HH:mm), clientId } /
+    //  RescheduleBookingRequest and close with it; pick the court from a slot's free courtIds
+    //  (AvailabilityApi.search) instead of a raw id — see docs/api.md#bookings--apiv1bookings
   }
 }

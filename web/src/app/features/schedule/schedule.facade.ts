@@ -19,13 +19,14 @@ export class ScheduleFacade {
 
   /** UC: Get schedule. */
   async getSchedule(courtId: number): Promise<void> {
-    // TODO: api.get(courtId) -> _schedule (404 = court has no schedule yet) — see docs/api.md#get-apiv1courtscourtidschedule
-    todo('ScheduleFacade.getSchedule', 'get-apiv1courtscourtidschedule');
+    // TODO: api.get(courtId) -> _schedule (404 = court has no schedule yet)
+    //  — see docs/api.md#schedule--apiv1courtsidschedule
+    todo('ScheduleFacade.getSchedule', 'schedule--apiv1courtsidschedule');
   }
 
-  /** UC: Update schedule (full replacement). */
+  /** UC: Update schedule (full replacement of slotMinutes, price and weekdays). */
   async updateSchedule(courtId: number, request: UpdateScheduleRequest): Promise<void> {
-    // TODO: api.update(courtId, request) -> _schedule — see docs/api.md#put-apiv1courtscourtidschedule
-    todo('ScheduleFacade.updateSchedule', 'put-apiv1courtscourtidschedule');
+    // TODO: api.update(courtId, request) -> _schedule — see docs/api.md#schedule--apiv1courtsidschedule
+    todo('ScheduleFacade.updateSchedule', 'schedule--apiv1courtsidschedule');
   }
 }

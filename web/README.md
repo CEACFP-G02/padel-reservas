@@ -4,7 +4,7 @@ Angular admin panel for the **OWNER** actor of padel-reservas. It talks to the R
 `../backend` (`/api/v1`). The API contract is specified in `docs/api.md`.
 
 > Scaffold only: facade methods and auth flows are TODO stubs that throw
-> `TODO: … — see docs/api.md#<section>`. API services already contain the typed HTTP calls.
+> `TODO: … — see docs/api.md#<section>`. API services contain the typed HTTP calls (tested against the contract).
 
 ## Run
 
@@ -43,7 +43,8 @@ src/app/
 ├── shared/
 │   ├── models/                     interfaces + enums mirroring the API DTOs (Role, CourtType, BookingStatus, …)
 │   ├── ui/shell, ui/nav-list       authenticated layout and side navigation
-│   └── util/                       todo() stub marker, toIsoDate()
+│   └── util/                       todo() stub marker, toIsoDate(), toHttpParams()
+├── testing/                        spec helpers (setUpHttp, pageOf, fixtures)
 └── features/<feature>/
     ├── <feature>.api.ts            typed HttpClient calls to the REST endpoints
     ├── <feature>.facade.ts         ONE method per OWNER use case; state in signals
@@ -74,13 +75,16 @@ redirects to `/dashboard`.
 
 Each facade method maps 1:1 to a use case of the OWNER actor in the T3 use-case diagram.
 
-| Feature | Facade | Methods |
-|---|---|---|
-| auth | `AuthService` (core) | `login`, `refreshToken`, `logout`, `currentUser` (signal) |
-| court | `CourtFacade` | `listCourts`, `getCourt`, `createCourt`, `updateCourt`, `deactivateCourt` |
-| schedule | `ScheduleFacade` | `getSchedule`, `updateSchedule` |
-| booking | `BookingFacade` | `listBookings`, `getBooking`, `createBooking` (manual), `cancelBooking`, `rescheduleBooking` |
-| availability | `AvailabilityFacade` | `getCourtDayAvailability` |
-| courtblock | `CourtBlockFacade` | `listBlocks`, `createBlock`, `removeBlock` |
-| user | `UserFacade` | `listClients`, `getClient`, `createClient`, `updateClient`, `deleteClient` |
-| dashboard | `DashboardFacade` | `getDashboardSummary` |
+| Feature | Facade | Methods | Endpoints |
+|---|---|---|---|
+| auth | `AuthService` (core, via `AuthApi`) | `login`, `refreshToken`, `loadCurrentUser`, `updateProfile`, `logout`, `currentUser` (signal) | `POST /auth/login`, `POST /auth/refresh`, `GET`/`PATCH /auth/me` |
+| court | `CourtFacade` | `listCourts`, `getCourt`, `createCourt`, `updateCourt`, `deactivateCourt` | `GET /courts` (paged), `GET /courts/{id}`, `POST /courts`, `PATCH /courts/{id}`, `DELETE /courts/{id}` |
+| schedule | `ScheduleFacade` | `getSchedule`, `updateSchedule` | `GET`/`PUT /courts/{id}/schedule` |
+| booking | `BookingFacade` | `listBookings`, `getBooking`, `createBooking` (manual), `cancelBooking`, `rescheduleBooking` | `GET /bookings` (paged), `GET /bookings/{id}`, `POST /bookings`, `DELETE /bookings/{id}`, `PATCH /bookings/{id}` |
+| availability | `AvailabilityFacade` | `getCourtDayAvailability` | `GET /courts/{id}/availability` (`AvailabilityApi.search` wraps `GET /availability`) |
+| courtblock | `CourtBlockFacade` | `listBlocks`, `createBlock`, `removeBlock` | `GET`/`POST /courts/{id}/blocks`, `DELETE /court-blocks/{id}` |
+| user | `UserFacade` | `listClients`, `getClient`, `createClient`, `updateClient`, `deleteClient`, `listClientBookings` | `GET /users` (paged), `GET /users/{id}`, `POST /users`, `PATCH /users/{id}`, `DELETE /users/{id}`, `GET /users/{id}/bookings` (paged) |
+| dashboard | `DashboardFacade` | `getDashboardSummary` | `GET /dashboard/summary` |
+
+Paginated lists come back as `PageResponse<T>` (`content`, `page`, `size`, `totalElements`, `totalPages`) and
+take `page`/`size`/`sort`; list facades keep the metadata in a `page` signal for `mat-paginator`. Times are `HH:mm`.

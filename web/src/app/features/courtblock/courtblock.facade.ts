@@ -19,19 +19,20 @@ export class CourtBlockFacade {
 
   /** UC: List blocks. */
   async listBlocks(courtId: number, date?: IsoDate): Promise<void> {
-    // TODO: api.list(courtId, date) -> _blocks — see docs/api.md#get-apiv1courtscourtidblocks
-    todo('CourtBlockFacade.listBlocks', 'get-apiv1courtscourtidblocks');
+    // TODO: api.list(courtId, date) -> _blocks — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
+    todo('CourtBlockFacade.listBlocks', 'court-blocks-maintenance--apiv1courtsidblocks');
   }
 
   /** UC: Create block. */
   async createBlock(courtId: number, request: CourtBlockRequest): Promise<void> {
-    // TODO: api.create(courtId, request) -> append to _blocks — see docs/api.md#post-apiv1courtscourtidblocks
-    todo('CourtBlockFacade.createBlock', 'post-apiv1courtscourtidblocks');
+    // TODO: api.create(courtId, request) -> append to _blocks
+    //  — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
+    todo('CourtBlockFacade.createBlock', 'court-blocks-maintenance--apiv1courtsidblocks');
   }
 
   /** UC: Remove block. */
-  async removeBlock(courtId: number, blockId: number): Promise<void> {
-    // TODO: api.remove(courtId, blockId) -> drop from _blocks — see docs/api.md#delete-apiv1courtscourtidblocksblockid
-    todo('CourtBlockFacade.removeBlock', 'delete-apiv1courtscourtidblocksblockid');
+  async removeBlock(id: number): Promise<void> {
+    // TODO: api.remove(id) -> drop from _blocks — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
+    todo('CourtBlockFacade.removeBlock', 'court-blocks-maintenance--apiv1courtsidblocks');
   }
 }

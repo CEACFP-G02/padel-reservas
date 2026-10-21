@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
@@ -12,7 +13,7 @@ import { ClientFormDialog } from './client-form.dialog';
 
 @Component({
   selector: 'app-client-list-page',
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatProgressBarModule, RouterLink],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, MatProgressBarModule, MatPaginatorModule, RouterLink],
   template: `
     <header class="page-header">
       <h1>Clientes</h1>
@@ -26,7 +27,7 @@ import { ClientFormDialog } from './client-form.dialog';
     <table mat-table [dataSource]="facade.clients()">
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>Nombre</th>
-        <td mat-cell *matCellDef="let c"><a [routerLink]="[c.id]">{{ c.firstName }} {{ c.lastName }}</a></td>
+        <td mat-cell *matCellDef="let c"><a [routerLink]="[c.id]">{{ c.name }}</a></td>
       </ng-container>
       <ng-container matColumnDef="email">
         <th mat-header-cell *matHeaderCellDef>Email</th>
@@ -35,10 +36,6 @@ import { ClientFormDialog } from './client-form.dialog';
       <ng-container matColumnDef="phone">
         <th mat-header-cell *matHeaderCellDef>Teléfono</th>
         <td mat-cell *matCellDef="let c">{{ c.phone }}</td>
-      </ng-container>
-      <ng-container matColumnDef="active">
-        <th mat-header-cell *matHeaderCellDef>Estado</th>
-        <td mat-cell *matCellDef="let c">{{ c.active ? 'Activo' : 'Inactivo' }}</td>
       </ng-container>
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
@@ -50,29 +47,40 @@ import { ClientFormDialog } from './client-form.dialog';
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
       <tr mat-row *matRowDef="let row; columns: columns"></tr>
     </table>
+    <mat-paginator
+      [length]="facade.page()?.totalElements ?? 0"
+      [pageIndex]="facade.page()?.page ?? 0"
+      [pageSize]="facade.page()?.size ?? 20"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="changePage($event)"
+    />
   `,
 })
 export class ClientListPage {
   protected readonly facade = inject(UserFacade);
   private readonly dialog = inject(MatDialog);
-  protected readonly columns = ['name', 'email', 'phone', 'active', 'actions'];
+  protected readonly columns = ['name', 'email', 'phone', 'actions'];
 
   constructor() {
     void this.facade.listClients();
   }
 
+  protected changePage(event: PageEvent): void {
+    void this.facade.listClients({ page: event.pageIndex, size: event.pageSize });
+  }
+
   protected openCreate(): void {
-    // TODO: on close with a request -> facade.createClient(request) — see docs/api.md#post-apiv1users
+    // TODO: on close with a request -> facade.createClient(request) — see docs/api.md#users--clients--apiv1users
     this.dialog.open(ClientFormDialog);
   }
 
   protected openEdit(client: User): void {
-    // TODO: on close with a request -> facade.updateClient(client.id, request) — see docs/api.md#put-apiv1usersid
+    // TODO: on close with a request -> facade.updateClient(client.id, request) — see docs/api.md#users--clients--apiv1users
     this.dialog.open(ClientFormDialog, { data: client });
   }
 
   protected delete(client: User): void {
-    // TODO: confirm dialog + snackbar — see docs/api.md#delete-apiv1usersid
+    // TODO: confirm dialog + snackbar — see docs/api.md#users--clients--apiv1users
     void this.facade.deleteClient(client.id);
   }
 }

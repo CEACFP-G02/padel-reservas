@@ -34,8 +34,8 @@ import { AvailabilityFacade } from '../availability.facade';
         @if (facade.dayAvailability(); as day) {
           <p>Ocupación: {{ facade.occupancy() | percent }}</p>
           <div class="slots">
-            @for (slot of day.slots; track slot.startTime) {
-              <div class="slot" [class.taken]="!slot.available">{{ slot.startTime }} – {{ slot.endTime }}</div>
+            @for (slot of day.slots; track slot.start) {
+              <div class="slot" [class.taken]="!slot.available">{{ slot.start }} – {{ slot.end }}</div>
             }
           </div>
         } @else {
@@ -60,7 +60,7 @@ export class AvailabilityPage {
   protected readonly courtId = signal<number | null>(null);
 
   constructor() {
-    void this.courts.listCourts(false);
+    void this.courts.listCourts({ active: true, size: 100 });
     effect(() => {
       const courtId = this.courtId();
       if (courtId != null) {

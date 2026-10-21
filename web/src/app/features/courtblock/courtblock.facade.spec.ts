@@ -19,5 +19,5 @@ describe('CourtBlockFacade', () => {
 
   it.todo('listBlocks loads the court blocks');
   it.todo('createBlock appends the created block');
-  it.todo('removeBlock drops the block');
+  it.todo('removeBlock deletes /court-blocks/{id} and drops the block');
 });

@@ -2,20 +2,18 @@ import { IsoTime } from './common';
 
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 
-export interface OpeningHours {
-  dayOfWeek: DayOfWeek;
-  openTime: IsoTime;
-  closeTime: IsoTime;
+export interface WeekdayHours {
+  day: DayOfWeek;
+  open: IsoTime;
+  close: IsoTime;
 }
 
+/** Weekly schedule of a court; `price` is per slot of `slotMinutes`. Days not listed are closed. */
 export interface Schedule {
-  courtId: number;
-  slotDurationMinutes: number;
-  openingHours: OpeningHours[];
+  slotMinutes: number;
+  price: number;
+  weekdays: WeekdayHours[];
 }
 
-/** Full replacement of the court's weekly schedule. */
-export interface UpdateScheduleRequest {
-  slotDurationMinutes: number;
-  openingHours: OpeningHours[];
-}
+/** Full replacement (PUT): same shape as the schedule. */
+export type UpdateScheduleRequest = Schedule;

@@ -1,21 +1,19 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { environment } from '../../../environments/environment';
-import { CurrentUser, LoginRequest, Role } from '../../shared/models';
+import { LoginRequest, Role, UpdateProfileRequest, User } from '../../shared/models';
 import { todo } from '../../shared/util/todo';
+import { AuthApi } from './auth.api';
 import { StoredTokens, decodeJwtPayload, readTokens, writeTokens } from './token-storage';
 
 /** Session state (JWT + current user) exposed as signals. */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly api = inject(AuthApi);
   private readonly router = inject(Router);
-  private readonly baseUrl = `${environment.apiBaseUrl}/auth`;
 
   private readonly tokens = signal<StoredTokens | null>(readTokens());
-  private readonly _currentUser = signal<CurrentUser | null>(null);
+  private readonly _currentUser = signal<User | null>(null);
 
   readonly accessToken = computed(() => this.tokens()?.accessToken ?? null);
   readonly currentUser = this._currentUser.asReadonly();
@@ -32,20 +30,26 @@ export class AuthService {
   readonly isOwner = computed(() => this.role() === Role.OWNER);
 
   async login(credentials: LoginRequest): Promise<void> {
-    // TODO: POST ${baseUrl}/login -> setTokens(response) -> loadCurrentUser(); reject non-OWNER accounts
-    //  — see docs/api.md#post-apiv1authlogin
-    todo('AuthService.login', 'post-apiv1authlogin');
+    // TODO: api.login(credentials) -> reject if user.role !== OWNER; setTokens({ accessToken, refreshToken });
+    //  _currentUser.set(user) — see docs/api.md#auth--apiv1auth
+    todo('AuthService.login', 'auth--apiv1auth');
   }
 
   async refreshToken(): Promise<void> {
-    // TODO: POST ${baseUrl}/refresh with the stored refresh token -> setTokens(response); logout() on failure
-    //  — see docs/api.md#post-apiv1authrefresh
-    todo('AuthService.refreshToken', 'post-apiv1authrefresh');
+    // TODO: api.refresh(stored refreshToken) -> setTokens({ ...current, accessToken }) (the refresh token is kept);
+    //  logout() on failure — see docs/api.md#auth--apiv1auth
+    todo('AuthService.refreshToken', 'auth--apiv1auth');
   }
 
+  /** Restores the profile after a reload (login already returns the user). */
   async loadCurrentUser(): Promise<void> {
-    // TODO: GET ${baseUrl}/me -> _currentUser.set(user) — see docs/api.md#get-apiv1authme
-    todo('AuthService.loadCurrentUser', 'get-apiv1authme');
+    // TODO: api.me() -> _currentUser.set(user) — see docs/api.md#auth--apiv1auth
+    todo('AuthService.loadCurrentUser', 'auth--apiv1auth');
+  }
+
+  async updateProfile(request: UpdateProfileRequest): Promise<void> {
+    // TODO: api.updateMe(request) -> _currentUser.set(user) — see docs/api.md#users--clients--apiv1users
+    todo('AuthService.updateProfile', 'users--clients--apiv1users');
   }
 
   logout(): void {

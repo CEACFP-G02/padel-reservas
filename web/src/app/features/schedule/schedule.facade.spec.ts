@@ -18,5 +18,5 @@ describe('ScheduleFacade', () => {
   });
 
   it.todo('getSchedule loads the court schedule');
-  it.todo('updateSchedule replaces the court schedule');
+  it.todo('updateSchedule replaces slotMinutes, price and weekdays');
 });

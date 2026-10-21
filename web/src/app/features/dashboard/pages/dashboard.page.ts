@@ -58,7 +58,7 @@ export class DashboardPage {
 
   protected load(from: string, to: string): void {
     // TODO: bind the range picker to Date values (FormGroup) and pass toIsoDate(from/to)
-    //  — see docs/api.md#get-apiv1dashboardsummary
+    //  — see docs/api.md#dashboard--apiv1dashboard
     void this.facade.getDashboardSummary(from || undefined, to || undefined);
   }
 }

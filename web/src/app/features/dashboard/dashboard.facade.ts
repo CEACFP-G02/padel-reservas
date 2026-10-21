@@ -19,7 +19,7 @@ export class DashboardFacade {
 
   /** UC: Get dashboard summary (server defaults to the current month). */
   async getDashboardSummary(from?: IsoDate, to?: IsoDate): Promise<void> {
-    // TODO: api.getSummary(from, to) -> _summary — see docs/api.md#get-apiv1dashboardsummary
-    todo('DashboardFacade.getDashboardSummary', 'get-apiv1dashboardsummary');
+    // TODO: api.getSummary(from, to) -> _summary — see docs/api.md#dashboard--apiv1dashboard
+    todo('DashboardFacade.getDashboardSummary', 'dashboard--apiv1dashboard');
   }
 }

@@ -33,11 +33,11 @@ import { CourtBlockFacade } from '../courtblock.facade';
       </mat-form-field>
       <mat-form-field>
         <mat-label>Desde</mat-label>
-        <input matInput type="time" formControlName="startTime" />
+        <input matInput type="time" formControlName="start" />
       </mat-form-field>
       <mat-form-field>
         <mat-label>Hasta</mat-label>
-        <input matInput type="time" formControlName="endTime" />
+        <input matInput type="time" formControlName="end" />
       </mat-form-field>
       <mat-form-field>
         <mat-label>Motivo</mat-label>
@@ -53,7 +53,7 @@ import { CourtBlockFacade } from '../courtblock.facade';
       </ng-container>
       <ng-container matColumnDef="range">
         <th mat-header-cell *matHeaderCellDef>Horario</th>
-        <td mat-cell *matCellDef="let block">{{ block.startTime }} – {{ block.endTime }}</td>
+        <td mat-cell *matCellDef="let block">{{ block.start }} – {{ block.end }}</td>
       </ng-container>
       <ng-container matColumnDef="reason">
         <th mat-header-cell *matHeaderCellDef>Motivo</th>
@@ -78,8 +78,8 @@ export class CourtBlocksPage {
 
   protected readonly form = inject(FormBuilder).group({
     date: [null as Date | null, Validators.required],
-    startTime: ['', Validators.required],
-    endTime: ['', Validators.required],
+    start: ['', Validators.required],
+    end: ['', Validators.required],
     reason: [''],
   });
 
@@ -88,11 +88,11 @@ export class CourtBlocksPage {
   }
 
   protected create(): void {
-    // TODO: map form (toIsoDate, HH:mm -> HH:mm:00) -> facade.createBlock(courtId, request)
-    //  — see docs/api.md#post-apiv1courtscourtidblocks
+    // TODO: map form { date: toIsoDate, start, end (HH:mm), reason } -> facade.createBlock(courtId, request)
+    //  — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
   }
 
   protected remove(block: CourtBlock): void {
-    void this.facade.removeBlock(this.courtId(), block.id);
+    void this.facade.removeBlock(block.id);
   }
 }

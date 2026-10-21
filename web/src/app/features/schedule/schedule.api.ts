@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Schedule, UpdateScheduleRequest } from '../../shared/models';
 
-/** REST client for `/courts/{courtId}/schedule` — see docs/api.md#schedule. */
+/** REST client for `/courts/{courtId}/schedule` — see docs/api.md#schedule--apiv1courtsidschedule. */
 @Injectable({ providedIn: 'root' })
 export class ScheduleApi {
   private readonly http = inject(HttpClient);

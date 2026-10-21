@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
@@ -25,6 +26,7 @@ import { BookingFormDialog } from './booking-form.dialog';
     MatInputModule,
     MatDatepickerModule,
     MatProgressBarModule,
+    MatPaginatorModule,
     RouterLink,
     CurrencyPipe,
   ],
@@ -60,7 +62,7 @@ import { BookingFormDialog } from './booking-form.dialog';
       </ng-container>
       <ng-container matColumnDef="client">
         <th mat-header-cell *matHeaderCellDef>Cliente</th>
-        <td mat-cell *matCellDef="let b">{{ b.userEmail }}</td>
+        <td mat-cell *matCellDef="let b"><a [routerLink]="['/clients', b.userId]">#{{ b.userId }}</a></td>
       </ng-container>
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef>Estado</th>
@@ -84,6 +86,13 @@ import { BookingFormDialog } from './booking-form.dialog';
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
       <tr mat-row *matRowDef="let row; columns: columns"></tr>
     </table>
+    <mat-paginator
+      [length]="facade.page()?.totalElements ?? 0"
+      [pageIndex]="facade.page()?.page ?? 0"
+      [pageSize]="facade.page()?.size ?? 20"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="changePage($event)"
+    />
   `,
 })
 export class BookingListPage {
@@ -97,21 +106,25 @@ export class BookingListPage {
   }
 
   protected filterByDate(date: Date | null): void {
-    void this.facade.listBookings({ ...this.facade.filters(), date: date ? toIsoDate(date) : undefined });
+    void this.facade.listBookings({ ...this.facade.filters(), date: date ? toIsoDate(date) : undefined, page: 0 });
+  }
+
+  protected changePage(event: PageEvent): void {
+    void this.facade.listBookings({ ...this.facade.filters(), page: event.pageIndex, size: event.pageSize });
   }
 
   protected openCreate(): void {
-    // TODO: on close with a request -> facade.createBooking(request); snackbar on 409 — see docs/api.md#post-apiv1bookings
+    // TODO: on close with a request -> facade.createBooking(request); snackbar on 409 — see docs/api.md#bookings--apiv1bookings
     this.dialog.open(BookingFormDialog);
   }
 
   protected openReschedule(booking: Booking): void {
-    // TODO: on close with a request -> facade.rescheduleBooking(booking.id, request) — see docs/api.md#patch-apiv1bookingsidreschedule
+    // TODO: on close with a request -> facade.rescheduleBooking(booking.id, request) — see docs/api.md#bookings--apiv1bookings
     this.dialog.open(BookingFormDialog, { data: booking });
   }
 
   protected cancel(booking: Booking): void {
-    // TODO: confirm dialog + snackbar — see docs/api.md#patch-apiv1bookingsidcancel
+    // TODO: confirm dialog + snackbar (DELETE soft-cancels) — see docs/api.md#bookings--apiv1bookings
     void this.facade.cancelBooking(booking.id);
   }
 }

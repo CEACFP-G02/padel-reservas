@@ -1,9 +1,13 @@
-import { IsoDate, IsoDateTime, IsoTime } from './common';
+import { IsoDate, IsoDateTime, IsoTime, PageRequest } from './common';
 import { BookingStatus } from './enums';
 
-export interface BookingSlot {
-  startTime: IsoTime;
-  endTime: IsoTime;
+export interface TimeRange {
+  start: IsoTime;
+  end: IsoTime;
+}
+
+export interface BookingSlot extends TimeRange {
+  price: number;
 }
 
 export interface Booking {
@@ -11,31 +15,31 @@ export interface Booking {
   courtId: number;
   courtName: string;
   userId: number;
-  userEmail: string;
   date: IsoDate;
-  slots: BookingSlot[];
   status: BookingStatus;
   totalPrice: number;
   createdAt: IsoDateTime;
-  cancelledAt: IsoDateTime | null;
+  slots: BookingSlot[];
 }
 
-/** Manual booking by the owner on behalf of a client (`userId`). */
+/** Manual booking by the owner on behalf of a client (`clientId` is required for OWNER). */
 export interface CreateBookingRequest {
   courtId: number;
   date: IsoDate;
-  slots: BookingSlot[];
-  userId: number;
+  slots: TimeRange[];
+  clientId: number;
 }
 
 /** `courtId` omitted keeps the current court. */
 export interface RescheduleBookingRequest {
   courtId?: number;
   date: IsoDate;
-  slots: BookingSlot[];
+  slots: TimeRange[];
 }
 
-export interface BookingFilters {
-  courtId?: number;
+export interface BookingFilters extends PageRequest {
   date?: IsoDate;
+  courtId?: number;
+  userId?: number;
+  status?: BookingStatus;
 }

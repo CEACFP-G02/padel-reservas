@@ -25,7 +25,7 @@ export class AvailabilityFacade {
 
   /** UC: Get court-day availability. */
   async getCourtDayAvailability(courtId: number, date: IsoDate): Promise<void> {
-    // TODO: api.getCourtDay(courtId, date) -> _dayAvailability — see docs/api.md#get-apiv1courtscourtidavailability
-    todo('AvailabilityFacade.getCourtDayAvailability', 'get-apiv1courtscourtidavailability');
+    // TODO: api.getCourtDay(courtId, date) -> _dayAvailability — see docs/api.md#availability--apiv1availability-
+    todo('AvailabilityFacade.getCourtDayAvailability', 'availability--apiv1availability-');
   }
 }

@@ -1,20 +1,21 @@
-import { CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 
-import { Court } from '../../../shared/models';
+import { Court, CourtType } from '../../../shared/models';
+import { COURT_TYPE_LABELS } from '../court-labels';
 import { CourtFacade } from '../court.facade';
 import { CourtFormDialog } from './court-form.dialog';
 
 @Component({
   selector: 'app-court-list-page',
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatProgressBarModule, RouterLink, CurrencyPipe],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, MatProgressBarModule, MatPaginatorModule, RouterLink],
   template: `
     <header class="page-header">
       <h1>Pistas</h1>
@@ -32,11 +33,11 @@ import { CourtFormDialog } from './court-form.dialog';
       </ng-container>
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef>Tipo</th>
-        <td mat-cell *matCellDef="let court">{{ court.type }}</td>
+        <td mat-cell *matCellDef="let court">{{ typeLabel(court.type) }}</td>
       </ng-container>
-      <ng-container matColumnDef="pricePerHour">
-        <th mat-header-cell *matHeaderCellDef>Precio / hora</th>
-        <td mat-cell *matCellDef="let court">{{ court.pricePerHour | currency: 'EUR' }}</td>
+      <ng-container matColumnDef="indoor">
+        <th mat-header-cell *matHeaderCellDef>Cubierta</th>
+        <td mat-cell *matCellDef="let court">{{ court.indoor ? 'Sí' : 'No' }}</td>
       </ng-container>
       <ng-container matColumnDef="active">
         <th mat-header-cell *matHeaderCellDef>Estado</th>
@@ -54,30 +55,45 @@ import { CourtFormDialog } from './court-form.dialog';
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
       <tr mat-row *matRowDef="let row; columns: columns"></tr>
     </table>
+    <mat-paginator
+      [length]="facade.page()?.totalElements ?? 0"
+      [pageIndex]="facade.page()?.page ?? 0"
+      [pageSize]="facade.page()?.size ?? 20"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="changePage($event)"
+    />
   `,
 })
 export class CourtListPage {
   protected readonly facade = inject(CourtFacade);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
-  protected readonly columns = ['name', 'type', 'pricePerHour', 'active', 'actions'];
+  protected readonly columns = ['name', 'type', 'indoor', 'active', 'actions'];
 
   constructor() {
     void this.facade.listCourts();
   }
 
+  protected typeLabel(type: CourtType): string {
+    return COURT_TYPE_LABELS[type];
+  }
+
+  protected changePage(event: PageEvent): void {
+    void this.facade.listCourts({ page: event.pageIndex, size: event.pageSize });
+  }
+
   protected openCreate(): void {
-    // TODO: on close with a value -> facade.createCourt(value) + snackbar — see docs/api.md#post-apiv1courts
+    // TODO: on close with a value -> facade.createCourt(value) + snackbar — see docs/api.md#courts--apiv1courts
     this.dialog.open(CourtFormDialog);
   }
 
   protected openEdit(court: Court): void {
-    // TODO: on close with a value -> facade.updateCourt(court.id, value) — see docs/api.md#put-apiv1courtsid
+    // TODO: on close with a value -> facade.updateCourt(court.id, changed fields) — see docs/api.md#courts--apiv1courts
     this.dialog.open(CourtFormDialog, { data: court });
   }
 
   protected deactivate(court: Court): void {
-    // TODO: confirm, then facade.deactivateCourt(court.id) — see docs/api.md#patch-apiv1courtsiddeactivate
+    // TODO: confirm, then facade.deactivateCourt(court.id) (DELETE, soft) — see docs/api.md#courts--apiv1courts
     this.snackBar.open(`TODO: desactivar ${court.name}`, 'OK', { duration: 3000 });
   }
 }

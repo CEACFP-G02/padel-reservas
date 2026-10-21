@@ -16,11 +16,12 @@ describe('BookingFacade', () => {
     expect(facade.bookings()).toEqual([]);
     expect(facade.selected()).toBeNull();
     expect(facade.filters()).toEqual({});
+    expect(facade.page()).toBeNull();
   });
 
-  it.todo('listBookings loads bookings for the given filters');
+  it.todo('listBookings loads one page of bookings for the given filters and keeps the page metadata');
   it.todo('getBooking sets the selected booking');
   it.todo('createBooking appends the booking and reports 409 as an error');
-  it.todo('cancelBooking marks the booking CANCELLED');
+  it.todo('cancelBooking (DELETE, 204) marks the booking CANCELLED locally');
   it.todo('rescheduleBooking replaces date/slots');
 });
