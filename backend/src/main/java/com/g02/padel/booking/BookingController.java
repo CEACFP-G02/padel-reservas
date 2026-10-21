@@ -18,6 +18,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,12 +85,21 @@ public class BookingController {
         return PageResponse.of(getMyBookings.execute(authentication.getName(), status, from, to, pageable));
     }
 
-    @PatchMapping("/bookings/{id}/cancel")
-    public BookingResponse cancel(Authentication authentication, @PathVariable Long id) {
-        return cancelBooking.execute(id, authentication.getName());
+    @GetMapping("/users/{userId}/bookings")
+    @PreAuthorize("hasRole('OWNER')")
+    public PageResponse<BookingResponse> clientBookings(@PathVariable Long userId,
+                                                        @PageableDefault(size = 20) Pageable pageable) {
+        return PageResponse.of(listBookings.execute(null, null, userId, null, pageable));
     }
 
-    @PatchMapping("/bookings/{id}/reschedule")
+    /** Soft-cancel: the booking stays, with status CANCELLED. */
+    @DeleteMapping("/bookings/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancel(Authentication authentication, @PathVariable Long id) {
+        cancelBooking.execute(id, authentication.getName());
+    }
+
+    @PatchMapping("/bookings/{id}")
     public BookingResponse reschedule(Authentication authentication, @PathVariable Long id,
                                       @Valid @RequestBody RescheduleBookingRequest request) {
         return rescheduleBooking.execute(id, authentication.getName(), request);

@@ -18,7 +18,8 @@ public class UpdateClientUseCase {
 
     @Transactional
     public UserResponse execute(Long id, UpdateClientRequest request) {
-        // TODO: load client (NotFoundException), apply fields, save — see docs/api.md#put-apiv1usersid
-        throw new UnsupportedOperationException("TODO: UpdateClient — see docs/api.md#put-apiv1usersid");
+        // TODO: load client (NotFoundException), apply non-null fields (reject duplicate email), save
+        //  — see docs/api.md#users--clients--apiv1users
+        throw new UnsupportedOperationException("TODO: UpdateClient — see docs/api.md#users--clients--apiv1users");
     }
 }

@@ -21,7 +21,8 @@ public class ListBlocksUseCase {
     @Transactional(readOnly = true)
     public List<CourtBlockResponse> execute(Long courtId, LocalDate date) {
         // TODO: date != null -> findByCourtIdAndDate, else findByCourtIdOrderByDateAscStartTimeAsc; map
-        //  — see docs/api.md#get-apiv1courtscourtidblocks
-        throw new UnsupportedOperationException("TODO: ListBlocks — see docs/api.md#get-apiv1courtscourtidblocks");
+        //  — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
+        throw new UnsupportedOperationException(
+                "TODO: ListBlocks — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks");
     }
 }

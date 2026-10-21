@@ -21,8 +21,10 @@ public class UpdateScheduleUseCase {
 
     @Transactional
     public ScheduleResponse execute(Long courtId, UpdateScheduleRequest request) {
-        // TODO: court must exist (NotFoundException); upsert Schedule; validate openTime < closeTime and no
-        //  overlapping ranges per day; replace openingHours (orphanRemoval) — see docs/api.md#put-apiv1courtscourtidschedule
-        throw new UnsupportedOperationException("TODO: UpdateSchedule — see docs/api.md#put-apiv1courtscourtidschedule");
+        // TODO: court must exist (NotFoundException); upsert Schedule; set slotMinutes + price;
+        //  validate open < close and no overlapping ranges per day; replace openingHours from weekdays
+        //  (orphanRemoval) — see docs/api.md#schedule--apiv1courtsidschedule
+        throw new UnsupportedOperationException(
+                "TODO: UpdateSchedule — see docs/api.md#schedule--apiv1courtsidschedule");
     }
 }

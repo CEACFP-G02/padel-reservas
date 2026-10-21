@@ -21,8 +21,10 @@ public class CreateBlockUseCase {
 
     @Transactional
     public CourtBlockResponse execute(Long courtId, CourtBlockRequest request) {
-        // TODO: court must exist (NotFoundException); startTime < endTime; decide policy for overlapping
-        //  CONFIRMED bookings (reject vs. warn) per docs; save — see docs/api.md#post-apiv1courtscourtidblocks
-        throw new UnsupportedOperationException("TODO: CreateBlock — see docs/api.md#post-apiv1courtscourtidblocks");
+        // TODO: court must exist (NotFoundException); start < end; decide policy for overlapping
+        //  CONFIRMED bookings (reject vs. warn) per docs; save
+        //  — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
+        throw new UnsupportedOperationException(
+                "TODO: CreateBlock — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks");
     }
 }

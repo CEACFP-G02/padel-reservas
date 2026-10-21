@@ -18,7 +18,7 @@ public class CreateCourtUseCase {
 
     @Transactional
     public CourtResponse execute(CourtRequest request) {
-        // TODO: reject duplicate name, save active court — see docs/api.md#post-apiv1courts
-        throw new UnsupportedOperationException("TODO: CreateCourt — see docs/api.md#post-apiv1courts");
+        // TODO: reject duplicate name, save (active defaults to true) — see docs/api.md#courts--apiv1courts
+        throw new UnsupportedOperationException("TODO: CreateCourt — see docs/api.md#courts--apiv1courts");
     }
 }

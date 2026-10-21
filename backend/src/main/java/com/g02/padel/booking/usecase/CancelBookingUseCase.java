@@ -1,7 +1,6 @@
 package com.g02.padel.booking.usecase;
 
 import com.g02.padel.booking.BookingRepository;
-import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,10 +23,10 @@ public class CancelBookingUseCase {
     }
 
     @Transactional
-    public BookingResponse execute(Long id, String requesterEmail) {
+    public void execute(Long id, String requesterEmail) {
         // TODO: load (NotFoundException); CLIENT must own it; must be CONFIRMED; for CLIENT, reject if
-        //  now > (date + first slot start) - cancelMinNoticeHours; set CANCELLED + cancelledAt
-        //  — see docs/api.md#patch-apiv1bookingsidcancel
-        throw new UnsupportedOperationException("TODO: CancelBooking — see docs/api.md#patch-apiv1bookingsidcancel");
+        //  now > (date + first slot start) - cancelMinNoticeHours; soft-cancel: set CANCELLED + cancelledAt
+        //  (the row is kept) — see docs/api.md#bookings--apiv1bookings
+        throw new UnsupportedOperationException("TODO: CancelBooking — see docs/api.md#bookings--apiv1bookings");
     }
 }

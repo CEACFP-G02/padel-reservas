@@ -13,8 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 @Entity
 @Table(name = "court")
 @Getter
@@ -33,8 +31,8 @@ public class Court {
     @Column(nullable = false, length = 20)
     private CourtType type;
 
-    @Column(name = "price_per_hour", nullable = false, precision = 8, scale = 2)
-    private BigDecimal pricePerHour;
+    @Column(nullable = false)
+    private boolean indoor;
 
     @Column(nullable = false)
     private boolean active = true;

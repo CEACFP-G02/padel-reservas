@@ -17,7 +17,7 @@ public class GetScheduleUseCase {
 
     @Transactional(readOnly = true)
     public ScheduleResponse execute(Long courtId) {
-        // TODO: findByCourtId else NotFoundException -> map — see docs/api.md#get-apiv1courtscourtidschedule
-        throw new UnsupportedOperationException("TODO: GetSchedule — see docs/api.md#get-apiv1courtscourtidschedule");
+        // TODO: findByCourtId else NotFoundException -> map — see docs/api.md#schedule--apiv1courtsidschedule
+        throw new UnsupportedOperationException("TODO: GetSchedule — see docs/api.md#schedule--apiv1courtsidschedule");
     }
 }

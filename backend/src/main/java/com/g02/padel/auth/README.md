@@ -11,5 +11,6 @@ Base path: `/api/v1/auth`
 | Login | `LoginUseCase` | `POST /login` | public |
 | Refresh token | `RefreshTokenUseCase` | `POST /refresh` | public |
 | Get current user | `GetCurrentUserUseCase` | `GET /me` | authenticated |
+| Update own profile | `UpdateProfileUseCase` | `PATCH /me` (name, phone) | authenticated |
 
 Contract details: `docs/api.md`.

@@ -10,7 +10,8 @@ Base path: `/api/v1/users` — all endpoints require role `OWNER`.
 | List clients | `ListClientsUseCase` | `GET /?search=` (paged) |
 | Get client | `GetClientUseCase` | `GET /{id}` |
 | Create client | `CreateClientUseCase` | `POST /` |
-| Update client | `UpdateClientUseCase` | `PUT /{id}` |
+| Update client | `UpdateClientUseCase` | `PATCH /{id}` |
 | Delete client | `DeleteClientUseCase` | `DELETE /{id}` |
+| List a client's bookings | `ListBookingsUseCase` (booking feature, `userId` filter) | `GET /{id}/bookings` (paged) |
 
 Contract details: `docs/api.md`.

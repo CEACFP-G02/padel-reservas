@@ -24,7 +24,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
-@PreAuthorize("hasRole('OWNER')")
 public class CourtBlockController {
 
     private final ListBlocksUseCase listBlocks;
@@ -47,13 +46,15 @@ public class CourtBlockController {
 
     @PostMapping("/courts/{courtId}/blocks")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('OWNER')")
     public CourtBlockResponse create(@PathVariable Long courtId, @Valid @RequestBody CourtBlockRequest request) {
         return createBlock.execute(courtId, request);
     }
 
-    @DeleteMapping("/courts/{courtId}/blocks/{blockId}")
+    @DeleteMapping("/court-blocks/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void remove(@PathVariable Long courtId, @PathVariable Long blockId) {
-        removeBlock.execute(courtId, blockId);
+    @PreAuthorize("hasRole('OWNER')")
+    public void remove(@PathVariable Long id) {
+        removeBlock.execute(id);
     }
 }

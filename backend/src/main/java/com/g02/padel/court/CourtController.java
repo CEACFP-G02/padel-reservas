@@ -2,6 +2,7 @@ package com.g02.padel.court;
 
 import com.g02.padel.court.dto.CourtRequest;
 import com.g02.padel.court.dto.CourtResponse;
+import com.g02.padel.court.dto.UpdateCourtRequest;
 import com.g02.padel.court.usecase.CreateCourtUseCase;
 import com.g02.padel.court.usecase.DeactivateCourtUseCase;
 import com.g02.padel.court.usecase.GetCourtUseCase;
@@ -14,11 +15,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,13 +64,14 @@ public class CourtController {
         return createCourt.execute(request);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('OWNER')")
-    public CourtResponse update(@PathVariable Long id, @Valid @RequestBody CourtRequest request) {
+    public CourtResponse update(@PathVariable Long id, @Valid @RequestBody UpdateCourtRequest request) {
         return updateCourt.execute(id, request);
     }
 
-    @PatchMapping("/{id}/deactivate")
+    /** Soft delete: the court is deactivated, its bookings are kept. */
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('OWNER')")
     public void deactivate(@PathVariable Long id) {

@@ -1,7 +1,7 @@
 package com.g02.padel.auth.usecase;
 
-import com.g02.padel.auth.dto.CurrentUserResponse;
 import com.g02.padel.user.UserRepository;
+import com.g02.padel.user.dto.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +16,8 @@ public class GetCurrentUserUseCase {
     }
 
     @Transactional(readOnly = true)
-    public CurrentUserResponse execute(String email) {
-        // TODO: findByEmail -> map to CurrentUserResponse (NotFoundException if missing)
-        //  — see docs/api.md#get-apiv1authme
-        throw new UnsupportedOperationException("TODO: GetCurrentUser — see docs/api.md#get-apiv1authme");
+    public UserResponse execute(String email) {
+        // TODO: findByEmail -> map to UserResponse (NotFoundException if missing) — see docs/api.md#auth--apiv1auth
+        throw new UnsupportedOperationException("TODO: GetCurrentUser — see docs/api.md#auth--apiv1auth");
     }
 }

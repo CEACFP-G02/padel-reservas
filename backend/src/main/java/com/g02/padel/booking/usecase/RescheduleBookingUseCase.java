@@ -36,8 +36,7 @@ public class RescheduleBookingUseCase {
     public BookingResponse execute(Long id, String requesterEmail, RescheduleBookingRequest request) {
         // TODO: same ownership + notice rules as CancelBooking; same slot checks as CreateBooking (ignoring this
         //  booking's own slots) -> SlotNotAvailableException; replace slots, recompute price
-        //  — see docs/api.md#patch-apiv1bookingsidreschedule
-        throw new UnsupportedOperationException(
-                "TODO: RescheduleBooking — see docs/api.md#patch-apiv1bookingsidreschedule");
+        //  — see docs/api.md#bookings--apiv1bookings
+        throw new UnsupportedOperationException("TODO: RescheduleBooking — see docs/api.md#bookings--apiv1bookings");
     }
 }

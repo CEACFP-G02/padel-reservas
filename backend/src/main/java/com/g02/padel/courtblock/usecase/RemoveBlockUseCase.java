@@ -15,10 +15,9 @@ public class RemoveBlockUseCase {
     }
 
     @Transactional
-    public void execute(Long courtId, Long blockId) {
-        // TODO: findById, must belong to courtId, else NotFoundException; delete
-        //  — see docs/api.md#delete-apiv1courtscourtidblocksblockid
+    public void execute(Long id) {
+        // TODO: findById else NotFoundException; delete — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
         throw new UnsupportedOperationException(
-                "TODO: RemoveBlock — see docs/api.md#delete-apiv1courtscourtidblocksblockid");
+                "TODO: RemoveBlock — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks");
     }
 }

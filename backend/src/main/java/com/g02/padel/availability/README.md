@@ -4,7 +4,7 @@ Read-only feature: availability is **computed** at query time (option B, nothing
 No own entity or repository; reads `CourtRepository`, `ScheduleRepository`,
 `BookingRepository` and `CourtBlockRepository`.
 
-`free slots = opening hours (split by slotDurationMinutes) − non-cancelled booking slots − court blocks`
+`free slots = opening hours (split by the schedule's slotMinutes) − non-cancelled booking slots − court blocks`
 
 Base path: `/api/v1` — authenticated.
 

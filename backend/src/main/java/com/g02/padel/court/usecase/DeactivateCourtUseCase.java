@@ -16,7 +16,8 @@ public class DeactivateCourtUseCase {
 
     @Transactional
     public void execute(Long id) {
-        // TODO: load (NotFoundException), set active=false (soft delete; existing bookings are kept) — see docs/api.md#patch-apiv1courtsiddeactivate
-        throw new UnsupportedOperationException("TODO: DeactivateCourt — see docs/api.md#patch-apiv1courtsiddeactivate");
+        // TODO: load (NotFoundException), set active=false (soft delete; existing bookings are kept)
+        //  — see docs/api.md#courts--apiv1courts
+        throw new UnsupportedOperationException("TODO: DeactivateCourt — see docs/api.md#courts--apiv1courts");
     }
 }

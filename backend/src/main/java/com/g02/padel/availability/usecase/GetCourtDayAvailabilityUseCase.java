@@ -32,7 +32,7 @@ public class GetCourtDayAvailabilityUseCase {
     @Transactional(readOnly = true)
     public CourtDayAvailabilityResponse execute(Long courtId, LocalDate date) {
         // TODO: court must exist & be active (NotFoundException); split that weekday's opening hours into
-        //  slotDurationMinutes slots; mark unavailable those overlapping a non-CANCELLED booking slot
+        //  slotMinutes slots; mark unavailable those overlapping a non-CANCELLED booking slot
         //  (findByCourtIdAndDate) or a court block (findByCourtIdAndDate); for today, past slots are unavailable
         //  — see docs/api.md#get-apiv1courtscourtidavailability
         throw new UnsupportedOperationException(

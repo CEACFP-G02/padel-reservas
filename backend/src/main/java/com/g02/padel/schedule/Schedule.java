@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +37,11 @@ public class Schedule {
     private Court court;
 
     @Column(name = "slot_duration_minutes", nullable = false)
-    private int slotDurationMinutes;
+    private int slotMinutes;
+
+    /** Price of one slot. */
+    @Column(nullable = false, precision = 8, scale = 2)
+    private BigDecimal price;
 
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OpeningHours> openingHours = new ArrayList<>();

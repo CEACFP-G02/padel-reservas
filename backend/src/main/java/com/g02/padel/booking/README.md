@@ -11,8 +11,8 @@ Base path: `/api/v1` — authenticated.
 | List bookings | `ListBookingsUseCase` | `GET /bookings?date=&courtId=&userId=&status=` (paged) | OWNER |
 | Get booking | `GetBookingUseCase` | `GET /bookings/{id}` | booking's client, OWNER |
 | Get my bookings | `GetMyBookingsUseCase` | `GET /me/bookings?status=&from=&to=` (paged) | CLIENT |
-| Cancel booking | `CancelBookingUseCase` | `PATCH /bookings/{id}/cancel` | booking's client, OWNER |
-| Reschedule booking | `RescheduleBookingUseCase` | `PATCH /bookings/{id}/reschedule` | booking's client, OWNER |
+| Cancel booking | `CancelBookingUseCase` | `DELETE /bookings/{id}` (soft: status CANCELLED) | booking's client, OWNER |
+| Reschedule booking | `RescheduleBookingUseCase` | `PATCH /bookings/{id}` | booking's client, OWNER |
 
 Rules:
 - A taken or blocked slot → `SlotNotAvailableException` → **409 Conflict**.

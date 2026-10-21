@@ -10,6 +10,6 @@ Base path: `/api/v1` — all endpoints require role `OWNER`.
 |---|---|---|
 | List blocks | `ListBlocksUseCase` | `GET /courts/{courtId}/blocks?date=` |
 | Create block | `CreateBlockUseCase` | `POST /courts/{courtId}/blocks` |
-| Remove block | `RemoveBlockUseCase` | `DELETE /courts/{courtId}/blocks/{blockId}` |
+| Remove block | `RemoveBlockUseCase` | `DELETE /court-blocks/{id}` |
 
 Contract details: `docs/api.md`.
