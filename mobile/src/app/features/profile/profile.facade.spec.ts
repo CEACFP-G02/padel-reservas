@@ -20,6 +20,6 @@ describe('ProfileFacade', () => {
     expect(facade.saving()).toBe(false);
   });
 
-  it.todo('getCurrentUser loads /auth/me and publishes it to AuthService');
+  it.todo('getCurrentUser loads /auth/me and publishes it to AuthFacade');
   it.todo('updateProfile PATCHes /auth/me and refreshes the profile');
 });

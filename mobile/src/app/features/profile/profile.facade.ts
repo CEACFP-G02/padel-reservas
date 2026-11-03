@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 
-import { AuthService } from '../../core/auth/auth.service';
+import { AuthFacade } from '../../core/auth/auth.facade';
 import { UpdateProfileRequest, User } from '../../shared/models';
 import { todo } from '../../shared/util/todo';
 import { ProfileApi } from './profile.api';
@@ -9,7 +9,7 @@ import { ProfileApi } from './profile.api';
 @Injectable({ providedIn: 'root' })
 export class ProfileFacade {
   private readonly api = inject(ProfileApi);
-  private readonly auth = inject(AuthService);
+  private readonly auth = inject(AuthFacade);
 
   private readonly _profile = signal<User | null>(null);
   private readonly _saving = signal(false);

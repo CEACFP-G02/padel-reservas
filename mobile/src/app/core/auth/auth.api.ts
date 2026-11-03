@@ -26,6 +26,10 @@ export class AuthApi {
     return this.http.post<LoginResponse>(`${this.baseUrl}/login`, body);
   }
 
+  me(): Observable<User> {
+    return this.http.get<User>(`${this.baseUrl}/me`);
+  }
+
   refresh(body: RefreshTokenRequest): Observable<RefreshTokenResponse> {
     return this.http.post<RefreshTokenResponse>(`${this.baseUrl}/refresh`, body);
   }

@@ -3,8 +3,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonHeader, IonInput, IonItem, IonList, IonText, IonTitle, IonToolbar } from '@ionic/angular';
 
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthFacade } from '../../../core/auth/auth.facade';
 
+/** Public login page for the CLIENT: page → AuthFacade (core) → AuthApi. */
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonInput, IonButton, IonText],
@@ -23,7 +24,7 @@ import { AuthService } from '../../../core/auth/auth.service';
           </ion-item>
         </ion-list>
         @if (error(); as message) {
-          <ion-text color="danger"><p>{{ message }}</p></ion-text>
+          <ion-text color="danger"><p role="alert" data-testid="login-error">{{ message }}</p></ion-text>
         }
         <ion-button expand="block" type="submit" [disabled]="form.invalid || submitting()">Entrar</ion-button>
       </form>
@@ -32,11 +33,11 @@ import { AuthService } from '../../../core/auth/auth.service';
   `,
 })
 export class LoginPage {
-  private readonly auth = inject(AuthService);
+  private readonly auth = inject(AuthFacade);
   private readonly router = inject(Router);
 
-  /** Bound from `?returnUrl=` set by clientGuard. */
-  readonly returnUrl = input('/tabs/availability');
+  /** Bound from `?returnUrl=` set by clientGuard; the router binds `undefined` when it is absent. */
+  readonly returnUrl = input<string | undefined>();
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
 
@@ -46,11 +47,12 @@ export class LoginPage {
   });
 
   protected async submit(): Promise<void> {
+    if (this.form.invalid) return;
     this.submitting.set(true);
     this.error.set(null);
     try {
       await this.auth.login(this.form.getRawValue());
-      await this.router.navigateByUrl(this.returnUrl());
+      await this.router.navigateByUrl(this.returnUrl() || '/tabs/availability');
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'No se pudo iniciar sesión');
     } finally {

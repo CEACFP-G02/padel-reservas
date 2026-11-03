@@ -15,8 +15,10 @@ import {
   IonToolbar,
 } from '@ionic/angular';
 
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthFacade } from '../../../core/auth/auth.facade';
+import { RegisterRequest } from '../../../shared/models';
 
+/** Client self sign-up (always a CLIENT account), then logged in: page → AuthFacade (core) → AuthApi. */
 @Component({
   selector: 'app-register',
   imports: [ReactiveFormsModule, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, IonList, IonItem, IonInput, IonButton, IonText],
@@ -36,7 +38,7 @@ import { AuthService } from '../../../core/auth/auth.service';
           <ion-item><ion-input label="Teléfono (opcional)" labelPlacement="stacked" type="tel" autocomplete="tel" formControlName="phone" /></ion-item>
         </ion-list>
         @if (error(); as message) {
-          <ion-text color="danger"><p>{{ message }}</p></ion-text>
+          <ion-text color="danger"><p role="alert" data-testid="register-error">{{ message }}</p></ion-text>
         }
         <ion-button expand="block" type="submit" [disabled]="form.invalid || submitting()">Registrarme</ion-button>
       </form>
@@ -44,20 +46,32 @@ import { AuthService } from '../../../core/auth/auth.service';
   `,
 })
 export class RegisterPage {
-  private readonly auth = inject(AuthService);
+  private readonly auth = inject(AuthFacade);
   private readonly router = inject(Router);
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
-    name: ['', Validators.required],
+    name: ['', [Validators.required, Validators.pattern(/\S/)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     phone: [''],
   });
 
   protected async submit(): Promise<void> {
-    // TODO: spec + implementation (auth.register -> navigate /tabs/availability; show 409 duplicate email)
-    //  — see docs/api.md#auth--apiv1auth
+    if (this.form.invalid) return;
+    this.submitting.set(true);
+    this.error.set(null);
+    const { name, email, password, phone } = this.form.getRawValue();
+    const request: RegisterRequest = { name: name.trim(), email: email.trim(), password };
+    if (phone.trim()) request.phone = phone.trim();
+    try {
+      await this.auth.register(request);
+      await this.router.navigateByUrl('/tabs/availability');
+    } catch (e) {
+      this.error.set(e instanceof Error ? e.message : 'No se pudo crear la cuenta');
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }

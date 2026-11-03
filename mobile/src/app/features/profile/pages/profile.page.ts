@@ -2,7 +2,7 @@ import { Component, effect, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { IonButton, IonContent, IonHeader, IonInput, IonItem, IonList, IonNote, IonTitle, IonToolbar } from '@ionic/angular';
 
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthFacade } from '../../../core/auth/auth.facade';
 import { ProfileFacade } from '../profile.facade';
 
 @Component({
@@ -33,7 +33,7 @@ import { ProfileFacade } from '../profile.facade';
 })
 export class ProfilePage {
   protected readonly facade = inject(ProfileFacade);
-  protected readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthFacade);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({ name: [''], phone: [''] });
 

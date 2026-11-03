@@ -34,6 +34,11 @@ describe('AuthApi', () => {
     expect(req.request.body).toEqual(body);
   });
 
+  it('me GETs /auth/me', () => {
+    api.me().subscribe();
+    expect(http.expectOne(`${base}/me`).request.method).toBe('GET');
+  });
+
   it('refresh POSTs /auth/refresh', () => {
     api.refresh({ refreshToken: 'refresh' }).subscribe();
     const req = http.expectOne(`${base}/refresh`);
