@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 
 import { environment } from '../../../environments/environment';
-import { Booking, BookingStatus, Page } from '../../shared/models';
+import { Booking, BookingStatus, PageResponse } from '../../shared/models';
 import { bookingFixture, pageOf } from '../../testing/fixtures';
 import { BookingApi } from './booking.api';
 
@@ -34,7 +34,7 @@ describe('BookingApi', () => {
   });
 
   it('myBookings GETs /me/bookings with optional filters and pagination', () => {
-    let page: Page<Booking> | undefined;
+    let page: PageResponse<Booking> | undefined;
     api
       .myBookings({ status: BookingStatus.CONFIRMED, from: '2026-06-01', page: 1, size: 10 })
       .subscribe((result) => (page = result));

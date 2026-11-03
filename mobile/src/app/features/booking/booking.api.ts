@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Booking, CreateBookingRequest, MyBookingsQuery, Page } from '../../shared/models';
+import { Booking, CreateBookingRequest, MyBookingsQuery, PageResponse } from '../../shared/models';
 import { toHttpParams } from '../../shared/util/http-params';
 
 /** REST client for the CLIENT side of docs/api.md#bookings--apiv1bookings. */
@@ -16,8 +16,8 @@ export class BookingApi {
     return this.http.post<Booking>(`${this.baseUrl}/bookings`, body);
   }
 
-  myBookings(query: MyBookingsQuery = {}): Observable<Page<Booking>> {
-    return this.http.get<Page<Booking>>(`${this.baseUrl}/me/bookings`, { params: toHttpParams(query) });
+  myBookings(query: MyBookingsQuery = {}): Observable<PageResponse<Booking>> {
+    return this.http.get<PageResponse<Booking>>(`${this.baseUrl}/me/bookings`, { params: toHttpParams(query) });
   }
 
   get(id: number): Observable<Booking> {

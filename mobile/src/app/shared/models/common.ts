@@ -17,7 +17,7 @@ export interface ApiError {
 }
 
 /** Paginated list response (docs/api.md#conventions). */
-export interface Page<T> {
+export interface PageResponse<T> {
   content: T[];
   page: number;
   size: number;

@@ -59,7 +59,7 @@ src/app/
 │   ├── client.guard.ts             functional CanActivate: role CLIENT, else /login?returnUrl=…
 │   └── token-storage.ts            localStorage + JWT payload decoding
 ├── shared/
-│   ├── models/                     interfaces + enums from docs/api.md (User, Court, AvailabilityResponse, SlotResponse, Booking, BookingSlot, Page<T>, Role, CourtType, BookingStatus)
+│   ├── models/                     interfaces + enums from docs/api.md (User, Court, AvailabilityResponse, SlotResponse, Booking, BookingSlot, PageResponse<T>, Role, CourtType, BookingStatus)
 │   ├── ui/                         tabs.page (shell), booking-status-badge, empty-state
 │   └── util/                       toIsoDate, toHttpParams, todo()
 ├── testing/                        test helpers (fakeJwt)
@@ -107,4 +107,4 @@ Both earlier gaps are resolved by the refined contract:
   `POST /bookings` with one of them as `courtId`: directly when only one court is free, otherwise the
   user picks it in an `ion-alert` (`AvailabilitySearchPage.book`). The server never auto-assigns a court.
 - **Response shapes:** the booking response (`courtName`, `userId`, `totalPrice`, `createdAt`,
-  per-slot `price`) is specified, and `/me/bookings` is paginated (`Page<Booking>`, `page`/`size`/`sort`).
+  per-slot `price`) is specified, and `/me/bookings` is paginated (`PageResponse<Booking>`, `page`/`size`/`sort`).

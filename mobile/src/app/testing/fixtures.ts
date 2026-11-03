@@ -1,4 +1,4 @@
-import { Booking, BookingStatus, Page } from '../shared/models';
+import { Booking, BookingStatus, PageResponse } from '../shared/models';
 
 /** A booking as returned by the API (docs/api.md#bookings--apiv1bookings). */
 export function bookingFixture(overrides: Partial<Booking> = {}): Booking {
@@ -17,6 +17,6 @@ export function bookingFixture(overrides: Partial<Booking> = {}): Booking {
   };
 }
 
-export function pageOf<T>(content: T[]): Page<T> {
+export function pageOf<T>(content: T[]): PageResponse<T> {
   return { content, page: 0, size: 20, totalElements: content.length, totalPages: 1 };
 }

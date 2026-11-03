@@ -11,7 +11,10 @@ REST API consumed by the admin web panel and the mobile app. This document is th
 - **Content type:** `application/json` (UTF-8).
 - **Dates/times:** ISO 8601 — date `YYYY-MM-DD`, time `HH:mm`, timestamp `YYYY-MM-DDTHH:mm:ssZ`.
 - **Money:** decimal with 2 places, EUR.
-- **Pagination (list endpoints):** `?page=0&size=20&sort=field,asc`. Response wraps items in `content` plus `page`, `size`, `totalElements`, `totalPages`.
+- **Pagination (list endpoints):** `?page=0&size=20&sort=field,asc` (`page` is 0-based). Paginated responses are a `PageResponse<T>`:
+  ```jsonc
+  { "content": [ /* items of type T */ ], "page": 0, "size": 20, "totalElements": 42, "totalPages": 3 }
+  ```
 - **Errors:** uniform body
   ```json
   { "timestamp": "2026-06-08T07:00:00Z", "status": 404, "error": "Not Found", "message": "Court 12 not found", "path": "/api/v1/courts/12" }
