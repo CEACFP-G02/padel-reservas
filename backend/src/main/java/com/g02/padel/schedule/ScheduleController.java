@@ -4,8 +4,10 @@ import com.g02.padel.schedule.dto.ScheduleResponse;
 import com.g02.padel.schedule.dto.UpdateScheduleRequest;
 import com.g02.padel.schedule.usecase.GetScheduleUseCase;
 import com.g02.padel.schedule.usecase.UpdateScheduleUseCase;
+import com.g02.padel.shared.security.CurrentRole;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,8 +28,8 @@ public class ScheduleController {
     }
 
     @GetMapping
-    public ScheduleResponse get(@PathVariable Long courtId) {
-        return getSchedule.execute(courtId);
+    public ScheduleResponse get(@PathVariable Long courtId, Authentication authentication) {
+        return getSchedule.execute(courtId, CurrentRole.of(authentication));
     }
 
     @PutMapping

@@ -79,6 +79,17 @@ Schedule body:
 }
 ```
 
+- `price`: price of one slot of `slotMinutes`, EUR, `>= 0` with at most 2 decimals (`DECIMAL(8,2)`).
+- `slotMinutes`: `30`–`240`.
+- `weekdays`: opening ranges; a day may have several (e.g. morning and evening), days not listed are
+  closed. Each range needs `open < close` and must fit at least one slot; ranges of the same day
+  must not overlap (one may end when the next starts, e.g. `10:00–14:00` and `14:00–20:00`).
+  `[]` closes the court all week.
+- `PUT` replaces the whole schedule (creates it the first time). Invalid values → `400` with the
+  uniform error body.
+- `404` if the court does not exist, if it has no schedule yet (`GET`), or — for a CLIENT — if the
+  court is inactive (see *Visibility by role* above).
+
 ---
 
 ## Availability — `/api/v1/availability` ⭐
