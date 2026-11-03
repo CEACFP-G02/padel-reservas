@@ -48,7 +48,7 @@ public class CourtController {
     @GetMapping
     public PageResponse<CourtResponse> list(@RequestParam(required = false) CourtType type,
                                             @RequestParam(required = false) Boolean active,
-                                            @PageableDefault(size = 20) Pageable pageable) {
+                                            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         return PageResponse.of(listCourts.execute(type, active, pageable));
     }
 
