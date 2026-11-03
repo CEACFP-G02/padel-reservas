@@ -30,3 +30,5 @@ cd backend && ./mvnw test
 cd web && npm test
 cd mobile && npm test
 ```
+
+La integración continua ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) ejecuta estas tres suites en cada push y pull request.
