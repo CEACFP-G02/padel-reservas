@@ -14,6 +14,7 @@ endpoint here.
 npm install
 npm start           # ng serve → http://localhost:4200
 npm test            # Vitest (ng test)
+npm run test:ci     # single run, no watch (used by CI)
 npm run build       # → www/ (Capacitor webDir)
 npm run lint
 ```
