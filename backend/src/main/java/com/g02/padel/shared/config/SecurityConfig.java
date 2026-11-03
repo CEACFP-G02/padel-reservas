@@ -1,5 +1,6 @@
 package com.g02.padel.shared.config;
 
+import com.g02.padel.shared.enums.Role;
 import com.g02.padel.shared.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +48,8 @@ public class SecurityConfig {
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/courts", "/api/v1/courts/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/courts", "/api/v1/courts/*")
+                        .hasAnyRole(Role.OWNER.name(), Role.CLIENT.name())
                         // TODO: fine-grained role rules (OWNER vs CLIENT) — see docs/api.md#authorization
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
