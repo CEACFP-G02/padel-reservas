@@ -8,6 +8,8 @@ specified in `../docs/api.md`, the single source of truth for every endpoint and
 
 - JDK 21
 - PostgreSQL 14+ (local install or Docker)
+- Docker, to run the tests: `FlywayPostgresIntegrationTest` starts a throwaway PostgreSQL with
+  Testcontainers
 
 Maven itself is not required: use the bundled wrapper (`./mvnw`).
 
@@ -28,8 +30,9 @@ docker run -d --name padel-db -p 5432:5432 \
 ./mvnw package   # → target/padel-backend-0.0.1-SNAPSHOT.jar
 ```
 
-Flyway applies `src/main/resources/db/migration` on startup; Hibernate only validates the
-schema (`ddl-auto=validate`).
+Flyway applies `src/main/resources/db/migration` (`V1__init.sql`, `V2__align_with_api_contract.sql`)
+on startup; Hibernate only validates the schema (`ddl-auto=validate`). Never edit an applied
+migration — add a new `V<n>__<description>.sql` instead.
 
 ## Configuration
 
