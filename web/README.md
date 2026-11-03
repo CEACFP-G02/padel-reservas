@@ -12,6 +12,7 @@ Angular admin panel for the **OWNER** actor of padel-reservas. It talks to the R
 npm install
 npm start          # ng serve → http://localhost:4200
 npm test           # Vitest (ng test)
+npm run test:ci    # single run, no watch (used by CI)
 npm run build
 ```
 
