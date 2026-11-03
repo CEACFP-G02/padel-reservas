@@ -8,7 +8,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterOutlet } from '@angular/router';
 import { map } from 'rxjs';
 
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthFacade } from '../../../core/auth/auth.facade';
 import { NavItem, NavList } from '../nav-list/nav-list';
 
 const NAV_ITEMS: NavItem[] = [
@@ -57,7 +57,7 @@ const NAV_ITEMS: NavItem[] = [
   `,
 })
 export class Shell {
-  protected readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthFacade);
   protected readonly navItems = NAV_ITEMS;
   protected readonly userEmail = computed(() => this.auth.currentUser()?.email ?? '');
   protected readonly isHandset = toSignal(

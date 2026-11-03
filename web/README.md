@@ -37,8 +37,8 @@ src/app/
 ├── app.config.ts / app.routes.ts   providers + top-level lazy routes
 ├── core/                           app-wide singletons
 │   └── auth/
-│       ├── auth.service.ts         session as signals: accessToken, currentUser, role, isOwner; login/refreshToken/logout
-│       ├── jwt.interceptor.ts      functional interceptor: Authorization: Bearer <token>
+│       ├── auth.facade.ts          auth use cases (login, refreshToken, loadCurrentUser, logout) + session signals: accessToken, currentUser, role, isOwner
+│       ├── jwt.interceptor.ts      functional interceptor: Authorization: Bearer <token>; on 401 refreshes once and retries
 │       ├── owner.guard.ts          functional CanActivate: role OWNER, else /login?returnUrl=…
 │       └── token-storage.ts        localStorage + JWT payload decoding
 ├── shared/
@@ -78,7 +78,7 @@ Each facade method maps 1:1 to a use case of the OWNER actor in the T3 use-case 
 
 | Feature | Facade | Methods | Endpoints |
 |---|---|---|---|
-| auth | `AuthService` (core, via `AuthApi`) | `login`, `refreshToken`, `loadCurrentUser`, `updateProfile`, `logout`, `currentUser` (signal) | `POST /auth/login`, `POST /auth/refresh`, `GET`/`PATCH /auth/me` |
+| auth | `AuthFacade` (core, via `AuthApi`) | `login` (OWNER only), `refreshToken`, `loadCurrentUser`, `updateProfile`, `logout`; signals `currentUser`, `role`, `isOwner` | `POST /auth/login`, `POST /auth/refresh`, `GET`/`PATCH /auth/me` |
 | court | `CourtFacade` | `listCourts`, `getCourt`, `createCourt`, `updateCourt`, `deactivateCourt` | `GET /courts` (paged), `GET /courts/{id}`, `POST /courts`, `PATCH /courts/{id}`, `DELETE /courts/{id}` |
 | schedule | `ScheduleFacade` | `getSchedule`, `updateSchedule` | `GET`/`PUT /courts/{id}/schedule` |
 | booking | `BookingFacade` | `listBookings`, `getBooking`, `createBooking` (manual), `cancelBooking`, `rescheduleBooking` | `GET /bookings` (paged), `GET /bookings/{id}`, `POST /bookings`, `DELETE /bookings/{id}`, `PATCH /bookings/{id}` |
