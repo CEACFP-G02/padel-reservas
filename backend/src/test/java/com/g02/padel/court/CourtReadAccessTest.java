@@ -1,6 +1,7 @@
 package com.g02.padel.court;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,22 +44,22 @@ class CourtReadAccessTest {
 
     @BeforeEach
     void setUp() {
-        when(listCourts.execute(any(), any(), any())).thenReturn(new PageImpl<>(List.of(COURT_3)));
-        when(getCourt.execute(3L)).thenReturn(COURT_3);
+        when(listCourts.execute(any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of(COURT_3)));
+        when(getCourt.execute(eq(3L), any())).thenReturn(COURT_3);
     }
 
     @Test
     @WithAnonymousUser
     void anonymousCannotListCourts() throws Exception {
         mvc.perform(get("/api/v1/courts")).andExpect(status().isUnauthorized());
-        verify(listCourts, never()).execute(any(), any(), any());
+        verify(listCourts, never()).execute(any(), any(), any(), any());
     }
 
     @Test
     @WithAnonymousUser
     void anonymousCannotReadACourt() throws Exception {
         mvc.perform(get("/api/v1/courts/3")).andExpect(status().isUnauthorized());
-        verify(getCourt, never()).execute(any());
+        verify(getCourt, never()).execute(any(), any());
     }
 
     @Test

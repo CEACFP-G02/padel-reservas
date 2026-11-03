@@ -40,13 +40,21 @@ Availability model: **computed** (option B). Only opening hours (schedule) and b
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| GET | `/courts` | OWNER, CLIENT | List courts. Query: `type`, `active`, pagination |
-| GET | `/courts/{id}` | OWNER, CLIENT | Single court |
+| GET | `/courts` | OWNER, CLIENT | List courts. Query: `type`, `active`, pagination. CLIENT: active courts only |
+| GET | `/courts/{id}` | OWNER, CLIENT | Single court. CLIENT: `404` if the court is inactive |
 | POST | `/courts` | OWNER | Create. Body: `{ name, type, indoor, active }` |
 | PATCH | `/courts/{id}` | OWNER | Update fields |
 | DELETE | `/courts/{id}` | OWNER | Deactivate / remove |
 
 `type` examples: `GLASS`, `WALL`. `indoor`: boolean.
+
+**Visibility by role** (decided from the caller's token, never from a request parameter):
+
+- **OWNER** sees active and inactive courts. `GET /courts` returns both unless filtered with
+  `active=true|false`; `GET /courts/{id}` returns the court whatever its state.
+- **CLIENT** sees active courts only. `GET /courts` never includes inactive courts — an
+  `active=false` filter returns an empty page — and `GET /courts/{id}` of an inactive court
+  returns `404`, the same as a court that does not exist.
 
 ---
 

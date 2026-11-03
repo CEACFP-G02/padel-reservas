@@ -21,6 +21,7 @@ import com.g02.padel.court.usecase.GetCourtUseCase;
 import com.g02.padel.court.usecase.ListCourtsUseCase;
 import com.g02.padel.court.usecase.UpdateCourtUseCase;
 import com.g02.padel.shared.enums.CourtType;
+import com.g02.padel.shared.enums.Role;
 import com.g02.padel.shared.exception.ConflictException;
 import com.g02.padel.shared.exception.NotFoundException;
 import java.util.List;
@@ -63,7 +64,7 @@ class CourtControllerTest {
     @Test
     void listsCourtsWithFiltersAndPagination() throws Exception {
         var pageable = PageRequest.of(1, 5, Sort.by("name"));
-        when(listCourts.execute(CourtType.GLASS, true, pageable)).thenReturn(new PageImpl<>(List.of(COURT_3), pageable, 6));
+        when(listCourts.execute(CourtType.GLASS, true, Role.OWNER, pageable)).thenReturn(new PageImpl<>(List.of(COURT_3), pageable, 6));
 
         mvc.perform(get("/api/v1/courts").param("type", "GLASS").param("active", "true")
                         .param("page", "1").param("size", "5").param("sort", "name"))
@@ -80,9 +81,22 @@ class CourtControllerTest {
     @Test
     void listsCourtsByIdWhenNoSortIsGiven() throws Exception {
         var pageable = PageRequest.of(0, 20, Sort.by("id"));
-        when(listCourts.execute(null, null, pageable)).thenReturn(new PageImpl<>(List.of(COURT_3), pageable, 1));
+        when(listCourts.execute(null, null, Role.OWNER, pageable)).thenReturn(new PageImpl<>(List.of(COURT_3), pageable, 1));
 
         mvc.perform(get("/api/v1/courts")).andExpect(status().isOk()).andExpect(jsonPath("$.content[0].id").value(3));
+    }
+
+    @Test
+    @WithMockUser(username = "ana@padel.test", roles = "CLIENT")
+    void passesTheClientRoleFromTheTokenNotFromTheRequest() throws Exception {
+        var pageable = PageRequest.of(0, 20, Sort.by("id"));
+        when(listCourts.execute(null, false, Role.CLIENT, pageable)).thenReturn(new PageImpl<>(List.of(), pageable, 0));
+        when(getCourt.execute(4L, Role.CLIENT)).thenThrow(NotFoundException.of("Court", 4L));
+
+        mvc.perform(get("/api/v1/courts").param("active", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/api/v1/courts/4")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -95,7 +109,7 @@ class CourtControllerTest {
 
     @Test
     void getsACourt() throws Exception {
-        when(getCourt.execute(3L)).thenReturn(COURT_3);
+        when(getCourt.execute(3L, Role.OWNER)).thenReturn(COURT_3);
 
         mvc.perform(get("/api/v1/courts/3"))
                 .andExpect(status().isOk())
@@ -104,7 +118,7 @@ class CourtControllerTest {
 
     @Test
     void answers404WithTheUniformErrorForAMissingCourt() throws Exception {
-        when(getCourt.execute(99L)).thenThrow(NotFoundException.of("Court", 99L));
+        when(getCourt.execute(99L, Role.OWNER)).thenThrow(NotFoundException.of("Court", 99L));
 
         mvc.perform(get("/api/v1/courts/99"))
                 .andExpect(status().isNotFound())
