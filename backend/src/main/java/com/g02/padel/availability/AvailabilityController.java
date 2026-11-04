@@ -4,7 +4,6 @@ import com.g02.padel.availability.dto.AvailabilityResponse;
 import com.g02.padel.availability.dto.CourtDayAvailabilityResponse;
 import com.g02.padel.availability.usecase.GetAvailabilityUseCase;
 import com.g02.padel.availability.usecase.GetCourtDayAvailabilityUseCase;
-import jakarta.validation.constraints.Min;
 import com.g02.padel.shared.security.CurrentRole;
 import org.springframework.security.core.Authentication;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,7 +31,7 @@ public class AvailabilityController {
     @GetMapping("/availability")
     public AvailabilityResponse availability(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "1") @Min(1) int courts) {
+            @RequestParam(defaultValue = "1") int courts) {
         return getAvailability.execute(date, courts);
     }
 

@@ -12,7 +12,7 @@ No own entity or repository; reads `CourtRepository`, `ScheduleRepository`,
 - a trailing remainder shorter than `slotMinutes` is not a slot;
 - no schedule, or no opening hours that weekday → no slots.
 
-Base path: `/api/v1` — authenticated.
+Base path: `/api/v1` — OWNER, CLIENT. Missing/malformed parameters → 400; hidden or missing court → 404.
 
 | Use case | Class | Endpoint |
 |---|---|---|

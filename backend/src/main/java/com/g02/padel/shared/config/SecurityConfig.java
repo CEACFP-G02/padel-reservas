@@ -48,7 +48,8 @@ public class SecurityConfig {
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/courts", "/api/v1/courts/*")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/courts", "/api/v1/courts/*",
+                                "/api/v1/availability", "/api/v1/courts/*/availability")
                         .hasAnyRole(Role.OWNER.name(), Role.CLIENT.name())
                         // TODO: fine-grained role rules (OWNER vs CLIENT) — see docs/api.md#authorization
                         .anyRequest().authenticated())

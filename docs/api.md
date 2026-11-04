@@ -115,7 +115,16 @@ Core feature. Computed from schedule − bookings − blocks.
 }
 ```
 
+Query parameters:
+- `date` (required, `YYYY-MM-DD`): today or later. Missing, malformed or past → `400`.
+- `courts` (optional, default `1`): how many courts the client needs at the same time, `>= 1`, else `400`.
+
 Each slot lists `courtIds`, the ids of the courts free in that slot (`courtsFree` is its length). To book, the client picks one of those ids and sends it as `courtId` to `POST /bookings` — the server does not auto-assign a court.
+
+How slots are computed (never stored):
+- Only **active** courts with a schedule take part, for every role.
+- A court's slots for a date are that weekday's opening ranges split into `slotMinutes` slots (a trailing remainder shorter than one slot is not a slot). A slot `[start, end)` is **taken** if it overlaps — by any amount — a booking slot of a non-`CANCELLED` booking or a court block; back-to-back ranges (one ends when the other starts) do not overlap. On today, a slot that has already started is taken.
+- A slot is listed when at least `courts` courts are free in that exact `start`–`end`. `slots` are ordered by `start`, `courtIds` ascending, and `price` is the lowest slot price among those courts.
 
 When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby days that have room, searched in a **±7-day window clamped to today** — i.e. from `max(today, date−7)` to `date+7`, never in the past:
 ```json
@@ -130,6 +139,22 @@ When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby
   ]
 }
 ```
+
+`alternativeDays` excludes the requested date, is in date order, and `freeSlotCount` is the number of slots that day with at least `courts` free courts. If the requested date is today the window is today…today+7; if it is 3 days ahead, today…date+7. It is `[]` when no day in the window has room.
+
+`GET /courts/3/availability?date=2026-06-08` — every slot of one court's day, flagged free or not:
+```json
+{
+  "courtId": 3,
+  "courtName": "Court 3",
+  "date": "2026-06-08",
+  "slots": [
+    { "start": "07:00", "end": "08:00", "available": false },
+    { "start": "08:00", "end": "09:00", "available": true }
+  ]
+}
+```
+Same slot rules as above, for this court only (any date, so the admin calendar can show past days — all their slots are unavailable). `slots` is `[]` if the court has no schedule or is closed that weekday. `date` is required (missing or malformed → `400`). `404` if the court does not exist or — for a CLIENT — is inactive.
 
 ---
 
