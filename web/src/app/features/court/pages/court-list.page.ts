@@ -6,54 +6,99 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 
 import { Court, CourtType } from '../../../shared/models';
+import { ConfirmDialog, ConfirmDialogData } from '../../../shared/ui/confirm-dialog/confirm.dialog';
 import { COURT_TYPE_LABELS } from '../court-labels';
-import { CourtFacade } from '../court.facade';
+import { CourtError, CourtFacade } from '../court.facade';
 import { CourtFormDialog } from './court-form.dialog';
+
+const SNACK_DURATION = { duration: 4000 };
 
 @Component({
   selector: 'app-court-list-page',
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatProgressBarModule, MatPaginatorModule, RouterLink],
+  imports: [
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatPaginatorModule,
+    MatTooltipModule,
+    RouterLink,
+  ],
   template: `
     <header class="page-header">
       <h1>Pistas</h1>
-      <button matButton="filled" (click)="openCreate()"><mat-icon>add</mat-icon> Nueva pista</button>
+      <span class="spacer"></span>
+      <button matButton (click)="facade.refresh()" data-testid="refresh">
+        <mat-icon>refresh</mat-icon> Actualizar
+      </button>
+      <button matButton="filled" (click)="openCreate()" data-testid="create">
+        <mat-icon>add</mat-icon> Nueva pista
+      </button>
     </header>
 
     @if (facade.loading()) {
       <mat-progress-bar mode="indeterminate" />
     }
+    @if (facade.error(); as error) {
+      <p class="error" role="alert" data-testid="list-error">{{ error }}</p>
+    }
 
     <table mat-table [dataSource]="facade.courts()">
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>Nombre</th>
-        <td mat-cell *matCellDef="let court"><a [routerLink]="[court.id]">{{ court.name }}</a></td>
+        <td mat-cell *matCellDef="let court">
+          <a [routerLink]="[court.id]">{{ court.name }}</a>
+        </td>
       </ng-container>
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef>Tipo</th>
         <td mat-cell *matCellDef="let court">{{ typeLabel(court.type) }}</td>
       </ng-container>
       <ng-container matColumnDef="indoor">
-        <th mat-header-cell *matHeaderCellDef>Cubierta</th>
-        <td mat-cell *matCellDef="let court">{{ court.indoor ? 'Sí' : 'No' }}</td>
+        <th mat-header-cell *matHeaderCellDef>Cubierta / exterior</th>
+        <td mat-cell *matCellDef="let court">{{ court.indoor ? 'Cubierta' : 'Exterior' }}</td>
       </ng-container>
       <ng-container matColumnDef="active">
         <th mat-header-cell *matHeaderCellDef>Estado</th>
-        <td mat-cell *matCellDef="let court">{{ court.active ? 'Activa' : 'Inactiva' }}</td>
+        <td mat-cell *matCellDef="let court" [class.inactive]="!court.active">
+          {{ court.active ? 'Activa' : 'Inactiva' }}
+        </td>
       </ng-container>
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
+        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
         <td mat-cell *matCellDef="let court">
-          <button matIconButton (click)="openEdit(court)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
-          <button matIconButton (click)="deactivate(court)" [disabled]="!court.active" aria-label="Desactivar">
+          <button
+            matIconButton
+            (click)="openEdit(court)"
+            data-testid="edit"
+            aria-label="Editar"
+            matTooltip="Editar"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            matIconButton
+            (click)="deactivate(court)"
+            [disabled]="!court.active"
+            data-testid="deactivate"
+            aria-label="Desactivar"
+            matTooltip="Desactivar"
+          >
             <mat-icon>block</mat-icon>
           </button>
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns" data-testid="court-row"></tr>
+      <tr class="mat-mdc-row" *matNoDataRow>
+        <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
+          {{ facade.loading() ? 'Cargando pistas…' : 'Todavía no hay pistas.' }}
+        </td>
+      </tr>
     </table>
     <mat-paginator
       [length]="facade.page()?.totalElements ?? 0"
@@ -62,6 +107,26 @@ import { CourtFormDialog } from './court-form.dialog';
       [pageSizeOptions]="[10, 20, 50]"
       (page)="changePage($event)"
     />
+  `,
+  styles: `
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spacer {
+      flex: 1;
+    }
+    .error {
+      color: var(--mat-sys-error);
+    }
+    .inactive {
+      color: var(--mat-sys-on-surface-variant);
+      font-style: italic;
+    }
+    .empty {
+      padding: 16px;
+    }
   `,
 })
 export class CourtListPage {
@@ -83,17 +148,51 @@ export class CourtListPage {
   }
 
   protected openCreate(): void {
-    // TODO: on close with a value -> facade.createCourt(value) + snackbar — see docs/api.md#courts--apiv1courts
-    this.dialog.open(CourtFormDialog);
+    this.openForm(null, (court) => `Pista «${court.name}» creada.`);
   }
 
   protected openEdit(court: Court): void {
-    // TODO: on close with a value -> facade.updateCourt(court.id, changed fields) — see docs/api.md#courts--apiv1courts
-    this.dialog.open(CourtFormDialog, { data: court });
+    this.openForm(court, (saved) => `Pista «${saved.name}» actualizada.`);
   }
 
   protected deactivate(court: Court): void {
-    // TODO: confirm, then facade.deactivateCourt(court.id) (DELETE, soft) — see docs/api.md#courts--apiv1courts
-    this.snackBar.open(`TODO: desactivar ${court.name}`, 'OK', { duration: 3000 });
+    const data: ConfirmDialogData = {
+      title: 'Desactivar pista',
+      message: `La pista «${court.name}» dejará de admitir reservas. Sus reservas y su horario se conservan.`,
+      confirmLabel: 'Desactivar',
+    };
+    this.dialog
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        try {
+          await this.facade.deactivateCourt(court.id);
+          this.notify(`Pista «${court.name}» desactivada.`);
+        } catch (error) {
+          this.notify(
+            error instanceof CourtError ? error.message : 'No se pudo desactivar la pista.',
+          );
+        }
+        await this.facade.refresh();
+      });
+  }
+
+  private openForm(court: Court | null, success: (saved: Court) => string): void {
+    this.dialog
+      .open<CourtFormDialog, Court | null, Court>(CourtFormDialog, { data: court })
+      .afterClosed()
+      .subscribe((saved) => {
+        if (saved) {
+          this.notify(success(saved));
+          void this.facade.refresh();
+        }
+      });
+  }
+
+  private notify(message: string): void {
+    this.snackBar.open(message, 'OK', SNACK_DURATION);
   }
 }

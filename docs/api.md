@@ -56,6 +56,23 @@ Availability model: **computed** (option B). Only opening hours (schedule) and b
   `active=false` filter returns an empty page — and `GET /courts/{id}` of an inactive court
   returns `404`, the same as a court that does not exist.
 
+**Rules and errors** (OWNER writes):
+
+- `POST` body: `name` required, not blank, max 100 characters; `type` and `indoor` required;
+  `active` optional (default `true`). `PATCH` body: any subset of those fields — only the fields
+  present change, and `name` must not be blank when present. Otherwise `400` with `fieldErrors`:
+  ```json
+  { "status": 400, "error": "Bad Request", "message": "Validation failed", "path": "/api/v1/courts",
+    "fieldErrors": { "name": "must not be blank", "type": "must not be null" } }
+  ```
+- Court names are unique, compared trimmed and ignoring case (`"Pista 1"` and `" pista 1 "`
+  clash). `POST`/`PATCH` with a name another court already uses → `409`
+  (`"Court name Pista 1 is already in use"`). Renaming a court to its own name is fine.
+- `PATCH`/`DELETE` of an unknown id → `404`.
+- `DELETE` is a soft delete: the court becomes inactive (`active: false`) and its bookings and
+  schedule are kept → `204`. Deleting an already inactive court is also `204`. An inactive court
+  can be reactivated with `PATCH { "active": true }`.
+
 ---
 
 ## Schedule — `/api/v1/courts/{id}/schedule`
