@@ -198,6 +198,8 @@ Booking response (also returned by `GET /bookings/{id}`, and as the items of the
 
 `status`: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
 
+Each `slots[].price` is a snapshot of the court's slot price taken when the slot was booked; later schedule price changes never alter an existing booking. `totalPrice` is the sum of the slot prices. A cancelled booking is kept with status `CANCELLED`; only a `CONFIRMED` booking can be cancelled or rescheduled.
+
 ---
 
 ## Court blocks (maintenance) — `/api/v1/courts/{id}/blocks`

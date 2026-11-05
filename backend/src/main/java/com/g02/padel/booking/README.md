@@ -15,6 +15,11 @@ Base path: `/api/v1` — authenticated.
 | Reschedule booking | `RescheduleBookingUseCase` | `PATCH /bookings/{id}` | booking's client, OWNER |
 
 Rules:
+- Each `BookingSlot` stores the price charged for it at booking time (`DECIMAL(8,2)`, `>= 0`);
+  `Booking.totalPrice` is always the sum of its slot prices. Schedule price changes never touch
+  existing bookings.
+- Status: `CONFIRMED` → `CANCELLED` (soft cancel, row kept, `cancelledAt` set) or `COMPLETED`;
+  only a `CONFIRMED` booking can be cancelled or rescheduled, otherwise **409**.
 - A taken or blocked slot → `SlotNotAvailableException` → **409 Conflict**.
 - Clients can cancel/reschedule only up to `app.booking.cancel-min-notice-hours` (default 24) before start.
 

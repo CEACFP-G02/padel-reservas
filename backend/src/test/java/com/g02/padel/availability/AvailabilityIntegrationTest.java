@@ -151,11 +151,7 @@ class AvailabilityIntegrationTest {
         booking.setUser(client());
         booking.setDate(date);
         booking.setStatus(status);
-        booking.setTotalPrice(new BigDecimal("16.00"));
-        var slot = new BookingSlot();
-        slot.setStartTime(LocalTime.parse(start));
-        slot.setEndTime(LocalTime.parse(end));
-        booking.addSlot(slot);
+        booking.addSlot(BookingSlot.of(LocalTime.parse(start), LocalTime.parse(end), new BigDecimal("16.00")));
         bookingRepository.save(booking);
     }
 

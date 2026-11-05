@@ -65,10 +65,8 @@ public final class AvailabilityFixtures {
         booking.setStatus(status);
         for (String range : ranges) {
             String[] parts = range.split("-");
-            var slot = new BookingSlot();
-            slot.setStartTime(LocalTime.parse(parts[0]));
-            slot.setEndTime(LocalTime.parse(parts[1]));
-            booking.addSlot(slot);
+            booking.addSlot(BookingSlot.of(LocalTime.parse(parts[0]), LocalTime.parse(parts[1]),
+                    new BigDecimal("16.00")));
         }
         return booking;
     }
