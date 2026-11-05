@@ -115,6 +115,21 @@ class CourtDaySlotCalculatorTest {
     }
 
     @Test
+    void anIgnoredBookingDoesNotTakeItsSlots() {
+        Schedule schedule = schedule(court, 60, "16.00", hours(DayOfWeek.MONDAY, "08:00", "10:00"));
+        Booking mine = booking(court, MONDAY, BookingStatus.CONFIRMED, "08:00-09:00");
+        mine.setId(7L);
+        Booking theirs = booking(court, MONDAY, BookingStatus.CONFIRMED, "09:00-10:00");
+        theirs.setId(8L);
+        given(MONDAY, List.of(mine, theirs), List.of());
+
+        assertThat(render(calculator.slotsOf(schedule, MONDAY, 7L)))
+                .containsExactly("08:00-09:00 free", "09:00-10:00 taken");
+        assertThat(render(calculator.slotsOf(schedule, MONDAY)))
+                .containsExactly("08:00-09:00 taken", "09:00-10:00 taken");
+    }
+
+    @Test
     void onTodaySlotsThatAlreadyStartedAreTaken() {
         calculator = calculatorAt(clockAt(MONDAY, "09:30"));
         Schedule schedule = schedule(court, 60, "16.00", hours(DayOfWeek.MONDAY, "08:00", "11:00"));

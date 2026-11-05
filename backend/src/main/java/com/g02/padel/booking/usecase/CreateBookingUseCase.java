@@ -7,7 +7,6 @@ import com.g02.padel.booking.BookingRepository;
 import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.booking.dto.CreateBookingRequest;
 import com.g02.padel.court.Court;
-import com.g02.padel.court.CourtRepository;
 import com.g02.padel.shared.enums.Role;
 import com.g02.padel.shared.exception.NotFoundException;
 import com.g02.padel.user.User;
@@ -23,14 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateBookingUseCase {
 
     private final BookingRepository bookingRepository;
-    private final CourtRepository courtRepository;
     private final UserRepository userRepository;
     private final BookableSlots bookableSlots;
 
-    public CreateBookingUseCase(BookingRepository bookingRepository, CourtRepository courtRepository,
-                                UserRepository userRepository, BookableSlots bookableSlots) {
+    public CreateBookingUseCase(BookingRepository bookingRepository, UserRepository userRepository,
+                                BookableSlots bookableSlots) {
         this.bookingRepository = bookingRepository;
-        this.courtRepository = courtRepository;
         this.userRepository = userRepository;
         this.bookableSlots = bookableSlots;
     }
@@ -42,13 +39,7 @@ public class CreateBookingUseCase {
         boolean owner = requester.getRole() == Role.OWNER;
         User client = owner ? clientFor(request.clientId()) : requester;
 
-        // Locked until commit: a concurrent booking of the same court waits and then sees this one.
-        Court court = courtRepository.findByIdForUpdate(request.courtId())
-                .filter(c -> c.isActive() || owner)
-                .orElseThrow(() -> NotFoundException.of("Court", request.courtId()));
-        if (!court.isActive()) {
-            throw new IllegalArgumentException("Court " + court.getId() + " is inactive");
-        }
+        Court court = bookableSlots.lockCourt(request.courtId(), owner);
 
         var booking = new Booking();
         booking.setCourt(court);

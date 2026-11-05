@@ -95,7 +95,8 @@ public class Booking {
                 .orElseThrow());
     }
 
-    private void requireConfirmed() {
+    /** @throws ConflictException unless the booking is CONFIRMED */
+    public void requireConfirmed() {
         if (status != BookingStatus.CONFIRMED) {
             throw new ConflictException("Booking " + id + " is " + status);
         }

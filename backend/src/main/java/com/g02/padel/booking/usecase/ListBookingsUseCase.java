@@ -1,5 +1,7 @@
 package com.g02.padel.booking.usecase;
 
+import com.g02.padel.booking.BookingMapper;
+import com.g02.padel.booking.BookingSpecifications;
 import com.g02.padel.booking.BookingRepository;
 import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.shared.enums.BookingStatus;
@@ -23,9 +25,9 @@ public class ListBookingsUseCase {
     @Transactional(readOnly = true)
     public Page<BookingResponse> execute(LocalDate date, Long courtId, Long userId, BookingStatus status,
                                          Pageable pageable) {
-        // TODO: paged query with the non-null filters (e.g. a JpaSpecificationExecutor);
-        //  map with BookingMapper::toResponse
-        //  — see docs/api.md#bookings--apiv1bookings
-        throw new UnsupportedOperationException("TODO: ListBookings — see docs/api.md#get-apiv1bookings");
+        return bookingRepository
+                .findAll(BookingSpecifications.filter(userId, courtId, status, date, date),
+                        BookingSpecifications.withDefaultSort(pageable))
+                .map(BookingMapper::toResponse);
     }
 }

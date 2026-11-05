@@ -19,7 +19,6 @@ import com.g02.padel.booking.dto.BookingSlotResponse;
 import com.g02.padel.booking.dto.CreateBookingRequest;
 import com.g02.padel.booking.dto.TimeSlotRequest;
 import com.g02.padel.court.Court;
-import com.g02.padel.court.CourtRepository;
 import com.g02.padel.shared.enums.BookingStatus;
 import com.g02.padel.shared.enums.Role;
 import com.g02.padel.shared.exception.NotFoundException;
@@ -42,10 +41,9 @@ class CreateBookingUseCaseTest {
             new TimeSlotRequest(LocalTime.of(11, 0), LocalTime.of(12, 0)));
 
     private final BookingRepository bookings = mock(BookingRepository.class);
-    private final CourtRepository courts = mock(CourtRepository.class);
     private final UserRepository users = mock(UserRepository.class);
     private final BookableSlots bookable = mock(BookableSlots.class);
-    private final CreateBookingUseCase useCase = new CreateBookingUseCase(bookings, courts, users, bookable);
+    private final CreateBookingUseCase useCase = new CreateBookingUseCase(bookings, users, bookable);
 
     private final Court court = court(3L, true);
     private final User ana = user(42L, "ana@padel.test", "Ana Client", Role.CLIENT);
@@ -57,7 +55,8 @@ class CreateBookingUseCaseTest {
         when(users.findByEmail("owner@padel.test")).thenReturn(Optional.of(owner));
         when(users.findById(42L)).thenReturn(Optional.of(ana));
         when(users.findById(1L)).thenReturn(Optional.of(owner));
-        when(courts.findByIdForUpdate(3L)).thenReturn(Optional.of(court));
+        when(bookable.lockCourt(3L, false)).thenReturn(court);
+        when(bookable.lockCourt(3L, true)).thenReturn(court);
         when(bookable.priced(court, DATE, SLOTS)).thenReturn(List.of(
                 BookingSlot.of(LocalTime.of(10, 0), LocalTime.of(11, 0), new BigDecimal("16.50")),
                 BookingSlot.of(LocalTime.of(11, 0), LocalTime.of(12, 0), new BigDecimal("16.50"))));
@@ -110,21 +109,11 @@ class CreateBookingUseCaseTest {
     }
 
     @Test
-    void aMissingCourtIsNotFound() {
-        when(courts.findByIdForUpdate(9L)).thenReturn(Optional.empty());
+    void anUnbookableCourtStopsTheBookingBeforeAnythingIsSaved() {
+        when(bookable.lockCourt(9L, false)).thenThrow(NotFoundException.of("Court", 9L));
 
         assertThatThrownBy(() -> useCase.execute("ana@padel.test", new CreateBookingRequest(9L, DATE, SLOTS, null)))
                 .isInstanceOf(NotFoundException.class).hasMessage("Court 9 not found");
-    }
-
-    @Test
-    void anInactiveCourtCannotBeBooked() {
-        court.setActive(false);
-
-        assertThatThrownBy(() -> useCase.execute("ana@padel.test", new CreateBookingRequest(3L, DATE, SLOTS, null)))
-                .isInstanceOf(NotFoundException.class).hasMessage("Court 3 not found");
-        assertThatThrownBy(() -> useCase.execute("owner@padel.test", new CreateBookingRequest(3L, DATE, SLOTS, 42L)))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("Court 3 is inactive");
         verify(bookings, never()).save(any());
     }
 

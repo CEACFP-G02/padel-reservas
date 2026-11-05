@@ -35,6 +35,11 @@ public class CourtDaySlotCalculator {
     }
 
     public List<DaySlot> slotsOf(Schedule schedule, LocalDate date) {
+        return slotsOf(schedule, date, null);
+    }
+
+    /** As {@link #slotsOf(Schedule, LocalDate)}, but the slots of {@code ignoredBookingId} count as free (reschedule). */
+    public List<DaySlot> slotsOf(Schedule schedule, LocalDate date, Long ignoredBookingId) {
         List<Range> grid = split(schedule, date);
         if (grid.isEmpty()) {
             return List.of();
@@ -43,6 +48,7 @@ public class CourtDaySlotCalculator {
         List<Range> busy = Stream.concat(
                 bookingRepository.findByCourtIdAndDate(courtId, date).stream()
                         .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
+                        .filter(b -> ignoredBookingId == null || !ignoredBookingId.equals(b.getId()))
                         .flatMap(b -> b.getSlots().stream())
                         .map(s -> new Range(s.getStartTime(), s.getEndTime())),
                 courtBlockRepository.findByCourtIdAndDate(courtId, date).stream()

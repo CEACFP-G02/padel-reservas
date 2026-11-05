@@ -14,6 +14,8 @@ import com.g02.padel.availability.CourtDaySlotCalculator;
 import com.g02.padel.availability.DaySlot;
 import com.g02.padel.booking.dto.TimeSlotRequest;
 import com.g02.padel.court.Court;
+import com.g02.padel.court.CourtRepository;
+import com.g02.padel.shared.exception.NotFoundException;
 import com.g02.padel.schedule.Schedule;
 import com.g02.padel.schedule.ScheduleRepository;
 import com.g02.padel.shared.exception.SlotNotAvailableException;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.Test;
 /** Which requested slots can be booked, priced at the schedule's current price. Free/taken comes from T15's calculator. */
 class BookableSlotsTest {
 
+    private final CourtRepository courts = mock(CourtRepository.class);
     private final ScheduleRepository schedules = mock(ScheduleRepository.class);
     private final CourtDaySlotCalculator calculator = mock(CourtDaySlotCalculator.class);
     private final Court court = court(3L, true);
@@ -35,15 +38,16 @@ class BookableSlotsTest {
             schedule(court, 60, "16.50", hours(DayOfWeek.MONDAY, "08:00", "12:00"));
 
     /** Monday 09:30: the 08:00 and 09:00 slots have started. */
-    private final BookableSlots bookable = new BookableSlots(schedules, calculator, clockAt(MONDAY, "09:30"));
+    private final BookableSlots bookable =
+            new BookableSlots(courts, schedules, calculator, clockAt(MONDAY, "09:30"));
 
     @BeforeEach
     void grid() {
         when(schedules.findByCourtId(3L)).thenReturn(Optional.of(schedule));
-        when(calculator.slotsOf(schedule, MONDAY)).thenReturn(List.of(
+        when(calculator.slotsOf(schedule, MONDAY, null)).thenReturn(List.of(
                 slot("08:00", "09:00", false), slot("09:00", "10:00", false),
                 slot("10:00", "11:00", true), slot("11:00", "12:00", true)));
-        when(calculator.slotsOf(schedule, MONDAY.plusDays(7))).thenReturn(List.of(
+        when(calculator.slotsOf(schedule, MONDAY.plusDays(7), null)).thenReturn(List.of(
                 slot("08:00", "09:00", true), slot("09:00", "10:00", false),
                 slot("10:00", "11:00", true), slot("11:00", "12:00", true)));
     }
@@ -89,7 +93,7 @@ class BookableSlotsTest {
 
     @Test
     void aClosedDayIsOutsideTheSchedule() {
-        when(calculator.slotsOf(schedule, MONDAY.plusDays(1))).thenReturn(List.of());
+        when(calculator.slotsOf(schedule, MONDAY.plusDays(1), null)).thenReturn(List.of());
 
         assertThatThrownBy(() -> bookable.priced(court, MONDAY.plusDays(1), List.of(req("10:00", "11:00"))))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -113,6 +117,41 @@ class BookableSlotsTest {
         assertThatThrownBy(() -> bookable.priced(court, MONDAY.minusDays(7), List.of(req("10:00", "11:00"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Cannot book a slot that has already started");
+    }
+
+    @Test
+    void whenReschedulingTheBookingsOwnSlotsCountAsFree() {
+        when(calculator.slotsOf(schedule, MONDAY.plusDays(7), 5001L)).thenReturn(List.of(
+                slot("08:00", "09:00", true), slot("09:00", "10:00", true)));
+
+        assertThat(bookable.priced(court, MONDAY.plusDays(7), List.of(req("09:00", "10:00")), 5001L))
+                .extracting(BookingSlot::getStartTime).containsExactly(LocalTime.of(9, 0));
+    }
+
+    @Test
+    void locksAnActiveCourtForBooking() {
+        when(courts.findByIdForUpdate(3L)).thenReturn(Optional.of(court));
+
+        assertThat(bookable.lockCourt(3L, false)).isSameAs(court);
+    }
+
+    @Test
+    void aMissingCourtOrAnInactiveOneForAClientIsNotFound() {
+        when(courts.findByIdForUpdate(9L)).thenReturn(Optional.empty());
+        when(courts.findByIdForUpdate(4L)).thenReturn(Optional.of(court(4L, false)));
+
+        assertThatThrownBy(() -> bookable.lockCourt(9L, true))
+                .isInstanceOf(NotFoundException.class).hasMessage("Court 9 not found");
+        assertThatThrownBy(() -> bookable.lockCourt(4L, false))
+                .isInstanceOf(NotFoundException.class).hasMessage("Court 4 not found");
+    }
+
+    @Test
+    void theOwnerIsToldAnInactiveCourtCannotBeBooked() {
+        when(courts.findByIdForUpdate(4L)).thenReturn(Optional.of(court(4L, false)));
+
+        assertThatThrownBy(() -> bookable.lockCourt(4L, true))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Court 4 is inactive");
     }
 
     private static DaySlot slot(String start, String end, boolean free) {

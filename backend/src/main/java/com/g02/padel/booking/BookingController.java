@@ -76,6 +76,7 @@ public class BookingController {
     }
 
     @GetMapping("/me/bookings")
+    @PreAuthorize("hasRole('CLIENT')")
     public PageResponse<BookingResponse> myBookings(
             Authentication authentication,
             @RequestParam(required = false) BookingStatus status,

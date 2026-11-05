@@ -1,8 +1,9 @@
 package com.g02.padel.booking.usecase;
 
-import com.g02.padel.booking.BookingRepository;
+
+import com.g02.padel.booking.BookingAccess;
+import com.g02.padel.booking.BookingMapper;
 import com.g02.padel.booking.dto.BookingResponse;
-import com.g02.padel.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,18 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GetBookingUseCase {
 
-    private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
+    private final BookingAccess bookingAccess;
 
-    public GetBookingUseCase(BookingRepository bookingRepository, UserRepository userRepository) {
-        this.bookingRepository = bookingRepository;
-        this.userRepository = userRepository;
+    public GetBookingUseCase(BookingAccess bookingAccess) {
+        this.bookingAccess = bookingAccess;
     }
 
     @Transactional(readOnly = true)
     public BookingResponse execute(Long id, String requesterEmail) {
-        // TODO: findById else NotFoundException; a CLIENT who did not make it -> NotFoundException (don't leak existence)
-        //  — see docs/api.md#get-apiv1bookingsid
-        throw new UnsupportedOperationException("TODO: GetBooking — see docs/api.md#get-apiv1bookingsid");
+        return BookingMapper.toResponse(bookingAccess.visible(id, requesterEmail));
     }
 }

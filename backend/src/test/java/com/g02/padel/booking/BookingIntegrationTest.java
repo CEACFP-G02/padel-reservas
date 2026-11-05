@@ -31,55 +31,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Booking flow through the real use cases and database (rolled back after each test). */
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@Transactional
-@WithMockUser(username = BookingIntegrationTest.CLIENT_EMAIL, roles = "CLIENT")
-class BookingIntegrationTest {
-
-    static final String CLIENT_EMAIL = "booking-it-client@padel.test";
-    static final String OTHER_EMAIL = "booking-it-other@padel.test";
-    static final String OWNER_EMAIL = "booking-it-owner@padel.test";
-    static final LocalDate DATE = LocalDate.now().plusDays(10);
-
-    @Autowired
-    MockMvc mvc;
-    @Autowired
-    CourtRepository courtRepository;
-    @Autowired
-    ScheduleRepository scheduleRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    BookingRepository bookingRepository;
-
-    Court court;
-    Schedule schedule;
-    User client;
-    User other;
-
-    @BeforeEach
-    void setUp() {
-        client = user(CLIENT_EMAIL, "Ana Client", Role.CLIENT);
-        other = user(OTHER_EMAIL, "Other Client", Role.CLIENT);
-        user(OWNER_EMAIL, "Owner", Role.OWNER);
-        court = new Court();
-        court.setName("Court " + UUID.randomUUID());
-        court.setType(CourtType.GLASS);
-        court = courtRepository.save(court);
-        schedule = new Schedule();
-        schedule.setCourt(court);
-        schedule.setSlotMinutes(60);
-        schedule.setPrice(new BigDecimal("16.50"));
-        var hours = new OpeningHours();
-        hours.setDayOfWeek(DATE.getDayOfWeek());
-        hours.setOpenTime(LocalTime.of(8, 0));
-        hours.setCloseTime(LocalTime.of(12, 0));
-        schedule.addOpeningHours(hours);
-        schedule = scheduleRepository.save(schedule);
-    }
+/** Creating bookings through the real use cases and database (rolled back after each test). */
+class BookingIntegrationTest extends BookingIntegrationSupport {
 
     @Test
     void aClientBooksAFreeSlotAndTheSecondAttemptIsAConflict() throws Exception {
@@ -131,23 +84,5 @@ class BookingIntegrationTest {
                         { "courtId": %d, "date": "%s", "slots": [ { "start": "10:00", "end": "11:00" } ] }
                         """.formatted(court.getId(), LocalDate.now().minusDays(1))))
                 .andExpect(status().isBadRequest());
-    }
-
-    String createBody(String... times) {
-        var slots = new StringBuilder();
-        for (int i = 0; i < times.length; i += 2) {
-            slots.append(i == 0 ? "" : ", ")
-                    .append("{ \"start\": \"%s\", \"end\": \"%s\" }".formatted(times[i], times[i + 1]));
-        }
-        return "{ \"courtId\": %d, \"date\": \"%s\", \"slots\": [ %s ] }".formatted(court.getId(), DATE, slots);
-    }
-
-    User user(String email, String name, Role role) {
-        var user = new User();
-        user.setEmail(email);
-        user.setPasswordHash("x");
-        user.setName(name);
-        user.setRole(role);
-        return userRepository.save(user);
     }
 }

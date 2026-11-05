@@ -166,7 +166,7 @@ Same slot rules as above, for this court only (any date, so the admin calendar c
 | GET | `/me/bookings` | CLIENT | Own bookings (upcoming + history), paginated. Query: `status`, `from`, `to`, pagination |
 | GET | `/bookings/{id}` | OWNER, CLIENT* | Single booking (*client: only own) |
 | POST | `/bookings` | OWNER, CLIENT | Create. Client books for self; owner books manually for any client |
-| PATCH | `/bookings/{id}` | OWNER, CLIENT* | Change status / reschedule |
+| PATCH | `/bookings/{id}` | OWNER, CLIENT* | Reschedule: new date, slots and optionally court |
 | DELETE | `/bookings/{id}` | OWNER, CLIENT* | Cancel (min-notice rule applies to clients) |
 
 Create body:
@@ -206,6 +206,34 @@ Booking response (also returned by `GET /bookings/{id}`, and as the items of the
 `status`: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
 
 Each `slots[].price` is a snapshot of the court's slot price taken when the slot was booked; later schedule price changes never alter an existing booking. `totalPrice` is the sum of the slot prices. A cancelled booking is kept with status `CANCELLED`; only a `CONFIRMED` booking can be cancelled or rescheduled.
+
+Listing and reading:
+- `GET /bookings` (OWNER only; a CLIENT gets `403`): every client's bookings, filtered by any of `date`, `courtId`, `userId`, `status`.
+- `GET /me/bookings` (CLIENT only; an OWNER gets `403`): only the caller's bookings, filtered by `status` and the inclusive date range `from`–`to`.
+- Both are paginated and sorted by `date` descending (most recent first) unless `sort` is given.
+- `GET /bookings/{id}`: the OWNER reads any booking; a CLIENT reads only their own — someone else's is `404`, the same as a missing one.
+
+Cancel — `DELETE /bookings/{id}` → `204`. The booking is kept with status `CANCELLED` and its slots become free again.
+- **Minimum notice (CLIENT):** a client may cancel only until **24 hours** before the booking starts (its first slot; configurable as `app.booking.cancel-min-notice-hours`). Exactly 24 hours before is still allowed. Later → `409`:
+  ```json
+  { "timestamp": "2026-06-07T08:00:00Z", "status": 409, "error": "Conflict", "message": "Bookings can only be cancelled or changed at least 24 hours before they start", "path": "/api/v1/bookings/5001" }
+  ```
+- The OWNER may cancel at any time.
+- Only a `CONFIRMED` booking can be cancelled → otherwise `409` (`"Booking 5001 is CANCELLED"`).
+- `404` if the booking does not exist or — for a CLIENT — is not theirs.
+
+Reschedule — `PATCH /bookings/{id}` → `200` + the booking response. Body (replaces date and slots; `courtId` optional, omitted keeps the current court):
+```json
+{
+  "courtId": 3,
+  "date": "2026-06-09",
+  "slots": [ { "start": "18:00", "end": "19:00" } ]
+}
+```
+- Same slot rules and errors as create (`400` past / outside the schedule / not consecutive, `409` taken). The booking's own current slots count as free, so it can be shifted onto times that overlap itself.
+- The new slots are priced at the current schedule price (a new snapshot).
+- Same minimum-notice rule as cancel for a CLIENT, measured on the booking's current start; same `CONFIRMED`-only and `404` rules.
+- Status changes are not made with `PATCH`: cancel with `DELETE`.
 
 ---
 

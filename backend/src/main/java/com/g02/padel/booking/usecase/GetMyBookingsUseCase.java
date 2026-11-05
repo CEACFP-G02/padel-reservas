@@ -1,5 +1,9 @@
 package com.g02.padel.booking.usecase;
 
+import com.g02.padel.booking.BookingMapper;
+import com.g02.padel.booking.BookingSpecifications;
+import com.g02.padel.shared.exception.NotFoundException;
+import com.g02.padel.user.User;
 import com.g02.padel.booking.BookingRepository;
 import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.user.UserRepository;
@@ -26,8 +30,11 @@ public class GetMyBookingsUseCase {
     @Transactional(readOnly = true)
     public Page<BookingResponse> execute(String requesterEmail, BookingStatus status, LocalDate from, LocalDate to,
                                          Pageable pageable) {
-        // TODO: resolve user by email; paged query by userId + optional status and date range (default sort
-        //  date desc); map with BookingMapper::toResponse — see docs/api.md#bookings--apiv1bookings
-        throw new UnsupportedOperationException("TODO: GetMyBookings — see docs/api.md#get-apiv1mebookings");
+        User user = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> NotFoundException.of("User", requesterEmail));
+        return bookingRepository
+                .findAll(BookingSpecifications.filter(user.getId(), null, status, from, to),
+                        BookingSpecifications.withDefaultSort(pageable))
+                .map(BookingMapper::toResponse);
     }
 }
