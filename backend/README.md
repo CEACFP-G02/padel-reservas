@@ -41,7 +41,7 @@ migration — add a new `V<n>__<description>.sql` instead.
 | `DB_URL` | `jdbc:postgresql://localhost:5432/padel` | JDBC URL |
 | `DB_USER` / `DB_PASSWORD` | `padel` / `padel` | DB credentials |
 | `JWT_SECRET` | dev-only key | Base64 HMAC key (≥ 256 bits) — always override outside local dev |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Allowed browser origins |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:4200,http://localhost:5173,http://localhost:3000` | Allowed browser origins |
 
 ## Structure
 

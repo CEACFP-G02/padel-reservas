@@ -40,13 +40,21 @@ Availability model: **computed** (option B). Only opening hours (schedule) and b
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| GET | `/courts` | OWNER, CLIENT | List courts. Query: `type`, `active`, pagination |
-| GET | `/courts/{id}` | OWNER, CLIENT | Single court |
+| GET | `/courts` | OWNER, CLIENT | List courts. Query: `type`, `active`, pagination. CLIENT: active courts only |
+| GET | `/courts/{id}` | OWNER, CLIENT | Single court. CLIENT: `404` if the court is inactive |
 | POST | `/courts` | OWNER | Create. Body: `{ name, type, indoor, active }` |
 | PATCH | `/courts/{id}` | OWNER | Update fields |
 | DELETE | `/courts/{id}` | OWNER | Deactivate / remove |
 
 `type` examples: `GLASS`, `WALL`. `indoor`: boolean.
+
+**Visibility by role** (decided from the caller's token, never from a request parameter):
+
+- **OWNER** sees active and inactive courts. `GET /courts` returns both unless filtered with
+  `active=true|false`; `GET /courts/{id}` returns the court whatever its state.
+- **CLIENT** sees active courts only. `GET /courts` never includes inactive courts — an
+  `active=false` filter returns an empty page — and `GET /courts/{id}` of an inactive court
+  returns `404`, the same as a court that does not exist.
 
 ---
 
@@ -70,6 +78,17 @@ Schedule body:
   ]
 }
 ```
+
+- `price`: price of one slot of `slotMinutes`, EUR, `>= 0` with at most 2 decimals (`DECIMAL(8,2)`).
+- `slotMinutes`: `30`–`240`.
+- `weekdays`: opening ranges; a day may have several (e.g. morning and evening), days not listed are
+  closed. Each range needs `open < close` and must fit at least one slot; ranges of the same day
+  must not overlap (one may end when the next starts, e.g. `10:00–14:00` and `14:00–20:00`).
+  `[]` closes the court all week.
+- `PUT` replaces the whole schedule (creates it the first time). Invalid values → `400` with the
+  uniform error body.
+- `404` if the court does not exist, if it has no schedule yet (`GET`), or — for a CLIENT — if the
+  court is inactive (see *Visibility by role* above).
 
 ---
 
@@ -96,7 +115,16 @@ Core feature. Computed from schedule − bookings − blocks.
 }
 ```
 
+Query parameters:
+- `date` (required, `YYYY-MM-DD`): today or later. Missing, malformed or past → `400`.
+- `courts` (optional, default `1`): how many courts the client needs at the same time, `>= 1`, else `400`.
+
 Each slot lists `courtIds`, the ids of the courts free in that slot (`courtsFree` is its length). To book, the client picks one of those ids and sends it as `courtId` to `POST /bookings` — the server does not auto-assign a court.
+
+How slots are computed (never stored):
+- Only **active** courts with a schedule take part, for every role.
+- A court's slots for a date are that weekday's opening ranges split into `slotMinutes` slots (a trailing remainder shorter than one slot is not a slot). A slot `[start, end)` is **taken** if it overlaps — by any amount — a booking slot of a non-`CANCELLED` booking or a court block; back-to-back ranges (one ends when the other starts) do not overlap. On today, a slot that has already started is taken.
+- A slot is listed when at least `courts` courts are free in that exact `start`–`end`. `slots` are ordered by `start`, `courtIds` ascending, and `price` is the lowest slot price among those courts.
 
 When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby days that have room, searched in a **±7-day window clamped to today** — i.e. from `max(today, date−7)` to `date+7`, never in the past:
 ```json
@@ -112,6 +140,22 @@ When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby
 }
 ```
 
+`alternativeDays` excludes the requested date, is in date order, and `freeSlotCount` is the number of slots that day with at least `courts` free courts. If the requested date is today the window is today…today+7; if it is 3 days ahead, today…date+7. It is `[]` when no day in the window has room.
+
+`GET /courts/3/availability?date=2026-06-08` — every slot of one court's day, flagged free or not:
+```json
+{
+  "courtId": 3,
+  "courtName": "Court 3",
+  "date": "2026-06-08",
+  "slots": [
+    { "start": "07:00", "end": "08:00", "available": false },
+    { "start": "08:00", "end": "09:00", "available": true }
+  ]
+}
+```
+Same slot rules as above, for this court only (any date, so the admin calendar can show past days — all their slots are unavailable). `slots` is `[]` if the court has no schedule or is closed that weekday. `date` is required (missing or malformed → `400`). `404` if the court does not exist or — for a CLIENT — is inactive.
+
 ---
 
 ## Bookings — `/api/v1/bookings`
@@ -122,7 +166,7 @@ When `available` is `false`, `slots` is empty and `alternativeDays` lists nearby
 | GET | `/me/bookings` | CLIENT | Own bookings (upcoming + history), paginated. Query: `status`, `from`, `to`, pagination |
 | GET | `/bookings/{id}` | OWNER, CLIENT* | Single booking (*client: only own) |
 | POST | `/bookings` | OWNER, CLIENT | Create. Client books for self; owner books manually for any client |
-| PATCH | `/bookings/{id}` | OWNER, CLIENT* | Change status / reschedule |
+| PATCH | `/bookings/{id}` | OWNER, CLIENT* | Reschedule: new date, slots and optionally court |
 | DELETE | `/bookings/{id}` | OWNER, CLIENT* | Cancel (min-notice rule applies to clients) |
 
 Create body:
@@ -135,6 +179,13 @@ Create body:
 }
 ```
 `courtId` is required: it is one of the `courtIds` the availability endpoint reported free for those slots. `clientId` is optional/ignored for CLIENT (taken from token) and required for OWNER manual booking. One booking covers one court with one or more consecutive slots. Returns `409` if any slot is no longer free on that court.
+
+Create rules (`201` + the booking response below):
+- Each slot must be one of the court's schedule slots for that weekday (same `start`/`end` as `GET /courts/{id}/availability` lists), and the slots must be consecutive (any order in the body). Otherwise `400` (e.g. `"12:00-13:00 is outside the schedule of court 3"`, `"Slots must be consecutive"`), also when the court has no schedule.
+- A slot that has already started (or a past `date`) → `400`.
+- A slot taken by a non-cancelled booking or a court block → `409` (`"07:00-08:00 is not available on court 3"`). Free/taken is the same computation as availability.
+- Each slot's `price` is the schedule price at this moment (snapshot); `totalPrice` is their sum.
+- `404` if the court does not exist — or, for a CLIENT, is inactive (an OWNER gets `400 "Court 3 is inactive"`) — or if an OWNER's `clientId` is not a client. An OWNER without `clientId` → `400`.
 
 Booking response (also returned by `GET /bookings/{id}`, and as the items of the paginated lists):
 ```json
@@ -153,6 +204,36 @@ Booking response (also returned by `GET /bookings/{id}`, and as the items of the
 ```
 
 `status`: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
+
+Each `slots[].price` is a snapshot of the court's slot price taken when the slot was booked; later schedule price changes never alter an existing booking. `totalPrice` is the sum of the slot prices. A cancelled booking is kept with status `CANCELLED`; only a `CONFIRMED` booking can be cancelled or rescheduled.
+
+Listing and reading:
+- `GET /bookings` (OWNER only; a CLIENT gets `403`): every client's bookings, filtered by any of `date`, `courtId`, `userId`, `status`.
+- `GET /me/bookings` (CLIENT only; an OWNER gets `403`): only the caller's bookings, filtered by `status` and the inclusive date range `from`–`to`.
+- Both are paginated and sorted by `date` descending (most recent first) unless `sort` is given.
+- `GET /bookings/{id}`: the OWNER reads any booking; a CLIENT reads only their own — someone else's is `404`, the same as a missing one.
+
+Cancel — `DELETE /bookings/{id}` → `204`. The booking is kept with status `CANCELLED` and its slots become free again.
+- **Minimum notice (CLIENT):** a client may cancel only until **24 hours** before the booking starts (its first slot; configurable as `app.booking.cancel-min-notice-hours`). Exactly 24 hours before is still allowed. Later → `409`:
+  ```json
+  { "timestamp": "2026-06-07T08:00:00Z", "status": 409, "error": "Conflict", "message": "Bookings can only be cancelled or changed at least 24 hours before they start", "path": "/api/v1/bookings/5001" }
+  ```
+- The OWNER may cancel at any time.
+- Only a `CONFIRMED` booking can be cancelled → otherwise `409` (`"Booking 5001 is CANCELLED"`).
+- `404` if the booking does not exist or — for a CLIENT — is not theirs.
+
+Reschedule — `PATCH /bookings/{id}` → `200` + the booking response. Body (replaces date and slots; `courtId` optional, omitted keeps the current court):
+```json
+{
+  "courtId": 3,
+  "date": "2026-06-09",
+  "slots": [ { "start": "18:00", "end": "19:00" } ]
+}
+```
+- Same slot rules and errors as create (`400` past / outside the schedule / not consecutive, `409` taken). The booking's own current slots count as free, so it can be shifted onto times that overlap itself.
+- The new slots are priced at the current schedule price (a new snapshot).
+- Same minimum-notice rule as cancel for a CLIENT, measured on the booking's current start; same `CONFIRMED`-only and `404` rules.
+- Status changes are not made with `PATCH`: cancel with `DELETE`.
 
 ---
 

@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalTime;
 
 @Entity
@@ -35,4 +37,22 @@ public class BookingSlot {
 
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
+
+    @Column(nullable = false, precision = 8, scale = 2)
+    private BigDecimal price;
+
+    /** A slot {@code [start, end)} with the price charged for it at booking time (never re-read from the schedule). */
+    public static BookingSlot of(LocalTime start, LocalTime end, BigDecimal price) {
+        if (!start.isBefore(end)) {
+            throw new IllegalArgumentException("Slot start must be before its end");
+        }
+        if (price.signum() < 0) {
+            throw new IllegalArgumentException("Slot price must not be negative");
+        }
+        var slot = new BookingSlot();
+        slot.startTime = start;
+        slot.endTime = end;
+        slot.price = price.setScale(2, RoundingMode.HALF_UP);
+        return slot;
+    }
 }

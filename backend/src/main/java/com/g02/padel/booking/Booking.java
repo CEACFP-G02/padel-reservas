@@ -2,6 +2,7 @@ package com.g02.padel.booking;
 
 import com.g02.padel.court.Court;
 import com.g02.padel.shared.enums.BookingStatus;
+import com.g02.padel.shared.exception.ConflictException;
 import com.g02.padel.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -15,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -53,7 +56,7 @@ public class Booking {
     private BookingStatus status = BookingStatus.CONFIRMED;
 
     @Column(name = "total_price", nullable = false, precision = 8, scale = 2)
-    private BigDecimal totalPrice;
+    private BigDecimal totalPrice = new BigDecimal("0.00");
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -62,10 +65,40 @@ public class Booking {
     private LocalDateTime cancelledAt;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("startTime")
     private List<BookingSlot> slots = new ArrayList<>();
 
+    /** Adds a priced slot; the total is always the sum of the slot price snapshots. */
     public void addSlot(BookingSlot slot) {
         slots.add(slot);
         slot.setBooking(this);
+        totalPrice = slots.stream().map(BookingSlot::getPrice).reduce(new BigDecimal("0.00"), BigDecimal::add);
+    }
+
+    /** Moves a confirmed booking to {@code newDate} with {@code newSlots}, replacing the old ones. */
+    public void reschedule(LocalDate newDate, List<BookingSlot> newSlots) {
+        requireConfirmed();
+        date = newDate;
+        slots.clear();
+        newSlots.forEach(this::addSlot);
+    }
+
+    /** Soft-cancel: the booking is kept with status CANCELLED, freeing its slots. */
+    public void cancel(LocalDateTime now) {
+        requireConfirmed();
+        status = BookingStatus.CANCELLED;
+        cancelledAt = now;
+    }
+
+    public LocalDateTime startsAt() {
+        return date.atTime(slots.stream().map(BookingSlot::getStartTime).min(Comparator.naturalOrder())
+                .orElseThrow());
+    }
+
+    /** @throws ConflictException unless the booking is CONFIRMED */
+    public void requireConfirmed() {
+        if (status != BookingStatus.CONFIRMED) {
+            throw new ConflictException("Booking " + id + " is " + status);
+        }
     }
 }

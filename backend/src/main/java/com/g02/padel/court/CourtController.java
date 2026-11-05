@@ -9,12 +9,14 @@ import com.g02.padel.court.usecase.GetCourtUseCase;
 import com.g02.padel.court.usecase.ListCourtsUseCase;
 import com.g02.padel.court.usecase.UpdateCourtUseCase;
 import com.g02.padel.shared.enums.CourtType;
+import com.g02.padel.shared.security.CurrentRole;
 import com.g02.padel.shared.web.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -48,13 +50,14 @@ public class CourtController {
     @GetMapping
     public PageResponse<CourtResponse> list(@RequestParam(required = false) CourtType type,
                                             @RequestParam(required = false) Boolean active,
-                                            @PageableDefault(size = 20) Pageable pageable) {
-        return PageResponse.of(listCourts.execute(type, active, pageable));
+                                            @PageableDefault(size = 20, sort = "id") Pageable pageable,
+                                            Authentication authentication) {
+        return PageResponse.of(listCourts.execute(type, active, CurrentRole.of(authentication), pageable));
     }
 
     @GetMapping("/{id}")
-    public CourtResponse get(@PathVariable Long id) {
-        return getCourt.execute(id);
+    public CourtResponse get(@PathVariable Long id, Authentication authentication) {
+        return getCourt.execute(id, CurrentRole.of(authentication));
     }
 
     @PostMapping

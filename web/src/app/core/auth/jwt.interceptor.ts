@@ -1,15 +1,37 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { catchError, from, switchMap, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { AuthService } from './auth.service';
+import { AuthFacade } from './auth.facade';
 
-/** Adds `Authorization: Bearer <token>` to requests sent to our API. */
+const AUTH_URL = `${environment.apiBaseUrl}/auth/`;
+
+/**
+ * Adds `Authorization: Bearer <access token>` to requests sent to our API. On a 401 it refreshes the access
+ * token once and retries; if the refresh fails the facade signs out and the original 401 is propagated.
+ */
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = inject(AuthService).accessToken();
+  const auth = inject(AuthFacade);
+  const token = auth.accessToken();
   if (!token || !req.url.startsWith(environment.apiBaseUrl)) {
     return next(req);
   }
-  // TODO: on 401, call AuthService.refreshToken() once and retry — see docs/api.md#authentication
-  return next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
+  return next(withBearer(req, token)).pipe(
+    catchError((error: unknown) => {
+      const refreshable =
+        error instanceof HttpErrorResponse && error.status === 401 && !req.url.startsWith(AUTH_URL);
+      if (!refreshable) {
+        return throwError(() => error);
+      }
+      return from(auth.refreshToken()).pipe(
+        catchError(() => throwError(() => error)),
+        switchMap(() => next(withBearer(req, auth.accessToken() ?? ''))),
+      );
+    }),
+  );
 };
+
+function withBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
+  return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+}

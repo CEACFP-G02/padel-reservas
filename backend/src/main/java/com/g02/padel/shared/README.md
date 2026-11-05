@@ -8,4 +8,6 @@ Cross-cutting code used by every feature. No use cases live here.
   use-case stubs throw `UnsupportedOperationException`, mapped to **501 Not Implemented**.
 - `config/` — `SecurityConfig` (stateless JWT, BCrypt), `CorsConfig`, `OpenApiConfig`
   (Swagger UI at `/swagger-ui.html`).
-- `security/` — `JwtService` and `JwtAuthenticationFilter`.
+- `security/` — `JwtService` (HS256 access/refresh tokens; `typ` claim keeps them apart; TTLs from
+  `app.jwt.*`), `JwtAuthenticationFilter` (Bearer access token → authenticated principal) and
+  `AppUserDetailsService` (`app_user` by email → authority `ROLE_OWNER` / `ROLE_CLIENT`).

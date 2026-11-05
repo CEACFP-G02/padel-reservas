@@ -4,9 +4,9 @@ Ionic + Angular app for the **CLIENT** actor of padel-reservas. It talks to the 
 (`/api/v1`) specified in `../docs/api.md`, which is the source of truth for every model and
 endpoint here.
 
-> Scaffold: facade methods (except `BookingFacade.createBooking`) and the `AuthService`
-> login/register/refresh flows are TODO stubs that throw `TODO: … — see docs/api.md#<section>`. API services, the JWT interceptor, the
-> client guard, token storage and booking from a slot are implemented and tested.
+> Scaffold: feature facade methods (except `BookingFacade.createBooking`) are TODO stubs that throw
+> `TODO: … — see docs/api.md#<section>`. Auth (login, registration, token refresh), API services, the JWT
+> interceptor, the client guard, token storage and booking from a slot are implemented and tested.
 
 ## Run
 
@@ -54,8 +54,8 @@ src/app/
 ├── app.config.ts / app.routes.ts   providers + top-level routes
 ├── core/auth/
 │   ├── auth.api.ts                 POST /auth/register | /login | /refresh
-│   ├── auth.service.ts             session as signals: currentUser, role, isClient; register/login/refreshToken/logout
-│   ├── jwt.interceptor.ts          functional: Authorization: Bearer <token> (API host only)
+│   ├── auth.facade.ts              auth use cases (register, login, refreshToken, loadCurrentUser, logout) + session signals: currentUser, role, isClient
+│   ├── jwt.interceptor.ts          functional: Authorization: Bearer <token> (API host only); on 401 refreshes once and retries
 │   ├── client.guard.ts             functional CanActivate: role CLIENT, else /login?returnUrl=…
 │   └── token-storage.ts            localStorage + JWT payload decoding
 ├── shared/
@@ -71,7 +71,7 @@ src/app/
 ```
 
 **Dependency rule:** `page → facade → api → HttpClient`. Pages never inject an `*Api`. The
-`auth` feature has only pages; it uses the core `AuthService`.
+`auth` feature has only pages; they use the core `AuthFacade` (page → `AuthFacade` → `AuthApi`).
 
 ## Routes
 
@@ -90,7 +90,7 @@ Each method maps 1:1 to a CLIENT use case in the T3 use-case diagram.
 
 | Feature | Facade | Methods | Endpoints |
 |---|---|---|---|
-| auth | `AuthService` (core) | `register`, `login` (+ `refreshToken`, `logout`) | `POST /auth/register`, `/auth/login`, `/auth/refresh` |
+| auth | `AuthFacade` (core) | `register` (always CLIENT, then logs in), `login` (CLIENT only), `refreshToken`, `loadCurrentUser`, `logout` | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `GET /auth/me` |
 | availability | `AvailabilityFacade` | `getAvailability` | `GET /availability?date=&courts=` |
 | court | `CourtFacade` | `listCourts`, `getCourt` | `GET /courts`, `/courts/{id}` |
 | booking | `BookingFacade` | `createBooking`, `getMyBookings`, `getBooking`, `cancelBooking` | `POST /bookings`, `GET /me/bookings`, `GET /bookings/{id}`, `DELETE /bookings/{id}` |

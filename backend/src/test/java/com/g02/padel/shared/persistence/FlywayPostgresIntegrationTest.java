@@ -42,7 +42,7 @@ class FlywayPostgresIntegrationTest {
         assertThat(applied).allSatisfy(m -> assertThat(m.getState()).isEqualTo(MigrationState.SUCCESS));
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(Arrays.stream(applied).map(m -> m.getVersion().getVersion()))
-                .containsExactly("1", "2");
+                .containsExactly("1", "2", "3");
     }
 
     @Test
@@ -56,11 +56,16 @@ class FlywayPostgresIntegrationTest {
 
     @Test
     void storesMoneyAsDecimal8Scale2() {
-        var column = jdbc.queryForMap("""
-                SELECT data_type, numeric_precision, numeric_scale FROM information_schema.columns
-                WHERE table_name = 'booking' AND column_name = 'total_price'""");
+        assertMoneyColumn("booking", "total_price");
+        assertMoneyColumn("booking_slot", "price");
+    }
 
-        assertThat(column).containsEntry("data_type", "numeric")
+    private void assertMoneyColumn(String table, String name) {
+        var column = jdbc.queryForMap("""
+                SELECT data_type, numeric_precision, numeric_scale, is_nullable FROM information_schema.columns
+                WHERE table_name = ? AND column_name = ?""", table, name);
+
+        assertThat(column).containsEntry("is_nullable", "NO").containsEntry("data_type", "numeric")
                 .containsEntry("numeric_precision", 8)
                 .containsEntry("numeric_scale", 2);
     }
