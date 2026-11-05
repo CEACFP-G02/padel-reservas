@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { AvailabilityQuery, AvailabilityResponse } from '../../shared/models';
-import { todo } from '../../shared/util/todo';
 import { AvailabilityApi } from './availability.api';
 
 /** CLIENT use case: search free slots for a date and a number of courts. */
@@ -24,7 +24,24 @@ export class AvailabilityFacade {
 
   /** UC: Get availability. */
   async getAvailability(query: AvailabilityQuery): Promise<void> {
-    // TODO: _query.set(query); api.search(query) -> _result — see docs/api.md#availability--apiv1availability-
-    todo('AvailabilityFacade.getAvailability', 'availability--apiv1availability-');
+    this._query.set(query);
+    this._loading.set(true);
+    this._error.set(null);
+    try {
+      this._result.set(await firstValueFrom(this.api.search(query)));
+    } catch {
+      this._result.set(null);
+      this._error.set('No se pudo consultar la disponibilidad.');
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /** Repeats the last search, e.g. after a booking changed the free slots. */
+  async refresh(): Promise<void> {
+    const query = this._query();
+    if (query) {
+      await this.getAvailability(query);
+    }
   }
 }

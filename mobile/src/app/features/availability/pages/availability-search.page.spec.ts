@@ -1,24 +1,27 @@
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { AlertController, provideIonicAngular, ToastController } from '@ionic/angular';
+import { ModalController, provideIonicAngular, ToastController } from '@ionic/angular';
 
-import {
-  AvailabilityQuery,
-  AvailabilityResponse,
-  Booking,
-  CreateBookingRequest,
-  SlotResponse,
-} from '../../../shared/models';
+import { AvailabilityQuery, AvailabilityResponse, SlotResponse } from '../../../shared/models';
 import { toIsoDate } from '../../../shared/util/date';
 import { bookingFixture } from '../../../testing/fixtures';
+import { BookingConfirmModal } from '../../booking/components/booking-confirm.modal';
 import { BookingFacade } from '../../booking/booking.facade';
 import { AvailabilityFacade } from '../availability.facade';
 import { AvailabilitySearchPage } from './availability-search.page';
 
 describe('AvailabilitySearchPage', () => {
+  const today = toIsoDate(new Date());
+  const inDays = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return toIsoDate(d);
+  };
+
   const result = signal<AvailabilityResponse | null>(null);
   const getAvailability = vi.fn<(query: AvailabilityQuery) => Promise<void>>().mockResolvedValue();
+  const refresh = vi.fn<() => Promise<void>>().mockResolvedValue();
   const facade = {
     query: signal<AvailabilityQuery | null>(null),
     result,
@@ -26,21 +29,20 @@ describe('AvailabilitySearchPage', () => {
     error: signal<string | null>(null),
     showAlternatives: computed(() => result()?.available === false),
     getAvailability,
+    refresh,
   };
 
-  type CreateBooking = (request: CreateBookingRequest) => Promise<Booking | null>;
-  type Dismiss = { role?: string; data?: { values?: unknown } };
-  let createBooking: ReturnType<typeof vi.fn<CreateBooking>>;
-  let bookingError: ReturnType<typeof signal<string | null>>;
-  let alertCreate: ReturnType<typeof vi.fn>;
+  type Dismiss = { role?: string; data?: unknown };
+  let modalCreate: ReturnType<typeof vi.fn>;
   let toastCreate: ReturnType<typeof vi.fn>;
+  let bookingError: ReturnType<typeof signal<string | null>>;
 
-  function dismissPickerWith(dismiss: Dismiss): void {
-    alertCreate.mockResolvedValue({ present: vi.fn(), onDidDismiss: vi.fn().mockResolvedValue(dismiss) });
+  function modalDismissesWith(dismiss: Dismiss): void {
+    modalCreate.mockResolvedValue({ present: vi.fn(), onDidDismiss: vi.fn().mockResolvedValue(dismiss) });
   }
 
-  function slot(courtIds: number[]): SlotResponse {
-    return { start: '07:00', end: '08:00', courtsFree: courtIds.length, courtIds, price: 16 };
+  function slot(courtIds: number[], start = '07:00', end = '08:00'): SlotResponse {
+    return { start, end, courtsFree: courtIds.length, courtIds, price: 16 };
   }
 
   function render() {
@@ -50,8 +52,8 @@ describe('AvailabilitySearchPage', () => {
         provideRouter([]),
         provideIonicAngular(),
         { provide: AvailabilityFacade, useValue: facade },
-        { provide: BookingFacade, useValue: { createBooking, error: bookingError } },
-        { provide: AlertController, useValue: { create: alertCreate } },
+        { provide: BookingFacade, useValue: { error: bookingError } },
+        { provide: ModalController, useValue: { create: modalCreate } },
         { provide: ToastController, useValue: { create: toastCreate } },
       ],
     });
@@ -60,132 +62,160 @@ describe('AvailabilitySearchPage', () => {
     return fixture;
   }
 
+  const text = (fixture: { nativeElement: HTMLElement }) => (fixture.nativeElement.textContent ?? '') as string;
+
   beforeEach(() => {
     result.set(null);
     getAvailability.mockClear();
-    createBooking = vi.fn<CreateBooking>().mockResolvedValue(bookingFixture());
-    bookingError = signal<string | null>(null);
-    alertCreate = vi.fn();
+    refresh.mockClear();
+    modalCreate = vi.fn();
     toastCreate = vi.fn().mockResolvedValue({ present: vi.fn() });
+    bookingError = signal<string | null>(null);
   });
 
-  it('searches today for one court by default', () => {
-    const fixture = render();
-    fixture.componentInstance['search']();
-    expect(getAvailability).toHaveBeenCalledWith({ date: toIsoDate(new Date()), courts: 1 });
-  });
-
-  it('searches with the chosen date and number of courts', () => {
-    const page = render().componentInstance;
-    page['date'].set('2026-06-08');
-    page['courts'].set(2);
-    page['search']();
-    expect(getAvailability).toHaveBeenCalledWith({ date: '2026-06-08', courts: 2 });
-  });
-
-  it('lists the free slots when the day is available', () => {
-    const fixture = render();
-    result.set({
-      requestedDate: '2026-06-08',
-      courtsRequested: 2,
-      available: true,
-      slots: [slot([1, 2, 3])],
-      alternativeDays: [],
+  describe('search', () => {
+    it('searches today for one court by default', () => {
+      const fixture = render();
+      (fixture.nativeElement.querySelector('[data-testid="search"]') as HTMLElement).click();
+      expect(getAvailability).toHaveBeenCalledWith({ date: today, courts: 1 });
     });
-    fixture.detectChanges();
-    const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('07:00 – 08:00');
-    expect(text).not.toContain('Días cercanos');
+
+    it('searches with the chosen date and number of courts', () => {
+      const page = render().componentInstance;
+      page['date'].set('2026-06-08');
+      page['courts'].set(2);
+      page['search']();
+      expect(getAvailability).toHaveBeenCalledWith({ date: '2026-06-08', courts: 2 });
+    });
+
+    it('offers 1 to 4 courts', () => {
+      expect(render().componentInstance['courtOptions']).toEqual([1, 2, 3, 4]);
+    });
   });
 
-  it('offers nearby days when the day is full, and searches one when tapped', () => {
-    const fixture = render();
-    fixture.componentInstance['courts'].set(2);
-    result.set({
-      requestedDate: '2026-06-08',
-      courtsRequested: 2,
-      available: false,
-      slots: [],
-      alternativeDays: [{ date: '2026-06-09', freeSlotCount: 5 }],
+  describe('results', () => {
+    it('lists each matching slot with its time, free courts and price', () => {
+      const fixture = render();
+      result.set({
+        requestedDate: '2026-06-08',
+        courtsRequested: 2,
+        available: true,
+        slots: [slot([1, 2, 3]), slot([2, 4], '08:00', '09:00')],
+        alternativeDays: [],
+      });
+      fixture.detectChanges();
+
+      const slots = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="slot"]')) as HTMLElement[];
+      expect(slots).toHaveLength(2);
+      expect(slots[0].textContent).toContain('07:00 – 08:00');
+      expect(slots[0].textContent).toContain('Pistas 1, 2, 3');
+      expect(slots[0].textContent).toContain('16,00\u00a0€');
+      expect(slots[1].textContent).toContain('Pistas 2, 4');
+      expect(text(fixture)).not.toContain('Días cercanos');
     });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Días cercanos');
 
-    const day = fixture.nativeElement.querySelector('[data-testid="alternative-day"]') as HTMLElement;
-    day.click();
+    it('offers the nearby days as chips when the day is full, and searches one when tapped', () => {
+      const fixture = render();
+      fixture.componentInstance['courts'].set(2);
+      result.set({
+        requestedDate: inDays(1),
+        courtsRequested: 2,
+        available: false,
+        slots: [],
+        alternativeDays: [
+          { date: inDays(2), freeSlotCount: 5 },
+          { date: inDays(3), freeSlotCount: 1 },
+        ],
+      });
+      fixture.detectChanges();
 
-    expect(fixture.componentInstance['date']()).toBe('2026-06-09');
-    expect(getAvailability).toHaveBeenLastCalledWith({ date: '2026-06-09', courts: 2 });
+      expect(text(fixture)).toContain('No hay 2 pistas libres a la vez ese día');
+      const chips = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="alternative-day"]')) as HTMLElement[];
+      expect(chips.map((c) => c.tagName.toLowerCase())).toEqual(['ion-chip', 'ion-chip']);
+      expect(chips[0].textContent).toContain('5 turnos');
+      expect(chips[1].textContent).toContain('1 turno');
+
+      chips[1].click();
+
+      expect(fixture.componentInstance['date']()).toBe(inDays(3));
+      expect(getAvailability).toHaveBeenLastCalledWith({ date: inDays(3), courts: 2 });
+    });
+
+    it('never shows a past day as an alternative', () => {
+      const fixture = render();
+      result.set({
+        requestedDate: today,
+        courtsRequested: 1,
+        available: false,
+        slots: [],
+        alternativeDays: [
+          { date: inDays(-1), freeSlotCount: 3 },
+          { date: today, freeSlotCount: 2 },
+          { date: inDays(1), freeSlotCount: 4 },
+        ],
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelectorAll('[data-testid="alternative-day"]')).toHaveLength(2);
+    });
+
+    it('says so when no nearby day has room either', () => {
+      const fixture = render();
+      result.set({ requestedDate: today, courtsRequested: 4, available: false, slots: [], alternativeDays: [] });
+      fixture.detectChanges();
+
+      expect(text(fixture)).toContain('Tampoco hay hueco en los días cercanos.');
+    });
   });
 
   describe('booking a slot', () => {
-    const request = (courtId: number): CreateBookingRequest => ({
-      courtId,
-      date: '2026-06-08',
-      slots: [{ start: '07:00', end: '08:00' }],
+    it('tapping a slot opens the confirmation modal for that date and slot', async () => {
+      modalDismissesWith({ role: 'cancel' });
+      const fixture = render();
+      result.set({ requestedDate: '2026-06-08', courtsRequested: 1, available: true, slots: [slot([3])], alternativeDays: [] });
+      fixture.detectChanges();
+
+      (fixture.nativeElement.querySelector('[data-testid="slot"]') as HTMLElement).click();
+      await fixture.whenStable();
+
+      expect(modalCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ component: BookingConfirmModal, componentProps: { date: '2026-06-08', slot: slot([3]) } }),
+      );
     });
 
-    it('books the only free court directly, for the searched date', async () => {
+    it('confirms a successful booking and refreshes the free slots', async () => {
+      modalDismissesWith({ role: 'booked', data: bookingFixture() });
       const page = render().componentInstance;
-      page['date'].set('2026-06-10');
+
       await page['book']('2026-06-08', slot([3]));
 
-      expect(alertCreate).not.toHaveBeenCalled();
-      expect(createBooking).toHaveBeenCalledWith(request(3));
-      expect(toastCreate).toHaveBeenCalledWith(expect.objectContaining({ message: 'Reserva confirmada: Court 3, 07:00' }));
+      expect(toastCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Reserva confirmada: Court 3, lunes, 8 de junio a las 07:00', color: 'success' }),
+      );
+      expect(refresh).toHaveBeenCalled();
     });
 
-    it('lets the user pick one of several free courts, and books the chosen one', async () => {
-      dismissPickerWith({ role: 'confirm', data: { values: 3 } });
+    it('shows the conflict and refreshes the results when the slot was just taken (409)', async () => {
+      bookingError.set('Ese turno ya no está libre en esa pista. Vuelve a buscar.');
+      modalDismissesWith({ role: 'taken' });
       const page = render().componentInstance;
-      await page['book']('2026-06-08', slot([1, 3]));
 
-      const options = alertCreate.mock.calls[0][0] as { inputs: { type: string; value: number; label: string }[] };
-      expect(options.inputs.map(({ type, value, label }) => ({ type, value, label }))).toEqual([
-        { type: 'radio', value: 1, label: 'Pista 1' },
-        { type: 'radio', value: 3, label: 'Pista 3' },
-      ]);
-      expect(createBooking).toHaveBeenCalledWith(request(3));
-    });
-
-    it('does not book when the court picker is cancelled', async () => {
-      dismissPickerWith({ role: 'cancel' });
-      const page = render().componentInstance;
-      await page['book']('2026-06-08', slot([1, 3]));
-
-      expect(createBooking).not.toHaveBeenCalled();
-      expect(toastCreate).not.toHaveBeenCalled();
-    });
-
-    it('shows the booking error when the booking fails', async () => {
-      createBooking.mockImplementation(async () => {
-        bookingError.set('Ese turno ya no está libre en esa pista. Vuelve a buscar.');
-        return null;
-      });
-      const page = render().componentInstance;
       await page['book']('2026-06-08', slot([3]));
 
       expect(toastCreate).toHaveBeenCalledWith(
         expect.objectContaining({ message: 'Ese turno ya no está libre en esa pista. Vuelve a buscar.', color: 'danger' }),
       );
+      expect(refresh).toHaveBeenCalled();
     });
 
-    it('wires the Reservar button of each slot to book it', () => {
-      const fixture = render();
-      const page = fixture.componentInstance as unknown as { book: (date: string, slot: SlotResponse) => Promise<void> };
-      const book = vi.spyOn(page, 'book').mockResolvedValue();
-      result.set({
-        requestedDate: '2026-06-08',
-        courtsRequested: 1,
-        available: true,
-        slots: [slot([3])],
-        alternativeDays: [],
-      });
-      fixture.detectChanges();
+    it('does nothing when the modal is cancelled', async () => {
+      modalDismissesWith({ role: 'cancel' });
+      const page = render().componentInstance;
 
-      (fixture.nativeElement.querySelector('[data-testid="book-slot"]') as HTMLElement).click();
+      await page['book']('2026-06-08', slot([3]));
 
-      expect(book).toHaveBeenCalledWith('2026-06-08', slot([3]));
+      expect(toastCreate).not.toHaveBeenCalled();
+      expect(refresh).not.toHaveBeenCalled();
     });
   });
 });

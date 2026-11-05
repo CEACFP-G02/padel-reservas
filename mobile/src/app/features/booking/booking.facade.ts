@@ -6,6 +6,13 @@ import { Booking, CreateBookingRequest, MyBookingsQuery } from '../../shared/mod
 import { todo } from '../../shared/util/todo';
 import { BookingApi } from './booking.api';
 
+/** Spanish messages for the documented POST /bookings rejections (the API's own messages are in English). */
+const BOOKING_ERRORS: Record<number, string> = {
+  400: 'Ese turno ya no se puede reservar. Vuelve a buscar.',
+  404: 'Esa pista ya no está disponible. Vuelve a buscar.',
+  409: 'Ese turno ya no está libre en esa pista. Vuelve a buscar.',
+};
+
 /** CLIENT use cases on the client's own bookings. */
 @Injectable({ providedIn: 'root' })
 export class BookingFacade {
@@ -15,23 +22,28 @@ export class BookingFacade {
   private readonly _selected = signal<Booking | null>(null);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
+  private readonly _slotTaken = signal(false);
 
   readonly myBookings = this._myBookings.asReadonly();
   readonly selected = this._selected.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
+  /** The last createBooking failed because the slot was taken meanwhile (409): refresh availability. */
+  readonly slotTaken = this._slotTaken.asReadonly();
 
   /** UC: Create booking (for self) on one court. Resolves to `null` on failure, with `error` set. */
   async createBooking(request: CreateBookingRequest): Promise<Booking | null> {
     this._loading.set(true);
     this._error.set(null);
+    this._slotTaken.set(false);
     try {
       const booking = await firstValueFrom(this.api.create(request));
       this._myBookings.update((bookings) => [booking, ...bookings]);
       return booking;
     } catch (err) {
-      const slotTaken = err instanceof HttpErrorResponse && err.status === 409;
-      this._error.set(slotTaken ? 'Ese turno ya no está libre en esa pista. Vuelve a buscar.' : 'No se pudo crear la reserva.');
+      const status = err instanceof HttpErrorResponse ? err.status : 0;
+      this._slotTaken.set(status === 409);
+      this._error.set(BOOKING_ERRORS[status] ?? 'No se pudo crear la reserva.');
       return null;
     } finally {
       this._loading.set(false);

@@ -39,6 +39,30 @@ describe('BookingFacade', () => {
     expect(facade.myBookings()).toEqual([bookingFixture()]);
     expect(facade.loading()).toBe(false);
     expect(facade.error()).toBeNull();
+    expect(facade.slotTaken()).toBe(false);
+  });
+
+  it('createBooking shows the API message for a rejected request (e.g. a slot outside the schedule)', async () => {
+    const pending = facade.createBooking(request);
+    http
+      .expectOne(`${environment.apiBaseUrl}/bookings`)
+      .flush({ status: 400, message: 'Cannot book a slot that has already started' }, { status: 400, statusText: 'Bad Request' });
+
+    await expect(pending).resolves.toBeNull();
+    expect(facade.error()).toBe('Ese turno ya no se puede reservar. Vuelve a buscar.');
+    expect(facade.slotTaken()).toBe(false);
+  });
+
+  it('a new attempt clears the previous conflict', async () => {
+    const first = facade.createBooking(request);
+    http.expectOne(`${environment.apiBaseUrl}/bookings`).flush(null, { status: 409, statusText: 'Conflict' });
+    await first;
+
+    const second = facade.createBooking(request);
+    expect(facade.slotTaken()).toBe(false);
+    expect(facade.error()).toBeNull();
+    http.expectOne(`${environment.apiBaseUrl}/bookings`).flush(bookingFixture());
+    await second;
   });
 
   it('createBooking reports 409 (slot no longer free) as an error', async () => {
@@ -49,6 +73,7 @@ describe('BookingFacade', () => {
 
     await expect(pending).resolves.toBeNull();
     expect(facade.error()).toBe('Ese turno ya no está libre en esa pista. Vuelve a buscar.');
+    expect(facade.slotTaken()).toBe(true);
     expect(facade.myBookings()).toEqual([]);
     expect(facade.loading()).toBe(false);
   });
@@ -61,6 +86,7 @@ describe('BookingFacade', () => {
 
     await expect(pending).resolves.toBeNull();
     expect(facade.error()).toBe('No se pudo crear la reserva.');
+    expect(facade.slotTaken()).toBe(false);
   });
 
   it.todo('getMyBookings loads the client bookings');

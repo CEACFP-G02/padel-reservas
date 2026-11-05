@@ -1,10 +1,9 @@
-import { CurrencyPipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  AlertController,
   IonButton,
   IonButtons,
+  IonChip,
   IonContent,
   IonDatetime,
   IonHeader,
@@ -19,19 +18,21 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
+  ModalController,
   ToastController,
 } from '@ionic/angular';
 
-import { IsoDate, SlotResponse } from '../../../shared/models';
+import { Booking, IsoDate, SlotResponse } from '../../../shared/models';
 import { toIsoDate } from '../../../shared/util/date';
+import { formatDay, formatPrice } from '../../../shared/util/format';
+import { BookingConfirmModal } from '../../booking/components/booking-confirm.modal';
 import { BookingFacade } from '../../booking/booking.facade';
 import { AvailabilityFacade } from '../availability.facade';
 
-/** Headline screen: date + number of courts → free slots, or nearby days when the day is full. */
+/** Headline screen: date + number of courts → free slots, or nearby days when the day is full; tap a slot to book. */
 @Component({
   selector: 'app-availability-search',
   imports: [
-    CurrencyPipe,
     RouterLink,
     IonHeader,
     IonToolbar,
@@ -45,6 +46,7 @@ import { AvailabilityFacade } from '../availability.facade';
     IonLabel,
     IonNote,
     IonText,
+    IonChip,
     IonDatetime,
     IonSelect,
     IonSelectOption,
@@ -72,7 +74,7 @@ import { AvailabilityFacade } from '../availability.facade';
 
       <ion-list>
         <ion-item>
-          <ion-select label="Pistas" [value]="courts()" (ionChange)="courts.set($event.detail.value)">
+          <ion-select label="Pistas a la vez" [value]="courts()" (ionChange)="courts.set($event.detail.value)">
             @for (n of courtOptions; track n) {
               <ion-select-option [value]="n">{{ n }}</ion-select-option>
             }
@@ -80,7 +82,7 @@ import { AvailabilityFacade } from '../availability.facade';
         </ion-item>
       </ion-list>
 
-      <ion-button expand="block" (click)="search()" [disabled]="facade.loading()">Buscar</ion-button>
+      <ion-button expand="block" data-testid="search" (click)="search()" [disabled]="facade.loading()">Buscar</ion-button>
 
       @if (facade.loading()) {
         <div class="ion-text-center ion-padding"><ion-spinner /></div>
@@ -92,31 +94,37 @@ import { AvailabilityFacade } from '../availability.facade';
       @if (facade.result(); as result) {
         @if (result.available) {
           <ion-list>
-            <ion-list-header>Turnos libres</ion-list-header>
+            <ion-list-header>Turnos libres · {{ day(result.requestedDate) }}</ion-list-header>
             @for (slot of result.slots; track slot.start) {
-              <ion-item>
+              <ion-item button detail data-testid="slot" (click)="book(result.requestedDate, slot)">
                 <ion-label>
                   {{ slot.start }} – {{ slot.end }}
-                  <p>{{ slot.courtsFree }} pistas libres · {{ slot.price | currency: 'EUR' }}</p>
+                  <p>{{ courtsLabel(slot) }}</p>
                 </ion-label>
-                <ion-button slot="end" data-testid="book-slot" (click)="book(result.requestedDate, slot)">
-                  Reservar
-                </ion-button>
+                <ion-note slot="end">{{ price(slot.price) }}</ion-note>
               </ion-item>
             }
           </ion-list>
         } @else {
-          <ion-list>
+          <ion-text>
+            <p>
+              @if (result.courtsRequested > 1) {
+                No hay {{ result.courtsRequested }} pistas libres a la vez ese día.
+              } @else {
+                No quedan turnos libres ese día.
+              }
+            </p>
+          </ion-text>
+          @if (upcomingDays().length) {
             <ion-list-header>Días cercanos con hueco</ion-list-header>
-            @for (day of result.alternativeDays; track day.date) {
-              <ion-item button data-testid="alternative-day" (click)="searchDay(day.date)">
-                <ion-label>{{ day.date }}</ion-label>
-                <ion-note slot="end">{{ day.freeSlotCount }} turnos</ion-note>
-              </ion-item>
-            } @empty {
-              <ion-item><ion-label>No hay huecos en los días cercanos.</ion-label></ion-item>
+            @for (alt of upcomingDays(); track alt.date) {
+              <ion-chip data-testid="alternative-day" (click)="searchDay(alt.date)">
+                {{ day(alt.date) }} · {{ alt.freeSlotCount }} {{ alt.freeSlotCount === 1 ? 'turno' : 'turnos' }}
+              </ion-chip>
             }
-          </ion-list>
+          } @else {
+            <ion-text color="medium"><p>Tampoco hay hueco en los días cercanos.</p></ion-text>
+          }
         }
       }
     </ion-content>
@@ -125,13 +133,25 @@ import { AvailabilityFacade } from '../availability.facade';
 export class AvailabilitySearchPage {
   protected readonly facade = inject(AvailabilityFacade);
   private readonly bookings = inject(BookingFacade);
-  private readonly alerts = inject(AlertController);
+  private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
 
   protected readonly today = toIsoDate(new Date());
   protected readonly courtOptions = [1, 2, 3, 4];
   protected readonly date = signal<IsoDate>(this.today);
   protected readonly courts = signal(1);
+
+  /** The API already clamps the window to today; never offer a past day regardless. */
+  protected readonly upcomingDays = computed(() =>
+    (this.facade.result()?.alternativeDays ?? []).filter((alt) => alt.date >= this.today),
+  );
+
+  protected readonly day = formatDay;
+  protected readonly price = formatPrice;
+
+  protected courtsLabel(slot: SlotResponse): string {
+    return `${slot.courtIds.length === 1 ? 'Pista' : 'Pistas'} ${slot.courtIds.join(', ')}`;
+  }
 
   protected onDateChange(value: string | string[] | null | undefined): void {
     if (typeof value === 'string') {
@@ -148,31 +168,22 @@ export class AvailabilitySearchPage {
     this.search();
   }
 
-  /** Books one court for the slot: the only free one, or the one the user picks. */
+  /** Opens the confirm-and-book modal; afterwards the free slots are refreshed, since they have changed. */
   protected async book(date: IsoDate, slot: SlotResponse): Promise<void> {
-    const courtId = slot.courtIds.length === 1 ? slot.courtIds[0] : await this.pickCourt(slot);
-    if (courtId === null) {
+    const modal = await this.modals.create({ component: BookingConfirmModal, componentProps: { date, slot } });
+    await modal.present();
+    const { data, role } = await modal.onDidDismiss<Booking>();
+    if (role === 'booked' && data) {
+      await this.toast(`Reserva confirmada: ${data.courtName}, ${formatDay(date)} a las ${slot.start}`, 'success');
+    } else if (role === 'taken') {
+      await this.toast(this.bookings.error() ?? 'Ese turno ya no está libre. Vuelve a buscar.', 'danger');
+    } else {
       return;
     }
-    const booking = await this.bookings.createBooking({ courtId, date, slots: [{ start: slot.start, end: slot.end }] });
-    const toast = booking
-      ? { message: `Reserva confirmada: ${booking.courtName}, ${slot.start}`, color: 'success' }
-      : { message: this.bookings.error() ?? 'No se pudo crear la reserva.', color: 'danger' };
-    await (await this.toasts.create({ ...toast, duration: 2500 })).present();
+    await this.facade.refresh();
   }
 
-  private async pickCourt(slot: SlotResponse): Promise<number | null> {
-    const alert = await this.alerts.create({
-      header: 'Elige pista',
-      subHeader: `${slot.start} – ${slot.end}`,
-      inputs: slot.courtIds.map((id, index) => ({ type: 'radio', label: `Pista ${id}`, value: id, checked: index === 0 })),
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        { text: 'Reservar', role: 'confirm' },
-      ],
-    });
-    await alert.present();
-    const { role, data } = await alert.onDidDismiss<{ values: number }>();
-    return role === 'confirm' && data ? data.values : null;
+  private async toast(message: string, color: 'success' | 'danger'): Promise<void> {
+    await (await this.toasts.create({ message, color, duration: 3000 })).present();
   }
 }
