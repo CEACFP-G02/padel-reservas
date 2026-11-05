@@ -180,6 +180,13 @@ Create body:
 ```
 `courtId` is required: it is one of the `courtIds` the availability endpoint reported free for those slots. `clientId` is optional/ignored for CLIENT (taken from token) and required for OWNER manual booking. One booking covers one court with one or more consecutive slots. Returns `409` if any slot is no longer free on that court.
 
+Create rules (`201` + the booking response below):
+- Each slot must be one of the court's schedule slots for that weekday (same `start`/`end` as `GET /courts/{id}/availability` lists), and the slots must be consecutive (any order in the body). Otherwise `400` (e.g. `"12:00-13:00 is outside the schedule of court 3"`, `"Slots must be consecutive"`), also when the court has no schedule.
+- A slot that has already started (or a past `date`) → `400`.
+- A slot taken by a non-cancelled booking or a court block → `409` (`"07:00-08:00 is not available on court 3"`). Free/taken is the same computation as availability.
+- Each slot's `price` is the schedule price at this moment (snapshot); `totalPrice` is their sum.
+- `404` if the court does not exist — or, for a CLIENT, is inactive (an OWNER gets `400 "Court 3 is inactive"`) — or if an OWNER's `clientId` is not a client. An OWNER without `clientId` → `400`.
+
 Booking response (also returned by `GET /bookings/{id}`, and as the items of the paginated lists):
 ```json
 {

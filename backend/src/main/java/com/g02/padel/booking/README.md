@@ -21,6 +21,10 @@ Rules:
 - Status: `CONFIRMED` → `CANCELLED` (soft cancel, row kept, `cancelledAt` set) or `COMPLETED`;
   only a `CONFIRMED` booking can be cancelled or rescheduled, otherwise **409**.
 - A taken or blocked slot → `SlotNotAvailableException` → **409 Conflict**.
+- `BookableSlots` validates requested times (consecutive, inside the schedule grid, not started)
+  and prices them; free/taken comes from `availability.CourtDaySlotCalculator`, never re-implemented.
+  Booking locks the court row (`CourtRepository.findByIdForUpdate`) so two concurrent requests
+  cannot both take the same slot.
 - Clients can cancel/reschedule only up to `app.booking.cancel-min-notice-hours` (default 24) before start.
 
 Contract details: `docs/api.md`.
