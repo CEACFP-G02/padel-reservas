@@ -71,6 +71,15 @@ const SNACK_DURATION = { duration: 4000 };
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
         <td mat-cell *matCellDef="let court">
+          <a
+            matIconButton
+            [routerLink]="['/courts', court.id, 'schedule']"
+            data-testid="schedule"
+            aria-label="Horario"
+            matTooltip="Horario"
+          >
+            <mat-icon>schedule</mat-icon>
+          </a>
           <button
             matIconButton
             (click)="openEdit(court)"

@@ -211,6 +211,13 @@ describe('CourtListPage', () => {
     expect((rowButton(element, 0, 'deactivate') as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it('links each court to its schedule screen', () => {
+    const element = render();
+
+    expect(rowButton(element, 0, 'schedule')?.getAttribute('href')).toBe('/courts/1/schedule');
+    expect(rowButton(element, 1, 'schedule')?.getAttribute('href')).toBe('/courts/2/schedule');
+  });
+
   it('loads another page from the paginator', () => {
     render();
 
