@@ -2,15 +2,14 @@ package com.g02.padel.dashboard.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
+/** Today's owner KPIs — see docs/api.md#dashboard--apiv1dashboard. */
 public record DashboardSummaryResponse(
-        LocalDate from,
-        LocalDate to,
-        long totalBookings,
-        long confirmedBookings,
-        long cancelledBookings,
-        BigDecimal revenue,
-        List<CourtBookingCount> bookingsByCourt
+        LocalDate date,
+        long activeCourts,
+        long bookingsToday,
+        long upcomingBookings,
+        BigDecimal occupancyRate,
+        BigDecimal revenueToday
 ) {
 }

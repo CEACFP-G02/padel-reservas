@@ -46,19 +46,45 @@ public class CourtDaySlotCalculator {
         }
         Long courtId = schedule.getCourt().getId();
         List<Range> busy = Stream.concat(
-                bookingRepository.findByCourtIdAndDate(courtId, date).stream()
-                        .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
-                        .filter(b -> ignoredBookingId == null || !ignoredBookingId.equals(b.getId()))
-                        .flatMap(b -> b.getSlots().stream())
-                        .map(s -> new Range(s.getStartTime(), s.getEndTime())),
-                courtBlockRepository.findByCourtIdAndDate(courtId, date).stream()
-                        .map(b -> new Range(b.getStartTime(), b.getEndTime())))
+                bookedRanges(courtId, date, ignoredBookingId).stream(), blockedRanges(courtId, date).stream())
                 .toList();
         LocalDateTime now = LocalDateTime.now(clock);
 
         return grid.stream()
                 .map(slot -> new DaySlot(slot.start(), slot.end(),
                         date.atTime(slot.start()).isAfter(now) && busy.stream().noneMatch(slot::overlaps)))
+                .toList();
+    }
+
+    /**
+     * Occupancy of a court's day, independent of the clock: the schedule slots not covered by a block, and how
+     * many of those a non-cancelled booking takes (same overlap rule as {@link #slotsOf}).
+     */
+    public DayOccupancy occupancyOf(Schedule schedule, LocalDate date) {
+        List<Range> grid = split(schedule, date);
+        if (grid.isEmpty()) {
+            return new DayOccupancy(0, 0);
+        }
+        Long courtId = schedule.getCourt().getId();
+        List<Range> blocked = blockedRanges(courtId, date);
+        List<Range> booked = bookedRanges(courtId, date, null);
+        List<Range> bookable = grid.stream().filter(slot -> blocked.stream().noneMatch(slot::overlaps)).toList();
+        int taken = (int) bookable.stream().filter(slot -> booked.stream().anyMatch(slot::overlaps)).count();
+        return new DayOccupancy(bookable.size(), taken);
+    }
+
+    private List<Range> bookedRanges(Long courtId, LocalDate date, Long ignoredBookingId) {
+        return bookingRepository.findByCourtIdAndDate(courtId, date).stream()
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
+                .filter(b -> ignoredBookingId == null || !ignoredBookingId.equals(b.getId()))
+                .flatMap(b -> b.getSlots().stream())
+                .map(s -> new Range(s.getStartTime(), s.getEndTime()))
+                .toList();
+    }
+
+    private List<Range> blockedRanges(Long courtId, LocalDate date) {
+        return courtBlockRepository.findByCourtIdAndDate(courtId, date).stream()
+                .map(b -> new Range(b.getStartTime(), b.getEndTime()))
                 .toList();
     }
 

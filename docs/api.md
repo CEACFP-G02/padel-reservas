@@ -285,7 +285,29 @@ Self profile edits go through `/auth/me` (PATCH) rather than `/users/{id}`.
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| GET | `/dashboard/summary?from=&to=` | OWNER | Occupancy %, revenue, most-used courts for a period |
+| GET | `/dashboard/summary` | OWNER | Today's snapshot: active courts, bookings today and in the next 7 days, today's occupancy and revenue |
+
+Summary — `GET /dashboard/summary` → `200`. No query parameters; a CLIENT gets `403`.
+```json
+{
+  "date": "2026-06-08",
+  "activeCourts": 4,
+  "bookingsToday": 12,
+  "upcomingBookings": 37,
+  "occupancyRate": 41.7,
+  "revenueToday": 192.00
+}
+```
+- `date` (date): today by the server clock — the day the "today" figures refer to.
+- `activeCourts` (integer): courts with `active = true`.
+- `bookingsToday` (integer): `CONFIRMED` bookings dated today, on any court, whether their slots have started or not.
+- `upcomingBookings` (integer): `CONFIRMED` bookings dated in the next 7 days — tomorrow through today + 7
+  (today is `bookingsToday`).
+- `occupancyRate` (number, percentage `0`–`100`, one decimal): share of today's bookable slots on active courts
+  taken by a booking. Bookable slots are the court's schedule slots for today (the grid of
+  `GET /courts/{id}/availability`) minus those covered by a court block; a court without a schedule adds none.
+  A slot is taken by a non-cancelled booking, the same rule as availability. `0` when nothing is bookable today.
+- `revenueToday` (money): sum of the slot price snapshots (`slots[].price`) of today's `CONFIRMED` bookings.
 
 ---
 

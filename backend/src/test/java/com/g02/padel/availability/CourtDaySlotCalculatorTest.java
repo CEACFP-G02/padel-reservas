@@ -147,6 +147,33 @@ class CourtDaySlotCalculatorTest {
                 .containsExactly("08:00-09:00 taken", "09:00-10:00 taken");
     }
 
+    @Test
+    void occupancyCountsScheduleSlotsMinusBlockedOnesAndTheBookedOnesAmongThem() {
+        Schedule schedule = schedule(court, 60, "16.00", hours(DayOfWeek.MONDAY, "08:00", "13:00"));
+        given(MONDAY,
+                List.of(booking(court, MONDAY, BookingStatus.CONFIRMED, "09:00-10:00", "10:00-11:00"),
+                        booking(court, MONDAY, BookingStatus.CANCELLED, "11:00-12:00")),
+                List.of(block(court, MONDAY, "12:00", "13:00")));
+
+        assertThat(calculator.occupancyOf(schedule, MONDAY)).isEqualTo(new DayOccupancy(4, 2));
+    }
+
+    @Test
+    void occupancyIgnoresTheClockSoStartedSlotsStillCount() {
+        calculator = calculatorAt(clockAt(MONDAY, "23:00"));
+        Schedule schedule = schedule(court, 60, "16.00", hours(DayOfWeek.MONDAY, "08:00", "10:00"));
+        given(MONDAY, List.of(booking(court, MONDAY, BookingStatus.CONFIRMED, "08:00-09:00")), List.of());
+
+        assertThat(calculator.occupancyOf(schedule, MONDAY)).isEqualTo(new DayOccupancy(2, 1));
+    }
+
+    @Test
+    void occupancyOfAClosedDayIsEmpty() {
+        Schedule schedule = schedule(court, 60, "16.00", hours(DayOfWeek.TUESDAY, "08:00", "22:00"));
+
+        assertThat(calculator.occupancyOf(schedule, MONDAY)).isEqualTo(new DayOccupancy(0, 0));
+    }
+
     private CourtDaySlotCalculator calculatorAt(Clock clock) {
         return new CourtDaySlotCalculator(bookings, blocks, clock);
     }
