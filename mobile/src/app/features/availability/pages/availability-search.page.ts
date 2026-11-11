@@ -28,7 +28,7 @@ import { Booking, IsoDate, SlotResponse } from '../../../shared/models';
 import { toIsoDate } from '../../../shared/util/date';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { formatDay, formatPrice } from '../../../shared/util/format';
-import { BookingConfirmModal } from '../../booking/components/booking-confirm.modal';
+import { BookingConfirmModalComponent } from '../../booking/components/booking-confirm.modal';
 import { BookingFacade } from '../../booking/booking.facade';
 import { AvailabilityFacade } from '../availability.facade';
 
@@ -225,7 +225,7 @@ export class AvailabilitySearchPage {
 
   /** Opens the confirm-and-book modal; afterwards the free slots are refreshed, since they have changed. */
   protected async book(date: IsoDate, slot: SlotResponse): Promise<void> {
-    const modal = await this.modals.create({ component: BookingConfirmModal, componentProps: { date, slot } });
+    const modal = await this.modals.create({ component: BookingConfirmModalComponent, componentProps: { date, slot } });
     await modal.present();
     const { data, role } = await modal.onDidDismiss<Booking>();
     if (role === 'booked' && data) {

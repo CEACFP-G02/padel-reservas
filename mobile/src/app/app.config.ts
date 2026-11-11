@@ -4,6 +4,7 @@ import { PreloadAllModules, RouteReuseStrategy, provideRouter, withComponentInpu
 import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 
 import { routes } from './app.routes';
+import { provideCurrentUserOnStartup } from './core/auth/current-user-on-startup';
 import { jwtInterceptor } from './core/auth/jwt.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -11,9 +12,10 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideBrowserGlobalErrorListeners(),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    // Lets modal componentProps feed signal inputs (BookingConfirmModal).
+    // Lets modal componentProps feed signal inputs (BookingConfirmModalComponent).
     provideIonicAngular({ useSetInputAPI: true }),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideCurrentUserOnStartup(),
   ],
 };

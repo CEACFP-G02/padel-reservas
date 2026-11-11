@@ -8,9 +8,9 @@ import { textOf } from '../../../testing/text';
 import { PaymentMethodFacade } from '../../payment-method/payment-method.facade';
 import { WalletFacade } from '../../wallet/wallet.facade';
 import { BookingFacade } from '../booking.facade';
-import { BookingConfirmModal } from './booking-confirm.modal';
+import { BookingConfirmModalComponent } from './booking-confirm.modal';
 
-describe('BookingConfirmModal', () => {
+describe('BookingConfirmModalComponent', () => {
   type CreateBooking = (request: CreateBookingRequest) => Promise<Booking | null>;
   let createBooking: ReturnType<typeof vi.fn<CreateBooking>>;
   let error: ReturnType<typeof signal<string | null>>;
@@ -29,7 +29,7 @@ describe('BookingConfirmModal', () => {
 
   function render(courtIds: number[]) {
     TestBed.configureTestingModule({
-      imports: [BookingConfirmModal],
+      imports: [BookingConfirmModalComponent],
       providers: [
         provideIonicAngular(),
         { provide: BookingFacade, useValue: { createBooking, error, slotTaken, loading: signal(false) } },
@@ -41,7 +41,7 @@ describe('BookingConfirmModal', () => {
         },
       ],
     });
-    const fixture = TestBed.createComponent(BookingConfirmModal);
+    const fixture = TestBed.createComponent(BookingConfirmModalComponent);
     fixture.componentRef.setInput('date', '2026-06-08');
     fixture.componentRef.setInput('slot', slot(courtIds));
     fixture.detectChanges();

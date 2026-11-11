@@ -6,7 +6,7 @@ import { ModalController, provideIonicAngular, ToastController } from '@ionic/an
 import { AvailabilityQuery, AvailabilityResponse, SlotResponse } from '../../../shared/models';
 import { toIsoDate } from '../../../shared/util/date';
 import { bookingFixture } from '../../../testing/fixtures';
-import { BookingConfirmModal } from '../../booking/components/booking-confirm.modal';
+import { BookingConfirmModalComponent } from '../../booking/components/booking-confirm.modal';
 import { BookingFacade } from '../../booking/booking.facade';
 import { AvailabilityFacade } from '../availability.facade';
 import { AvailabilitySearchPage } from './availability-search.page';
@@ -179,7 +179,7 @@ describe('AvailabilitySearchPage', () => {
       await fixture.whenStable();
 
       expect(modalCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ component: BookingConfirmModal, componentProps: { date: '2026-06-08', slot: slot([3]) } }),
+        expect.objectContaining({ component: BookingConfirmModalComponent, componentProps: { date: '2026-06-08', slot: slot([3]) } }),
       );
     });
 

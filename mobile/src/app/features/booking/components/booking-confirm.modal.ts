@@ -43,7 +43,7 @@ addIcons({ alertCircleOutline, calendarOutline, cardOutline, pricetagOutline, te
  * someone else got it first) or `cancel`; any other failure is shown here so the client can retry.
  */
 @Component({
-  selector: 'app-booking-confirm',
+  selector: 'app-booking-confirm-modal',
   imports: [
     IonHeader,
     IonToolbar,
@@ -245,7 +245,7 @@ addIcons({ alertCircleOutline, calendarOutline, cardOutline, pricetagOutline, te
     }
   `,
 })
-export class BookingConfirmModal implements OnInit {
+export class BookingConfirmModalComponent implements OnInit {
   protected readonly bookings = inject(BookingFacade);
   private readonly wallet = inject(WalletFacade);
   protected readonly payments = inject(PaymentMethodFacade);
