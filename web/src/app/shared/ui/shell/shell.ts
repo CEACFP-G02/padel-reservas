@@ -11,12 +11,14 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { filter, map } from 'rxjs';
 
 import { AuthFacade } from '../../../core/auth/auth.facade';
+import { provideSpanishPaginator } from '../../../core/locale/spanish-paginator-intl';
 import { navItems } from '../nav-list/nav-items';
 import { NavList } from '../nav-list/nav-list';
 
 /** Authenticated layout: top bar with wordmark and user menu, side navigation, routed content. */
 @Component({
   selector: 'app-shell',
+  providers: [provideSpanishPaginator()],
   imports: [
     MatSidenavModule,
     MatToolbarModule,

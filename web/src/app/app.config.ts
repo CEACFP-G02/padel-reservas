@@ -8,6 +8,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideCurrentUserOnStartup } from './core/auth/current-user-on-startup';
 import { jwtInterceptor } from './core/auth/jwt.interceptor';
 import { provideSpanishLocale } from './core/locale/spanish-locale';
 
@@ -24,5 +25,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([jwtInterceptor])),
     provideNativeDateAdapter(),
     provideSpanishLocale(),
+    provideCurrentUserOnStartup(),
   ],
 };
