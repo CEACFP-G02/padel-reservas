@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pádel Reservas</string>
+    <string name="title_activity_main">Pádel Reservas</string>
+    <string name="package_name">com.g02.padelreservas</string>
+    <string name="custom_url_scheme">com.g02.padelreservas</string>
+</resources>

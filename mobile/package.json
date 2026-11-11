@@ -10,7 +10,11 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --watch=false",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "build:android": "ng build --configuration production,android",
+    "android:sync": "npm run build:android && npx cap sync android",
+    "android:open": "npm run android:sync && npx cap open android",
+    "android:run": "npm run android:sync && npx cap run android"
   },
   "private": true,
   "dependencies": {
@@ -20,6 +24,7 @@
     "@angular/forms": "22.1.7",
     "@angular/platform-browser": "22.1.7",
     "@angular/router": "22.1.7",
+    "@capacitor/android": "8.5.3",
     "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.5.3",
     "@capacitor/haptics": "8.0.2",

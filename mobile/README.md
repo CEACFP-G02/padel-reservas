@@ -19,18 +19,60 @@ npm run build       # → www/ (Capacitor webDir)
 npm run lint
 ```
 
-`apiBaseUrl` is in `src/environments/environment*.ts` (default `http://localhost:8080/api/v1`).
+## Environments (where the API is)
 
-Native shells (not generated yet):
+`apiBaseUrl` comes from `src/environments/`, swapped at build time by `angular.json`:
+
+| File | Used by | `apiBaseUrl` |
+|---|---|---|
+| `environment.ts` | `npm start` (browser, `ng serve`) and tests | `http://localhost:8080/api/v1` |
+| `environment.prod.ts` | `npm run build` (production, browser) | `http://localhost:8080/api/v1` |
+| `environment.android.ts` | `npm run build:android` (Android emulator) | `http://10.0.2.2:8080/api/v1` |
+
+`10.0.2.2` is the Android emulator's alias for the host machine (inside the emulator `localhost` is the
+emulator itself). For a **physical phone**, put the host's LAN IP (e.g. `http://192.168.1.20:8080/api/v1`) in
+`environment.android.ts` and add that IP to `android/app/src/main/res/xml/network_security_config.xml`.
+
+## Android (Capacitor)
+
+The native project lives in `android/` (Capacitor 8, app id `com.g02.padelreservas`, name "Pádel Reservas",
+web assets from `www/`). Generated files (`build/`, `.gradle/`, `local.properties`, the copied web assets
+`app/src/main/assets/public`, `capacitor.config.json`) are ignored by `android/.gitignore`; re-create them with a sync.
+
+| Script | Does |
+|---|---|
+| `npm run build:android` | `ng build` (production) with `environment.android.ts` → `www/` |
+| `npm run android:sync` | `build:android` + `npx cap sync android` (copies `www/` and plugins into `android/`) |
+| `npm run android:open` | `android:sync` + opens the project in Android Studio |
+| `npm run android:run` | `android:sync` + builds, installs and launches on a running emulator/device (`npx cap run android`) |
+
+### First time (local machine)
+
+1. Install **Android Studio** (it brings the Android SDK and a JDK). In *SDK Manager* install an Android SDK
+   Platform (API 36, the `compileSdkVersion`) and the *Android SDK Platform-Tools*.
+2. In *Device Manager* create an **AVD** (virtual device), e.g. a Pixel with a recent Google APIs image, and start it.
+3. Make the SDK findable from the terminal (for `npx cap run android`), e.g. on Linux/macOS:
+   `export ANDROID_HOME=$HOME/Android/Sdk` (macOS: `$HOME/Library/Android/sdk`).
+
+### Each time
 
 ```bash
-npx cap add android   # needs Android Studio / SDK to build
-npx cap add ios       # needs macOS + Xcode
-npm run build && npx cap sync
+# 1. backend on the host, allowing the WebView origin (http://localhost, no port) in CORS
+cd backend
+CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:4200 ./mvnw spring-boot:run
+
+# 2. app on the running emulator
+cd mobile
+npm install
+npm run android:run        # or: npm run android:open, then ▶ Run in Android Studio
 ```
 
-On a device, `localhost` is the phone itself; point `apiBaseUrl` at the host machine's LAN IP
-(or `10.0.2.2` for the Android emulator).
+Why the extra settings: the WebView is served from `http://localhost` (`server.androidScheme: 'http'` in
+`capacitor.config.ts`) so it may call the plain-HTTP backend, and
+`android/app/src/main/res/xml/network_security_config.xml` allows cleartext only to `10.0.2.2`/`localhost`. Both are
+for development; a release build should use an HTTPS API, `androidScheme: 'https'` and no cleartext exception.
+
+iOS is not set up (`npx cap add ios` needs macOS + Xcode).
 
 ## Stack
 
@@ -40,7 +82,7 @@ On a device, `localhost` is the phone itself; point `apiBaseUrl` at the host mac
 | Zoneless | `provideZonelessChangeDetection()` in `app.config.ts`; `polyfills: []`. `zone.js` is **not installed**: it is an *optional* peer dependency of `@ionic/angular` 9, and Ionic's `NgZone.run()` calls become plain calls without zone. Verified in a browser: forms, navigation, tabs and `ion-datetime` update with `window.Zone` undefined. |
 | Signals for state | Facades keep private `signal()`s and expose read-only signals / `computed()`. Pages read them in templates; route params arrive as signal `input()`s (`withComponentInputBinding`). |
 | Ionic UI | `ion-tabs` shell, `ion-datetime` (date picker, `es-ES`, min = today), `ion-select`, `ion-list`/`ion-item`, `ion-card`, `ion-button`, `AlertController`, `ToastController`. Tabbed pages refresh in `ionViewWillEnter` (Ionic keeps them alive). |
-| Capacitor 8 | `capacitor.config.ts` (`com.g02.padel`, `webDir: www`). |
+| Capacitor 8 | `capacitor.config.ts` (`com.g02.padelreservas`, `webDir: www`); native Android project in `android/`. |
 | HTTP | `provideHttpClient(withInterceptors([jwtInterceptor]))`, typed `HttpClient`. |
 | Tests | Vitest via `@angular/build:unit-test` (jsdom). `src/test-setup.ts` polyfills `matchMedia` and `IntersectionObserver` for Ionic components. |
 
