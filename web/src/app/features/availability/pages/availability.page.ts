@@ -92,7 +92,12 @@ function bookingRange(booking: Booking): string {
                   @switch (cell.state) {
                     @case ('free') {
                       <span class="state">Libre</span>
-                      <button matButton type="button" data-testid="book-slot" (click)="book(cell)">
+                      <button
+                        matButton="tonal"
+                        type="button"
+                        data-testid="book-slot"
+                        (click)="book(cell)"
+                      >
                         Reservar
                       </button>
                     }
@@ -130,53 +135,90 @@ function bookingRange(booking: Booking): string {
     </div>
   `,
   styles: `
+    h1 {
+      margin-bottom: var(--app-space-3);
+    }
     .layout {
       display: flex;
       flex-wrap: wrap;
-      gap: 24px;
+      align-items: flex-start;
+      gap: var(--app-space-3);
     }
     .calendar {
       width: 320px;
+      box-shadow: var(--app-shadow);
     }
     .grid-panel {
       flex: 1;
       min-width: 280px;
     }
-    .muted {
-      color: var(--mat-sys-on-surface-variant);
-    }
-    .error {
-      color: var(--mat-sys-error);
+    [data-testid='occupancy'] {
+      display: inline-flex;
+      margin: 0 0 var(--app-space-2);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--app-accent-soft);
+      color: var(--app-on-accent-soft);
+      font: var(--mat-sys-label-large);
     }
     .slots {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 8px;
+      gap: var(--app-space-1);
     }
     .slot {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      padding: 8px;
-      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      border-left-width: 4px;
+      border-radius: var(--app-radius-sm);
+      background: var(--mat-sys-surface-container-lowest);
+      box-shadow: var(--app-shadow-sm);
     }
     .slot.free {
-      background: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
+      border-left-color: var(--app-success);
+    }
+    .slot.free .state {
+      color: var(--app-success);
     }
     .slot.booked {
-      background: var(--mat-sys-error-container);
-      color: var(--mat-sys-on-error-container);
+      border-left-color: var(--mat-sys-primary);
+      background: color-mix(in srgb, var(--mat-sys-primary-container) 45%, transparent);
+    }
+    .slot.booked .state {
+      color: var(--mat-sys-primary);
     }
     .slot.unavailable {
-      background: var(--mat-sys-surface-container-highest);
+      border-left-color: var(--mat-sys-outline);
+      background: repeating-linear-gradient(
+        135deg,
+        var(--mat-sys-surface-container),
+        var(--mat-sys-surface-container) 6px,
+        var(--mat-sys-surface-container-low) 6px,
+        var(--mat-sys-surface-container-low) 12px
+      );
       color: var(--mat-sys-on-surface-variant);
     }
     .time {
-      font-weight: 500;
+      font: var(--mat-sys-title-small);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .state {
+      font: var(--mat-sys-label-medium);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .detail {
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
     }
     .slot button {
       align-self: flex-start;
+      margin-top: 4px;
     }
   `,
 })

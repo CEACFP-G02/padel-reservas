@@ -35,7 +35,7 @@ const SNACK_DURATION = { duration: 4000 };
     <header class="page-header">
       <h1>Clientes</h1>
       <span class="spacer"></span>
-      <button matButton (click)="facade.refresh()" data-testid="refresh">
+      <button matButton="outlined" (click)="facade.refresh()" data-testid="refresh">
         <mat-icon>refresh</mat-icon> Actualizar
       </button>
       <button matButton="filled" (click)="openCreate()" data-testid="create">
@@ -43,7 +43,7 @@ const SNACK_DURATION = { duration: 4000 };
       </button>
     </header>
 
-    <mat-form-field class="search">
+    <mat-form-field class="search" appearance="outline">
       <mat-label>Buscar por nombre, email o teléfono</mat-label>
       <input matInput #query data-testid="search" (keyup.enter)="search(query.value)" />
       <button matIconButton matSuffix (click)="search(query.value)" aria-label="Buscar">
@@ -58,89 +58,75 @@ const SNACK_DURATION = { duration: 4000 };
       <p class="error" role="alert" data-testid="list-error">{{ error }}</p>
     }
 
-    <table mat-table [dataSource]="facade.clients()">
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Nombre</th>
-        <td mat-cell *matCellDef="let c">
-          <a [routerLink]="[c.id]">{{ c.name }}</a>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef>Email</th>
-        <td mat-cell *matCellDef="let c">{{ c.email }}</td>
-      </ng-container>
-      <ng-container matColumnDef="phone">
-        <th mat-header-cell *matHeaderCellDef>Teléfono</th>
-        <td mat-cell *matCellDef="let c">{{ c.phone ?? '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="active">
-        <th mat-header-cell *matHeaderCellDef>Estado</th>
-        <td mat-cell *matCellDef="let c" [class.inactive]="!c.active">
-          {{ c.active ? 'Activo' : 'Inactivo' }}
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
-        <td mat-cell *matCellDef="let c">
-          <button
-            matIconButton
-            (click)="openEdit(c)"
-            data-testid="edit"
-            aria-label="Editar"
-            matTooltip="Editar"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button
-            matIconButton
-            (click)="deactivate(c)"
-            [disabled]="!c.active"
-            data-testid="deactivate"
-            aria-label="Dar de baja"
-            matTooltip="Dar de baja"
-          >
-            <mat-icon>person_off</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns" data-testid="client-row"></tr>
-      <tr class="mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
-          {{ facade.loading() ? 'Cargando clientes…' : 'No hay clientes.' }}
-        </td>
-      </tr>
-    </table>
-    <mat-paginator
-      [length]="facade.page()?.totalElements ?? 0"
-      [pageIndex]="facade.page()?.page ?? 0"
-      [pageSize]="facade.page()?.size ?? 20"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="changePage($event)"
-    />
+    <div class="table-card">
+      <table mat-table [dataSource]="facade.clients()">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let c">
+            <a [routerLink]="[c.id]">{{ c.name }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let c">{{ c.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+          <td mat-cell *matCellDef="let c">{{ c.phone ?? '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="active">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let c" [class.inactive]="!c.active">
+            {{ c.active ? 'Activo' : 'Inactivo' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="cdk-visually-hidden">Acciones</span>
+          </th>
+          <td mat-cell *matCellDef="let c">
+            <button
+              matIconButton
+              (click)="openEdit(c)"
+              data-testid="edit"
+              aria-label="Editar"
+              matTooltip="Editar"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              matIconButton
+              (click)="deactivate(c)"
+              [disabled]="!c.active"
+              data-testid="deactivate"
+              aria-label="Dar de baja"
+              matTooltip="Dar de baja"
+            >
+              <mat-icon>person_off</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" data-testid="client-row"></tr>
+        <tr class="mat-mdc-row" *matNoDataRow>
+          <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
+            {{ facade.loading() ? 'Cargando clientes…' : 'No hay clientes.' }}
+          </td>
+        </tr>
+      </table>
+      <mat-paginator
+        [length]="facade.page()?.totalElements ?? 0"
+        [pageIndex]="facade.page()?.page ?? 0"
+        [pageSize]="facade.page()?.size ?? 20"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="changePage($event)"
+      />
+    </div>
   `,
   styles: `
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .spacer {
-      flex: 1;
-    }
     .search {
       width: 100%;
       max-width: 420px;
-    }
-    .error {
-      color: var(--mat-sys-error);
-    }
-    .inactive {
-      color: var(--mat-sys-on-surface-variant);
-      font-style: italic;
-    }
-    .empty {
-      padding: 16px;
     }
   `,
 })

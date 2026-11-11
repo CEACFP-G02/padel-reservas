@@ -38,7 +38,7 @@ import { BookingFormDialog } from './booking-form.dialog';
       </button>
     </header>
 
-    <mat-form-field>
+    <mat-form-field appearance="outline">
       <mat-label>Fecha</mat-label>
       <input matInput [matDatepicker]="picker" (dateChange)="filterByDate($event.value)" />
       <mat-datepicker-toggle matIconSuffix [for]="picker" />
@@ -49,66 +49,72 @@ import { BookingFormDialog } from './booking-form.dialog';
       <mat-progress-bar mode="indeterminate" />
     }
 
-    <table mat-table [dataSource]="facade.bookings()">
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef>#</th>
-        <td mat-cell *matCellDef="let b">
-          <a [routerLink]="[b.id]">{{ b.id }}</a>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Fecha</th>
-        <td mat-cell *matCellDef="let b">{{ b.date }}</td>
-      </ng-container>
-      <ng-container matColumnDef="court">
-        <th mat-header-cell *matHeaderCellDef>Pista</th>
-        <td mat-cell *matCellDef="let b">{{ b.courtName }}</td>
-      </ng-container>
-      <ng-container matColumnDef="client">
-        <th mat-header-cell *matHeaderCellDef>Cliente</th>
-        <td mat-cell *matCellDef="let b">
-          <a data-testid="booking-client" [routerLink]="['/clients', b.userId]">{{ b.userName }}</a>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Estado</th>
-        <td mat-cell *matCellDef="let b">{{ b.status }}</td>
-      </ng-container>
-      <ng-container matColumnDef="totalPrice">
-        <th mat-header-cell *matHeaderCellDef>Importe</th>
-        <td mat-cell *matCellDef="let b">{{ b.totalPrice | currency: 'EUR' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let b">
-          <button
-            matIconButton
-            (click)="openReschedule(b)"
-            [disabled]="b.status !== confirmed"
-            aria-label="Reprogramar"
-          >
-            <mat-icon>edit_calendar</mat-icon>
-          </button>
-          <button
-            matIconButton
-            (click)="cancel(b)"
-            [disabled]="b.status !== confirmed"
-            aria-label="Cancelar"
-          >
-            <mat-icon>cancel</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
-    </table>
-    <mat-paginator
-      [length]="facade.page()?.totalElements ?? 0"
-      [pageIndex]="facade.page()?.page ?? 0"
-      [pageSize]="facade.page()?.size ?? 20"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="changePage($event)"
-    />
+    <div class="table-card">
+      <table mat-table [dataSource]="facade.bookings()">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let b">
+            <a [routerLink]="[b.id]">{{ b.id }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let b">{{ b.date }}</td>
+        </ng-container>
+        <ng-container matColumnDef="court">
+          <th mat-header-cell *matHeaderCellDef>Pista</th>
+          <td mat-cell *matCellDef="let b">{{ b.courtName }}</td>
+        </ng-container>
+        <ng-container matColumnDef="client">
+          <th mat-header-cell *matHeaderCellDef>Cliente</th>
+          <td mat-cell *matCellDef="let b">
+            <a data-testid="booking-client" [routerLink]="['/clients', b.userId]">{{
+              b.userName
+            }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let b">
+            <span class="status" [class.off]="b.status !== confirmed">{{ b.status }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalPrice">
+          <th mat-header-cell *matHeaderCellDef>Importe</th>
+          <td mat-cell *matCellDef="let b">{{ b.totalPrice | currency: 'EUR' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let b">
+            <button
+              matIconButton
+              (click)="openReschedule(b)"
+              [disabled]="b.status !== confirmed"
+              aria-label="Reprogramar"
+            >
+              <mat-icon>edit_calendar</mat-icon>
+            </button>
+            <button
+              matIconButton
+              (click)="cancel(b)"
+              [disabled]="b.status !== confirmed"
+              aria-label="Cancelar"
+            >
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+      <mat-paginator
+        [length]="facade.page()?.totalElements ?? 0"
+        [pageIndex]="facade.page()?.page ?? 0"
+        [pageSize]="facade.page()?.size ?? 20"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="changePage($event)"
+      />
+    </div>
   `,
 })
 export class BookingListPage {

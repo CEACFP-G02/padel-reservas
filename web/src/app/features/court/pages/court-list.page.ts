@@ -32,7 +32,7 @@ const SNACK_DURATION = { duration: 4000 };
     <header class="page-header">
       <h1>Pistas</h1>
       <span class="spacer"></span>
-      <button matButton (click)="facade.refresh()" data-testid="refresh">
+      <button matButton="outlined" (click)="facade.refresh()" data-testid="refresh">
         <mat-icon>refresh</mat-icon> Actualizar
       </button>
       <button matButton="filled" (click)="openCreate()" data-testid="create">
@@ -47,104 +47,88 @@ const SNACK_DURATION = { duration: 4000 };
       <p class="error" role="alert" data-testid="list-error">{{ error }}</p>
     }
 
-    <table mat-table [dataSource]="facade.courts()">
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Nombre</th>
-        <td mat-cell *matCellDef="let court">
-          <a [routerLink]="[court.id]">{{ court.name }}</a>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="type">
-        <th mat-header-cell *matHeaderCellDef>Tipo</th>
-        <td mat-cell *matCellDef="let court">{{ typeLabel(court.type) }}</td>
-      </ng-container>
-      <ng-container matColumnDef="indoor">
-        <th mat-header-cell *matHeaderCellDef>Cubierta / exterior</th>
-        <td mat-cell *matCellDef="let court">{{ court.indoor ? 'Cubierta' : 'Exterior' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="active">
-        <th mat-header-cell *matHeaderCellDef>Estado</th>
-        <td mat-cell *matCellDef="let court" [class.inactive]="!court.active">
-          {{ court.active ? 'Activa' : 'Inactiva' }}
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
-        <td mat-cell *matCellDef="let court">
-          <a
-            matIconButton
-            [routerLink]="['/courts', court.id, 'schedule']"
-            data-testid="schedule"
-            aria-label="Horario"
-            matTooltip="Horario"
-          >
-            <mat-icon>schedule</mat-icon>
-          </a>
-          <a
-            matIconButton
-            [routerLink]="['/courts', court.id, 'blocks']"
-            data-testid="blocks"
-            aria-label="Bloqueos"
-            matTooltip="Bloqueos"
-          >
-            <mat-icon>event_busy</mat-icon>
-          </a>
-          <button
-            matIconButton
-            (click)="openEdit(court)"
-            data-testid="edit"
-            aria-label="Editar"
-            matTooltip="Editar"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button
-            matIconButton
-            (click)="deactivate(court)"
-            [disabled]="!court.active"
-            data-testid="deactivate"
-            aria-label="Desactivar"
-            matTooltip="Desactivar"
-          >
-            <mat-icon>block</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns" data-testid="court-row"></tr>
-      <tr class="mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
-          {{ facade.loading() ? 'Cargando pistas…' : 'Todavía no hay pistas.' }}
-        </td>
-      </tr>
-    </table>
-    <mat-paginator
-      [length]="facade.page()?.totalElements ?? 0"
-      [pageIndex]="facade.page()?.page ?? 0"
-      [pageSize]="facade.page()?.size ?? 20"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="changePage($event)"
-    />
-  `,
-  styles: `
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .spacer {
-      flex: 1;
-    }
-    .error {
-      color: var(--mat-sys-error);
-    }
-    .inactive {
-      color: var(--mat-sys-on-surface-variant);
-      font-style: italic;
-    }
-    .empty {
-      padding: 16px;
-    }
+    <div class="table-card">
+      <table mat-table [dataSource]="facade.courts()">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let court">
+            <a [routerLink]="[court.id]">{{ court.name }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let court">{{ typeLabel(court.type) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="indoor">
+          <th mat-header-cell *matHeaderCellDef>Cubierta / exterior</th>
+          <td mat-cell *matCellDef="let court">{{ court.indoor ? 'Cubierta' : 'Exterior' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="active">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let court" [class.inactive]="!court.active">
+            {{ court.active ? 'Activa' : 'Inactiva' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="cdk-visually-hidden">Acciones</span>
+          </th>
+          <td mat-cell *matCellDef="let court">
+            <a
+              matIconButton
+              [routerLink]="['/courts', court.id, 'schedule']"
+              data-testid="schedule"
+              aria-label="Horario"
+              matTooltip="Horario"
+            >
+              <mat-icon>schedule</mat-icon>
+            </a>
+            <a
+              matIconButton
+              [routerLink]="['/courts', court.id, 'blocks']"
+              data-testid="blocks"
+              aria-label="Bloqueos"
+              matTooltip="Bloqueos"
+            >
+              <mat-icon>event_busy</mat-icon>
+            </a>
+            <button
+              matIconButton
+              (click)="openEdit(court)"
+              data-testid="edit"
+              aria-label="Editar"
+              matTooltip="Editar"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              matIconButton
+              (click)="deactivate(court)"
+              [disabled]="!court.active"
+              data-testid="deactivate"
+              aria-label="Desactivar"
+              matTooltip="Desactivar"
+            >
+              <mat-icon>block</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" data-testid="court-row"></tr>
+        <tr class="mat-mdc-row" *matNoDataRow>
+          <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
+            {{ facade.loading() ? 'Cargando pistas…' : 'Todavía no hay pistas.' }}
+          </td>
+        </tr>
+      </table>
+      <mat-paginator
+        [length]="facade.page()?.totalElements ?? 0"
+        [pageIndex]="facade.page()?.page ?? 0"
+        [pageSize]="facade.page()?.size ?? 20"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="changePage($event)"
+      />
+    </div>
   `,
 })
 export class CourtListPage {

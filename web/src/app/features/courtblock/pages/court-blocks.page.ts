@@ -69,65 +69,55 @@ const SNACK_DURATION = { duration: 4000 };
       <p class="error" role="alert" data-testid="list-error">{{ error }}</p>
     }
 
-    <table mat-table [dataSource]="facade.blocks()">
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Fecha</th>
-        <td mat-cell *matCellDef="let block" class="date">{{ block.date | date: 'fullDate' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="range">
-        <th mat-header-cell *matHeaderCellDef>Horario</th>
-        <td mat-cell *matCellDef="let block">{{ block.start }} – {{ block.end }}</td>
-      </ng-container>
-      <ng-container matColumnDef="reason">
-        <th mat-header-cell *matHeaderCellDef>Motivo</th>
-        <td mat-cell *matCellDef="let block">{{ block.reason ?? '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
-        <td mat-cell *matCellDef="let block">
-          <button
-            matIconButton
-            (click)="remove(block)"
-            data-testid="remove"
-            aria-label="Quitar bloqueo"
-            matTooltip="Quitar bloqueo"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns" data-testid="block-row"></tr>
-      <tr class="mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
-          {{
-            facade.loading()
-              ? 'Cargando bloqueos…'
-              : showPast()
-                ? 'No hay bloqueos.'
-                : 'No hay bloqueos próximos.'
-          }}
-        </td>
-      </tr>
-    </table>
+    <div class="table-card">
+      <table mat-table [dataSource]="facade.blocks()">
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let block" class="date">{{ block.date | date: 'fullDate' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="range">
+          <th mat-header-cell *matHeaderCellDef>Horario</th>
+          <td mat-cell *matCellDef="let block">{{ block.start }} – {{ block.end }}</td>
+        </ng-container>
+        <ng-container matColumnDef="reason">
+          <th mat-header-cell *matHeaderCellDef>Motivo</th>
+          <td mat-cell *matCellDef="let block">{{ block.reason ?? '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="cdk-visually-hidden">Acciones</span>
+          </th>
+          <td mat-cell *matCellDef="let block">
+            <button
+              matIconButton
+              (click)="remove(block)"
+              data-testid="remove"
+              aria-label="Quitar bloqueo"
+              matTooltip="Quitar bloqueo"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" data-testid="block-row"></tr>
+        <tr class="mat-mdc-row" *matNoDataRow>
+          <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
+            {{
+              facade.loading()
+                ? 'Cargando bloqueos…'
+                : showPast()
+                  ? 'No hay bloqueos.'
+                  : 'No hay bloqueos próximos.'
+            }}
+          </td>
+        </tr>
+      </table>
+    </div>
   `,
   styles: `
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .spacer {
-      flex: 1;
-    }
-    .error {
-      color: var(--mat-sys-error);
-    }
     .date::first-letter {
       text-transform: uppercase;
-    }
-    .empty {
-      padding: 16px;
     }
   `,
 })

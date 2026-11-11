@@ -28,7 +28,7 @@ const PAGE_SIZE = 10;
   ],
   template: `
     @if (facade.selected(); as client) {
-      <mat-card appearance="outlined">
+      <mat-card appearance="outlined" class="detail-card">
         <mat-card-header>
           <mat-card-title>{{ client.name }}</mat-card-title>
           <mat-card-subtitle
@@ -57,67 +57,54 @@ const PAGE_SIZE = 10;
       <p class="error" role="alert" data-testid="bookings-error">{{ error }}</p>
     }
 
-    <table mat-table [dataSource]="facade.clientBookings()">
-      <ng-container matColumnDef="court">
-        <th mat-header-cell *matHeaderCellDef>Pista</th>
-        <td mat-cell *matCellDef="let b">
-          <a [routerLink]="['/bookings', b.id]">{{ b.courtName }}</a>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Fecha</th>
-        <td mat-cell *matCellDef="let b">{{ b.date | date: 'mediumDate' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="time">
-        <th mat-header-cell *matHeaderCellDef>Horario</th>
-        <td mat-cell *matCellDef="let b">{{ range(b) }}</td>
-      </ng-container>
-      <ng-container matColumnDef="totalPrice">
-        <th mat-header-cell *matHeaderCellDef>Importe</th>
-        <td mat-cell *matCellDef="let b">{{ b.totalPrice | currency }}</td>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Estado</th>
-        <td mat-cell *matCellDef="let b" [class.cancelled]="b.status === cancelled">
-          {{ statusLabel(b.status) }}
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns" data-testid="booking-row"></tr>
-      <tr class="mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
-          {{
-            facade.clientBookingsLoading()
-              ? 'Cargando reservas…'
-              : facade.clientBookingsError()
-                ? ''
-                : 'Este cliente todavía no tiene reservas.'
-          }}
-        </td>
-      </tr>
-    </table>
-    <mat-paginator
-      [length]="facade.clientBookingsPage()?.totalElements ?? 0"
-      [pageIndex]="facade.clientBookingsPage()?.page ?? 0"
-      [pageSize]="facade.clientBookingsPage()?.size ?? pageSize"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="changePage($event)"
-    />
-  `,
-  styles: `
-    .muted {
-      color: var(--mat-sys-on-surface-variant);
-    }
-    .error {
-      color: var(--mat-sys-error);
-    }
-    .cancelled {
-      color: var(--mat-sys-on-surface-variant);
-      font-style: italic;
-    }
-    .empty {
-      padding: 16px;
-    }
+    <div class="table-card">
+      <table mat-table [dataSource]="facade.clientBookings()">
+        <ng-container matColumnDef="court">
+          <th mat-header-cell *matHeaderCellDef>Pista</th>
+          <td mat-cell *matCellDef="let b">
+            <a [routerLink]="['/bookings', b.id]">{{ b.courtName }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let b">{{ b.date | date: 'mediumDate' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="time">
+          <th mat-header-cell *matHeaderCellDef>Horario</th>
+          <td mat-cell *matCellDef="let b">{{ range(b) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="totalPrice">
+          <th mat-header-cell *matHeaderCellDef>Importe</th>
+          <td mat-cell *matCellDef="let b">{{ b.totalPrice | currency }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let b" [class.cancelled]="b.status === cancelled">
+            {{ statusLabel(b.status) }}
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" data-testid="booking-row"></tr>
+        <tr class="mat-mdc-row" *matNoDataRow>
+          <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
+            {{
+              facade.clientBookingsLoading()
+                ? 'Cargando reservas…'
+                : facade.clientBookingsError()
+                  ? ''
+                  : 'Este cliente todavía no tiene reservas.'
+            }}
+          </td>
+        </tr>
+      </table>
+      <mat-paginator
+        [length]="facade.clientBookingsPage()?.totalElements ?? 0"
+        [pageIndex]="facade.clientBookingsPage()?.page ?? 0"
+        [pageSize]="facade.clientBookingsPage()?.size ?? pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="changePage($event)"
+      />
+    </div>
   `,
 })
 export class ClientDetailPage {

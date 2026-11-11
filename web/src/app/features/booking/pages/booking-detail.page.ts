@@ -11,7 +11,7 @@ import { BookingFacade } from '../booking.facade';
   imports: [MatCardModule, MatListModule, RouterLink, CurrencyPipe],
   template: `
     @if (facade.selected(); as booking) {
-      <mat-card>
+      <mat-card appearance="outlined" class="detail-card">
         <mat-card-header>
           <mat-card-title>Reserva #{{ booking.id }} · {{ booking.status }}</mat-card-title>
           <mat-card-subtitle
@@ -30,11 +30,18 @@ import { BookingFacade } from '../booking.facade';
               >
             }
           </mat-list>
-          <p>Total: {{ booking.totalPrice | currency: 'EUR' }}</p>
+          <p class="total">Total: {{ booking.totalPrice | currency: 'EUR' }}</p>
         </mat-card-content>
       </mat-card>
     } @else {
-      <p>Cargando reserva {{ id() }}…</p>
+      <p class="muted">Cargando reserva {{ id() }}…</p>
+    }
+  `,
+  styles: `
+    .total {
+      margin: var(--app-space-2) 0 0;
+      font: var(--mat-sys-title-medium);
+      font-weight: 600;
     }
   `,
 })

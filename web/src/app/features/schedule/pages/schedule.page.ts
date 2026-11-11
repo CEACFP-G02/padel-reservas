@@ -53,43 +53,38 @@ interface DayRow {
     }
 
     @if (facade.schedule(); as schedule) {
-      <p data-testid="summary">
+      <p class="summary" data-testid="summary">
         Turnos de {{ schedule.slotMinutes }} min · {{ schedule.price | currency: 'EUR' }} por turno
       </p>
-      <table mat-table [dataSource]="rows()">
-        <ng-container matColumnDef="day">
-          <th mat-header-cell *matHeaderCellDef>Día</th>
-          <td mat-cell *matCellDef="let row">{{ row.label }}</td>
-        </ng-container>
-        <ng-container matColumnDef="hours">
-          <th mat-header-cell *matHeaderCellDef>Horario</th>
-          <td mat-cell *matCellDef="let row" [class.closed]="row.hours === 'Cerrado'">
-            {{ row.hours }}
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="columns"></tr>
-        <tr mat-row *matRowDef="let row; columns: columns" data-testid="day-row"></tr>
-      </table>
+      <div class="table-card">
+        <table mat-table [dataSource]="rows()">
+          <ng-container matColumnDef="day">
+            <th mat-header-cell *matHeaderCellDef>Día</th>
+            <td mat-cell *matCellDef="let row">{{ row.label }}</td>
+          </ng-container>
+          <ng-container matColumnDef="hours">
+            <th mat-header-cell *matHeaderCellDef>Horario</th>
+            <td mat-cell *matCellDef="let row" [class.closed]="row.hours === 'Cerrado'">
+              {{ row.hours }}
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns" data-testid="day-row"></tr>
+        </table>
+      </div>
     } @else if (!facade.loading() && !facade.error()) {
       <p class="empty">Esta pista todavía no tiene horario.</p>
     }
   `,
   styles: `
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .spacer {
-      flex: 1;
-    }
-    .error {
-      color: var(--mat-sys-error);
-    }
-    .closed,
-    .empty {
-      color: var(--mat-sys-on-surface-variant);
-      font-style: italic;
+    .summary {
+      display: inline-flex;
+      margin: 0 0 var(--app-space-2);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      font: var(--mat-sys-label-large);
     }
   `,
 })

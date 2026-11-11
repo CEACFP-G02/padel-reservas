@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 
@@ -11,13 +12,24 @@ import { AuthFacade } from '../../../core/auth/auth.facade';
 /** Public login page for the OWNER: page → AuthFacade (core) → AuthApi. */
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   template: `
-    <mat-card class="login">
+    <mat-card class="login" appearance="outlined">
+      <div class="brand">
+        <span class="badge"><mat-icon>sports_tennis</mat-icon></span>
+        <span class="wordmark">Pádel <strong>Reservas</strong></span>
+      </div>
       <mat-card-header><mat-card-title>Padel Admin</mat-card-title></mat-card-header>
       <form [formGroup]="form" (ngSubmit)="submit()">
         <mat-card-content>
-          <mat-form-field>
+          <mat-form-field appearance="outline">
             <mat-label>Email</mat-label>
             <input matInput type="email" formControlName="email" autocomplete="username" />
             @if (form.controls.email.hasError('email')) {
@@ -26,9 +38,14 @@ import { AuthFacade } from '../../../core/auth/auth.facade';
               <mat-error>El email es obligatorio</mat-error>
             }
           </mat-form-field>
-          <mat-form-field>
+          <mat-form-field appearance="outline">
             <mat-label>Contraseña</mat-label>
-            <input matInput type="password" formControlName="password" autocomplete="current-password" />
+            <input
+              matInput
+              type="password"
+              formControlName="password"
+              autocomplete="current-password"
+            />
             @if (form.controls.password.hasError('required')) {
               <mat-error>La contraseña es obligatoria</mat-error>
             }
@@ -37,17 +54,93 @@ import { AuthFacade } from '../../../core/auth/auth.facade';
             <p class="error" role="alert" data-testid="login-error">{{ message }}</p>
           }
         </mat-card-content>
-        <mat-card-actions align="end">
-          <button matButton="filled" type="submit" [disabled]="form.invalid || submitting()">Entrar</button>
+        <mat-card-actions>
+          <button
+            matButton="filled"
+            class="submit"
+            type="submit"
+            [disabled]="form.invalid || submitting()"
+          >
+            Entrar
+          </button>
         </mat-card-actions>
       </form>
     </mat-card>
   `,
   styles: `
-    :host { display: grid; place-items: center; min-height: 100%; padding: 16px; box-sizing: border-box; }
-    .login { width: 100%; max-width: 380px; }
-    mat-card-content { display: flex; flex-direction: column; }
-    .error { color: var(--mat-sys-error); margin: 0 0 8px; }
+    :host {
+      display: grid;
+      place-items: center;
+      min-height: 100%;
+      padding: var(--app-space-2);
+      box-sizing: border-box;
+      background:
+        radial-gradient(
+          1200px 600px at 10% -10%,
+          var(--mat-sys-primary-container),
+          transparent 60%
+        ),
+        radial-gradient(800px 400px at 110% 110%, var(--app-accent-soft), transparent 60%),
+        var(--mat-sys-surface);
+    }
+    .login {
+      width: 100%;
+      max-width: 400px;
+      padding: var(--app-space-3) var(--app-space-1) var(--app-space-2);
+      box-shadow: var(--app-shadow-lg);
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: var(--app-space-1);
+    }
+    .badge {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      border-radius: var(--app-radius);
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+      box-shadow: inset 0 -4px 0 var(--app-accent);
+    }
+    .badge mat-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 32px;
+    }
+    .wordmark {
+      font: var(--mat-sys-headline-small);
+      letter-spacing: -0.02em;
+    }
+    .wordmark strong {
+      color: var(--mat-sys-primary);
+      font-weight: 700;
+    }
+    mat-card-header {
+      justify-content: center;
+      padding-top: 0;
+    }
+    mat-card-title {
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-title-small);
+      text-align: center;
+    }
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: var(--app-space-2);
+    }
+    mat-card-actions {
+      padding: 0 var(--app-space-2) var(--app-space-1);
+    }
+    .submit {
+      width: 100%;
+      height: 44px;
+    }
   `,
 })
 export class LoginPage {

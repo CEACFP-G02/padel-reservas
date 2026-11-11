@@ -1,50 +1,366 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// Pádel Reservas admin theme: custom Material 3 palettes (teal primary, amber tertiary for highlights,
+// slate neutrals) generated from brand colors into styles/_theme-colors.scss, plus a small set of
+// app tokens and shared patterns (page header, table card, status pills, states) used by every page.
 @use '@angular/material' as mat;
+@use './styles/theme-colors' as brand;
 
 html {
   height: 100%;
+  color-scheme: light;
+
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: brand.$primary-palette,
+        tertiary: brand.$tertiary-palette,
+        theme-type: color-scheme,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: (
+          Inter,
+          system-ui,
+          sans-serif,
+        ),
+        brand-family: (
+          Inter,
+          system-ui,
+          sans-serif,
+        ),
+        bold-weight: 600,
+        medium-weight: 500,
+        regular-weight: 400,
+      ),
       density: 0,
+    )
+  );
+
+  // Exact brand primary and very light slate surfaces on top of the generated tonal palette.
+  @include mat.theme-overrides(
+    (
+      primary: light-dark(#0f766e, #5eead4),
+      primary-container: light-dark(#ccfbf1, #134e4a),
+      on-primary-container: light-dark(#134e4a, #ccfbf1),
+      secondary-container: light-dark(#e0f2f1, #1f3b39),
+      surface: light-dark(#f8fafc, #0b1220),
+      surface-container-lowest: light-dark(#ffffff, #0f172a),
+      surface-container-low: light-dark(#f8fafc, #111a2e),
+      surface-container: light-dark(#f1f5f9, #16213a),
+      surface-container-high: light-dark(#e2e8f0, #1e293b),
+      outline-variant: light-dark(#e2e8f0, #334155),
+      corner-medium: 12px,
+      corner-small: 10px,
+    )
+  );
+
+  // App tokens: 8px spacing, 10–12px radius, subtle shadows, status colors.
+  --app-space-1: 8px;
+  --app-space-2: 16px;
+  --app-space-3: 24px;
+  --app-space-4: 32px;
+  --app-radius: 12px;
+  --app-radius-sm: 10px;
+  --app-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --app-shadow: 0 1px 3px rgb(15 23 42 / 0.08), 0 1px 2px rgb(15 23 42 / 0.04);
+  --app-shadow-lg: 0 12px 32px rgb(15 23 42 / 0.12);
+  --app-accent: #f59e0b;
+  --app-accent-soft: light-dark(#fef3c7, #422006);
+  --app-on-accent-soft: light-dark(#92400e, #fcd34d);
+  --app-success: light-dark(#15803d, #4ade80);
+  --app-success-soft: light-dark(#dcfce7, #052e16);
+  --app-warn: light-dark(#b45309, #fbbf24);
+  --app-warn-soft: light-dark(#fef3c7, #422006);
+  --app-error-soft: light-dark(#fee2e2, #450a0a);
+  --app-neutral-soft: light-dark(#f1f5f9, #1e293b);
+
+  // Components.
+  @include mat.card-overrides(
+    (
+      outlined-container-shape: var(--app-radius),
+      elevated-container-shape: var(--app-radius),
+      outlined-container-color: var(--mat-sys-surface-container-lowest),
+      elevated-container-color: var(--mat-sys-surface-container-lowest),
+      outlined-outline-color: var(--mat-sys-outline-variant),
+      title-text-weight: 600,
+    )
+  );
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--app-radius-sm),
+      outlined-container-shape: var(--app-radius-sm),
+      text-container-shape: var(--app-radius-sm),
+      tonal-container-shape: var(--app-radius-sm),
+      protected-container-shape: var(--app-radius-sm),
+      filled-label-text-weight: 600,
+      text-label-text-weight: 600,
+    )
+  );
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: var(--mat-sys-surface-container-lowest),
+      container-text-color: var(--mat-sys-on-surface),
+      standard-height: 64px,
+    )
+  );
+  @include mat.sidenav-overrides(
+    (
+      container-background-color: var(--mat-sys-surface-container-lowest),
+      container-shape: 0,
+      content-background-color: var(--mat-sys-surface),
+    )
+  );
+  @include mat.list-overrides(
+    (
+      active-indicator-shape: var(--app-radius-sm),
+      active-indicator-color: var(--mat-sys-secondary-container),
+      list-item-container-shape: var(--app-radius-sm),
+      list-item-one-line-container-height: 44px,
+    )
+  );
+  @include mat.table-overrides(
+    (
+      background-color: var(--mat-sys-surface-container-lowest),
+      header-headline-color: var(--mat-sys-on-surface-variant),
+      header-headline-weight: 600,
+      header-headline-size: 12px,
+      header-headline-tracking: 0.04em,
+      header-container-height: 48px,
+      row-item-container-height: 56px,
+      row-item-outline-color: var(--mat-sys-outline-variant),
+    )
+  );
+  @include mat.paginator-overrides(
+    (
+      container-background-color: var(--mat-sys-surface-container-lowest),
+    )
+  );
+  @include mat.dialog-overrides(
+    (
+      container-shape: 16px,
+      container-color: var(--mat-sys-surface-container-lowest),
+    )
+  );
+  @include mat.form-field-overrides(
+    (
+      outlined-container-shape: var(--app-radius-sm),
+    )
+  );
+  @include mat.progress-bar-overrides(
+    (
+      active-indicator-height: 3px,
+      track-height: 3px,
+      track-shape: 3px,
     )
   );
 }
 
-body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
+// Dark theme follows the system preference.
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
+body {
+  margin: 0;
+  height: 100%;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
-  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
 }
-/* You can add global styles to this file, and also import other style files */
 
+// Type scale.
+h1 {
+  font: var(--mat-sys-headline-small);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+h2 {
+  font: var(--mat-sys-title-large);
+  font-weight: 600;
+  margin: var(--app-space-4) 0 var(--app-space-2);
+}
+
+a {
+  color: var(--mat-sys-primary);
+  font-weight: 500;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+.mat-mdc-button-base,
+.mat-mdc-list-item {
+  text-decoration: none !important;
+}
+
+// Page header: title on the left, actions on the right.
 .page-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: var(--app-space-1);
+  margin-bottom: var(--app-space-3);
+  min-height: 48px;
+
+  .spacer {
+    flex: 1;
+  }
+  h1 + .spacer {
+    min-width: var(--app-space-2);
+  }
+}
+.spacer {
+  flex: 1;
 }
 
+// Tables live in a card: clear header, hover, comfortable rows.
+.table-card {
+  overflow: hidden;
+  overflow-x: auto;
+  background: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+}
 table.mat-mdc-table {
   width: 100%;
+}
+.mat-mdc-header-row {
+  background: var(--mat-sys-surface-container-low);
+  text-transform: uppercase;
+}
+.mat-mdc-row:not(:has(td.empty)) {
+  transition: background-color 120ms ease;
+  &:hover {
+    background: var(--mat-sys-surface-container-low);
+  }
+}
+.mat-mdc-cell.mat-column-actions,
+.mat-mdc-header-cell.mat-column-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.mat-mdc-paginator {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+// Empty and error states, shared by tables and pages.
+td.empty,
+p.empty {
+  padding: var(--app-space-4) var(--app-space-2);
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+td.empty::before {
+  content: 'inbox' / '';
+  display: block;
+  margin-bottom: var(--app-space-1);
+  font-family: 'Material Symbols Outlined';
+  font-size: 32px;
+  line-height: 1;
+  color: var(--mat-sys-outline);
+}
+p.empty {
+  background: var(--mat-sys-surface-container-lowest);
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius);
+}
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+.error,
+.failure {
+  color: var(--mat-sys-error);
+}
+// Page-level error banners.
+p.error,
+div.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-1);
+  margin: 0 0 var(--app-space-2);
+  padding: 12px var(--app-space-2);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-error) 30%, transparent);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-error-soft);
+  color: var(--mat-sys-on-error-container);
+  p {
+    margin: 0;
+  }
+}
+// Slim loading bar.
+mat-progress-bar {
+  margin-bottom: var(--app-space-2);
+  border-radius: 3px;
+}
+
+// Status pills.
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-medium);
+  font-weight: 600;
+  background: var(--app-success-soft);
+  color: var(--app-success);
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  &.off {
+    background: var(--app-neutral-soft);
+    color: var(--mat-sys-on-surface-variant);
+  }
+  &.warn {
+    background: var(--app-warn-soft);
+    color: var(--app-warn);
+  }
+}
+
+// Skeleton placeholders while data loads.
+.skeleton {
+  border-radius: var(--app-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--mat-sys-surface-container) 25%,
+    var(--mat-sys-surface-container-high) 50%,
+    var(--mat-sys-surface-container) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+}
+@keyframes skeleton {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+// Detail cards.
+.detail-card {
+  margin-bottom: var(--app-space-3);
+}
+.mat-mdc-card-header {
+  padding-bottom: var(--app-space-1);
+}
+
+// Dialog content spacing.
+.mat-mdc-dialog-container .mat-mdc-dialog-title {
+  font-weight: 600;
 }
