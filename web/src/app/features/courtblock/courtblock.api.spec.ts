@@ -6,7 +6,14 @@ import { API, setUpHttp } from '../../testing/http';
 import { CourtBlockApi } from './courtblock.api';
 
 describe('CourtBlockApi', () => {
-  const block: CourtBlock = { id: 9, courtId: 3, date: '2026-06-08', start: '07:00', end: '09:00', reason: 'Mantenimiento' };
+  const block: CourtBlock = {
+    id: 9,
+    courtId: 3,
+    date: '2026-06-08',
+    start: '07:00',
+    end: '09:00',
+    reason: 'Mantenimiento',
+  };
   let api: CourtBlockApi;
   let http: HttpTestingController;
 
@@ -17,16 +24,24 @@ describe('CourtBlockApi', () => {
 
   afterEach(() => http.verify());
 
-  it('list GETs /courts/{id}/blocks, optionally for a date', () => {
+  it('list GETs /courts/{id}/blocks, optionally within a from/to date range', () => {
     let blocks: CourtBlock[] | undefined;
-    api.list(3, '2026-06-08').subscribe((b) => (blocks = b));
+    api.list(3, { from: '2026-06-08', to: '2026-06-30' }).subscribe((b) => (blocks = b));
 
     const req = http.expectOne((r) => r.url === `${API}/courts/3/blocks`);
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('date')).toBe('2026-06-08');
+    expect(req.request.params.toString()).toBe('from=2026-06-08&to=2026-06-30');
     req.flush([block]);
 
     expect(blocks).toEqual([block]);
+  });
+
+  it('list without a range sends no params', () => {
+    api.list(3).subscribe();
+
+    expect(http.expectOne((r) => r.url === `${API}/courts/3/blocks`).request.params.keys()).toEqual(
+      [],
+    );
   });
 
   it('create POSTs { date, start, end, reason } to /courts/{id}/blocks', () => {

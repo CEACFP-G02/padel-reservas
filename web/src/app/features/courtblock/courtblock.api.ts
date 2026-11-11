@@ -1,18 +1,20 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { CourtBlock, CourtBlockRequest, IsoDate } from '../../shared/models';
+import { BlockRange, CourtBlock, CourtBlockRequest } from '../../shared/models';
+import { toHttpParams } from '../../shared/util/http-params';
 
 /** REST client for court blocks — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks. */
 @Injectable({ providedIn: 'root' })
 export class CourtBlockApi {
   private readonly http = inject(HttpClient);
 
-  list(courtId: number, date?: IsoDate): Observable<CourtBlock[]> {
-    const params = date ? new HttpParams().set('date', date) : undefined;
-    return this.http.get<CourtBlock[]>(this.courtBlocksUrl(courtId), { params });
+  list(courtId: number, range: BlockRange = {}): Observable<CourtBlock[]> {
+    return this.http.get<CourtBlock[]>(this.courtBlocksUrl(courtId), {
+      params: toHttpParams(range),
+    });
   }
 
   create(courtId: number, body: CourtBlockRequest): Observable<CourtBlock> {

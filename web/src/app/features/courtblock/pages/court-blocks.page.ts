@@ -1,55 +1,76 @@
-import { Component, effect, inject, input, numberAttribute } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  numberAttribute,
+  signal,
+  untracked,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterLink } from '@angular/router';
 
 import { CourtBlock } from '../../../shared/models';
-import { CourtBlockFacade } from '../courtblock.facade';
+import { ConfirmDialog, ConfirmDialogData } from '../../../shared/ui/confirm-dialog/confirm.dialog';
+import { toIsoDate } from '../../../shared/util/date';
+import { longDate } from '../../../shared/util/long-date';
+import { CourtFacade } from '../../court/court.facade';
+import { CourtBlockError, CourtBlockFacade } from '../courtblock.facade';
+import { BlockFormDialog, BlockFormDialogData } from './block-form.dialog';
 
+const SNACK_DURATION = { duration: 4000 };
+
+/** Maintenance blocks of one court: list (upcoming, or all), add and remove. */
 @Component({
   selector: 'app-court-blocks-page',
   imports: [
-    ReactiveFormsModule,
     MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatIconModule,
+    MatProgressBarModule,
+    MatTooltipModule,
+    RouterLink,
   ],
   template: `
-    <h1>Bloqueos de la pista {{ courtId() }}</h1>
+    <header class="page-header">
+      <a matIconButton routerLink="/courts" aria-label="Volver a pistas"
+        ><mat-icon>arrow_back</mat-icon></a
+      >
+      <h1>Bloqueos · {{ courtName() }}</h1>
+      <span class="spacer"></span>
+      <button matButton="filled" (click)="openCreate()" data-testid="create">
+        <mat-icon>block</mat-icon> Nuevo bloqueo
+      </button>
+    </header>
 
-    <form class="block-form" [formGroup]="form" (ngSubmit)="create()">
-      <mat-form-field>
-        <mat-label>Fecha</mat-label>
-        <input matInput [matDatepicker]="picker" formControlName="date" />
-        <mat-datepicker-toggle matIconSuffix [for]="picker" />
-        <mat-datepicker #picker />
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Desde</mat-label>
-        <input matInput type="time" formControlName="start" />
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Hasta</mat-label>
-        <input matInput type="time" formControlName="end" />
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Motivo</mat-label>
-        <input matInput formControlName="reason" />
-      </mat-form-field>
-      <button matButton="filled" type="submit" [disabled]="form.invalid">Bloquear</button>
-    </form>
+    <mat-checkbox
+      data-testid="show-past"
+      [checked]="showPast()"
+      (change)="showPast.set($event.checked)"
+    >
+      Mostrar también los pasados
+    </mat-checkbox>
+
+    @if (facade.loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    @if (facade.error(); as error) {
+      <p class="error" role="alert" data-testid="list-error">{{ error }}</p>
+    }
 
     <table mat-table [dataSource]="facade.blocks()">
       <ng-container matColumnDef="date">
         <th mat-header-cell *matHeaderCellDef>Fecha</th>
-        <td mat-cell *matCellDef="let block">{{ block.date }}</td>
+        <td mat-cell *matCellDef="let block" class="date">{{ day(block) }}</td>
       </ng-container>
       <ng-container matColumnDef="range">
         <th mat-header-cell *matHeaderCellDef>Horario</th>
@@ -57,42 +78,126 @@ import { CourtBlockFacade } from '../courtblock.facade';
       </ng-container>
       <ng-container matColumnDef="reason">
         <th mat-header-cell *matHeaderCellDef>Motivo</th>
-        <td mat-cell *matCellDef="let block">{{ block.reason }}</td>
+        <td mat-cell *matCellDef="let block">{{ block.reason ?? '—' }}</td>
       </ng-container>
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
+        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
         <td mat-cell *matCellDef="let block">
-          <button matIconButton (click)="remove(block)" aria-label="Quitar bloqueo"><mat-icon>delete</mat-icon></button>
+          <button
+            matIconButton
+            (click)="remove(block)"
+            data-testid="remove"
+            aria-label="Quitar bloqueo"
+            matTooltip="Quitar bloqueo"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns" data-testid="block-row"></tr>
+      <tr class="mat-mdc-row" *matNoDataRow>
+        <td class="mat-mdc-cell empty" [attr.colspan]="columns.length">
+          {{
+            facade.loading()
+              ? 'Cargando bloqueos…'
+              : showPast()
+                ? 'No hay bloqueos.'
+                : 'No hay bloqueos próximos.'
+          }}
+        </td>
+      </tr>
     </table>
   `,
-  styles: `.block-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }`,
+  styles: `
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spacer {
+      flex: 1;
+    }
+    .error {
+      color: var(--mat-sys-error);
+    }
+    .date::first-letter {
+      text-transform: uppercase;
+    }
+    .empty {
+      padding: 16px;
+    }
+  `,
 })
 export class CourtBlocksPage {
   protected readonly facade = inject(CourtBlockFacade);
+  private readonly courts = inject(CourtFacade);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   readonly courtId = input.required({ transform: numberAttribute });
   protected readonly columns = ['date', 'range', 'reason', 'actions'];
+  protected readonly showPast = signal(false);
 
-  protected readonly form = inject(FormBuilder).group({
-    date: [null as Date | null, Validators.required],
-    start: ['', Validators.required],
-    end: ['', Validators.required],
-    reason: [''],
+  protected readonly courtName = computed(() => {
+    const court = this.courts.selected();
+    return court?.id === this.courtId() ? court.name : `Pista ${this.courtId()}`;
   });
 
   constructor() {
-    effect(() => void this.facade.listBlocks(this.courtId()));
+    effect(() => {
+      const courtId = this.courtId();
+      untracked(() => void this.courts.getCourt(courtId).catch(() => undefined));
+    });
+    effect(() => {
+      const courtId = this.courtId();
+      const range = this.showPast() ? {} : { from: toIsoDate(new Date()) };
+      untracked(() => void this.facade.listBlocks(courtId, range));
+    });
   }
 
-  protected create(): void {
-    // TODO: map form { date: toIsoDate, start, end (HH:mm), reason } -> facade.createBlock(courtId, request)
-    //  — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
+  protected day(block: CourtBlock): string {
+    return longDate(block.date);
+  }
+
+  protected openCreate(): void {
+    const data: BlockFormDialogData = { courtId: this.courtId(), courtName: this.courtName() };
+    this.dialog
+      .open<BlockFormDialog, BlockFormDialogData, CourtBlock>(BlockFormDialog, { data })
+      .afterClosed()
+      .subscribe((block) => {
+        if (block) {
+          this.notify('Bloqueo creado.');
+          void this.facade.refresh();
+        }
+      });
   }
 
   protected remove(block: CourtBlock): void {
-    void this.facade.removeBlock(block.id);
+    const data: ConfirmDialogData = {
+      title: 'Quitar bloqueo',
+      message: `Se quitará el bloqueo del ${longDate(block.date)} (${block.start} – ${block.end}) y esos turnos volverán a estar disponibles.`,
+      confirmLabel: 'Quitar',
+    };
+    this.dialog
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        try {
+          await this.facade.removeBlock(block.id);
+          this.notify('Bloqueo quitado.');
+        } catch (error) {
+          this.notify(
+            error instanceof CourtBlockError ? error.message : 'No se pudo quitar el bloqueo.',
+          );
+        }
+        await this.facade.refresh();
+      });
+  }
+
+  private notify(message: string): void {
+    this.snackBar.open(message, 'OK', SNACK_DURATION);
   }
 }

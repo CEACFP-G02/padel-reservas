@@ -80,6 +80,15 @@ const SNACK_DURATION = { duration: 4000 };
           >
             <mat-icon>schedule</mat-icon>
           </a>
+          <a
+            matIconButton
+            [routerLink]="['/courts', court.id, 'blocks']"
+            data-testid="blocks"
+            aria-label="Bloqueos"
+            matTooltip="Bloqueos"
+          >
+            <mat-icon>event_busy</mat-icon>
+          </a>
           <button
             matIconButton
             (click)="openEdit(court)"

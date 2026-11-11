@@ -15,3 +15,9 @@ export interface CourtBlockRequest {
   end: IsoTime;
   reason?: string | null;
 }
+
+/** Optional inclusive date range of `GET /courts/{id}/blocks`. */
+export interface BlockRange {
+  from?: IsoDate;
+  to?: IsoDate;
+}

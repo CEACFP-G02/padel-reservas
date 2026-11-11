@@ -211,6 +211,13 @@ describe('CourtListPage', () => {
     expect((rowButton(element, 0, 'deactivate') as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it('links each court to its blocks screen', () => {
+    const element = render();
+
+    expect(rowButton(element, 0, 'blocks')?.getAttribute('href')).toBe('/courts/1/blocks');
+    expect(rowButton(element, 1, 'blocks')?.getAttribute('href')).toBe('/courts/2/blocks');
+  });
+
   it('links each court to its schedule screen', () => {
     const element = render();
 
