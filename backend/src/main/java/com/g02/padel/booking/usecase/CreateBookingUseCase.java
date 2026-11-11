@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * UC: book one or more consecutive slots of a court. A CLIENT books for themselves; the OWNER books for
- * {@code clientId}. Each slot keeps the schedule price of this moment.
+ * {@code clientId}, who must be an active client. Each slot keeps the schedule price of this moment.
  */
 @Service
 public class CreateBookingUseCase {
@@ -53,8 +53,12 @@ public class CreateBookingUseCase {
         if (clientId == null) {
             throw new IllegalArgumentException("clientId is required when the owner books");
         }
-        return userRepository.findById(clientId)
+        User client = userRepository.findById(clientId)
                 .filter(u -> u.getRole() == Role.CLIENT)
                 .orElseThrow(() -> NotFoundException.of("Client", clientId));
+        if (!client.isActive()) {
+            throw new IllegalArgumentException("Client " + clientId + " is inactive");
+        }
+        return client;
     }
 }

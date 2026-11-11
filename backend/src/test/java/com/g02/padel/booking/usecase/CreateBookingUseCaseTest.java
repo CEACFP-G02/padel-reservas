@@ -109,6 +109,17 @@ class CreateBookingUseCaseTest {
     }
 
     @Test
+    void theOwnerCannotBookForAnInactiveClient() {
+        ana.setActive(false);
+
+        assertThatThrownBy(() -> useCase.execute("owner@padel.test", new CreateBookingRequest(3L, DATE, SLOTS, 42L)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Client 42 is inactive");
+        verify(bookable, never()).lockCourt(any(), org.mockito.ArgumentMatchers.anyBoolean());
+        verify(bookings, never()).save(any());
+    }
+
+    @Test
     void anUnbookableCourtStopsTheBookingBeforeAnythingIsSaved() {
         when(bookable.lockCourt(9L, false)).thenThrow(NotFoundException.of("Court", 9L));
 

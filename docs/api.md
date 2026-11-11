@@ -203,6 +203,7 @@ Create rules (`201` + the booking response below):
 - A slot taken by a non-cancelled booking or a court block → `409` (`"07:00-08:00 is not available on court 3"`). Free/taken is the same computation as availability.
 - Each slot's `price` is the schedule price at this moment (snapshot); `totalPrice` is their sum.
 - `404` if the court does not exist — or, for a CLIENT, is inactive (an OWNER gets `400 "Court 3 is inactive"`) — or if an OWNER's `clientId` is not a client. An OWNER without `clientId` → `400`.
+- An OWNER booking for an **inactive** client (one removed with `DELETE /users/{id}`, see Users) → `400` (`"Client 42 is inactive"`); nothing is booked. Reactivate the client first with `PATCH /users/{id} { "active": true }`. This rule is checked before the slots, so it wins over a `409`.
 
 Booking response (also returned by `GET /bookings/{id}`, and as the items of the paginated lists):
 ```json
