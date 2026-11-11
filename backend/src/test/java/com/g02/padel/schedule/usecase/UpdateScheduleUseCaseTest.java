@@ -138,6 +138,38 @@ class UpdateScheduleUseCaseTest {
     }
 
     @Test
+    void rejectsARangeNestedInAWiderEarlierRangeEvenWhenItClearsThePreviousOne() {
+        // Sorted: 08-22, 11-12, 13-14. 13:00 is after the previous close (12:00) but inside 08:00-22:00.
+        assertInvalid(request(60, "16.00", weekday(MONDAY, "13:00", "14:00"), weekday(MONDAY, "08:00", "22:00"),
+                        weekday(MONDAY, "11:00", "12:00")),
+                "MONDAY 11:00-12:00 overlaps 08:00-22:00");
+        assertInvalid(request(60, "16.00", weekday(MONDAY, "08:00", "22:00"), weekday(MONDAY, "08:00", "09:00"),
+                        weekday(MONDAY, "21:00", "22:00")),
+                "MONDAY 08:00-09:00 overlaps 08:00-22:00");
+    }
+
+    @Test
+    void rejectsALaterRangeInsideTheWidestEarlierOne() {
+        assertInvalid(request(60, "16.00", weekday(MONDAY, "08:00", "22:00"), weekday(MONDAY, "08:00", "20:00"),
+                        weekday(MONDAY, "21:00", "22:00")),
+                "MONDAY 08:00-20:00 overlaps 08:00-22:00");
+    }
+
+    @Test
+    void aRangeTouchingTheLatestCloseIsStillAllowed() {
+        var court = court(3, true);
+        when(courtRepository.findById(3L)).thenReturn(Optional.of(court));
+        when(scheduleRepository.findByCourtId(3L)).thenReturn(Optional.empty());
+        when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var response = updateSchedule.execute(3L, request(60, "16.00", weekday(MONDAY, "08:00", "14:00"),
+                weekday(MONDAY, "14:00", "15:00"),
+                weekday(MONDAY, "15:00", "20:00")));
+
+        assertThat(response.weekdays()).hasSize(3);
+    }
+
+    @Test
     void sameHoursOnDifferentDaysDoNotOverlap() {
         var court = court(3, true);
         when(courtRepository.findById(3L)).thenReturn(Optional.of(court));
