@@ -18,6 +18,7 @@ describe('navItems', () => {
       'Clientes',
       'Bloqueos',
       'Reservas',
+      'Packs de crédito',
     ]);
   });
 
@@ -26,6 +27,7 @@ describe('navItems', () => {
     expect(active('/clients/7?tab=1')).toEqual(['Clientes']);
     expect(active('/bookings/3#x')).toEqual(['Reservas']);
     expect(active('/availability')).toEqual(['Ocupación']);
+    expect(active('/credit-packs')).toEqual(['Packs de crédito']);
   });
 
   it('highlights Pistas on the court list and a court detail only', () => {
@@ -33,6 +35,10 @@ describe('navItems', () => {
     expect(active('/courts/4')).toEqual(['Pistas']);
     expect(active('/courts/4/schedule')).toEqual(['Horarios']);
     expect(active('/courts/4/blocks')).toEqual(['Bloqueos']);
+  });
+
+  it('links Packs de crédito to its page', () => {
+    expect(linkOf('/dashboard', 'Packs de crédito')).toBe('/credit-packs');
   });
 
   it('sends Horarios and Bloqueos to the court list to pick a court when none is in context', () => {

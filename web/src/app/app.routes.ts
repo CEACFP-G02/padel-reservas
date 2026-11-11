@@ -20,6 +20,10 @@ export const routes: Routes = [
       { path: 'courts/:courtId/schedule', loadChildren: () => import('./features/schedule/schedule.routes') },
       { path: 'courts/:courtId/blocks', loadChildren: () => import('./features/courtblock/courtblock.routes') },
       { path: 'clients', loadChildren: () => import('./features/user/user.routes') },
+      {
+        path: 'credit-packs',
+        loadChildren: () => import('./features/credit-pack/credit-pack.routes'),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -4,6 +4,7 @@ export * from './booking.model';
 export * from './common';
 export * from './court-block.model';
 export * from './court.model';
+export * from './credit-pack.model';
 export * from './dashboard.model';
 export * from './enums';
 export * from './schedule.model';

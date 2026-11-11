@@ -51,5 +51,11 @@ export function navItems(url: string): NavItem[] {
       active: courtSection === 'blocks',
     },
     { label: 'Reservas', icon: 'event', link: '/bookings', active: within('/bookings') },
+    {
+      label: 'Packs de crédito',
+      icon: 'loyalty',
+      link: '/credit-packs',
+      active: within('/credit-packs'),
+    },
   ];
 }
