@@ -46,7 +46,7 @@ class FlywayPostgresIntegrationTest {
         assertThat(applied).allSatisfy(m -> assertThat(m.getState()).isEqualTo(MigrationState.SUCCESS));
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(Arrays.stream(applied).map(m -> m.getVersion().getVersion()))
-                .containsExactly("1", "2", "3", "4");
+                .containsExactly("1", "2", "3", "4", "5");
     }
 
     @Test
@@ -56,7 +56,7 @@ class FlywayPostgresIntegrationTest {
 
         assertThat(tables).contains(
                 "app_user", "court", "schedule", "opening_hours", "booking", "booking_slot", "court_block",
-                "credit_pack");
+                "credit_pack", "payment_method");
     }
 
     @Test
@@ -84,6 +84,15 @@ class FlywayPostgresIntegrationTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThatThrownBy(() -> jdbc.update("UPDATE credit_pack SET price = -1 WHERE pack_size = 5"))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void storesOnlyTheSafeCardFieldsOfAPaymentMethod() {
+        List<String> columns = jdbc.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'payment_method'", String.class);
+
+        assertThat(columns).containsExactlyInAnyOrder("id", "user_id", "brand", "last4", "exp_month", "exp_year",
+                "gateway_token", "is_default", "active", "created_at");
     }
 
     private void assertMoneyColumn(String table, String name) {

@@ -427,6 +427,70 @@ Update price — `PATCH /credit-packs/2` → `200` + the updated pack:
 
 ---
 
+## Payment methods — `/api/v1/payment-methods`
+
+Cards a client saves to pay later (e.g. for credit packs). Every endpoint is CLIENT-only and works on
+the caller's own methods: an OWNER gets `403`, an anonymous caller `401`.
+
+**Card data is never stored.** On create, the card goes to the payment gateway, which tokenises it; the
+API stores only the brand, the last 4 digits, the expiry, the gateway token and the `default`/`active`
+flags. The full card number (PAN) is never persisted, logged or returned, and neither is the token.
+
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| GET | `/payment-methods` | CLIENT | The caller's saved methods |
+| POST | `/payment-methods` | CLIENT | Add a card. Body: `{ cardNumber, expiry, holder }` |
+| PATCH | `/payment-methods/{id}` | CLIENT | Make it the default. Body: `{ "default": true }` |
+| DELETE | `/payment-methods/{id}` | CLIENT | Remove it |
+
+PaymentMethod:
+```json
+{ "id": 7, "brand": "VISA", "last4": "4242", "expiry": "2028-12", "default": true }
+```
+- `brand`: `VISA`, `MASTERCARD`, `AMEX` or `OTHER`, derived from the card number.
+- `last4`: last 4 digits of the card number.
+- `expiry`: expiry month, `YYYY-MM`.
+- `default` (boolean): the method used unless another is chosen. A client has at most one default.
+
+List — `GET /payment-methods` → `200` + an array of the caller's methods (not paginated), the default
+first, then in the order they were added. Removed methods are not listed.
+
+Add — `POST /payment-methods` → `201` + the new method:
+```json
+{ "cardNumber": "4242 4242 4242 4242", "expiry": "2028-12", "holder": "Ana López" }
+```
+- `cardNumber`: required, digits (spaces and dashes are ignored), 13–19 digits, valid Luhn checksum.
+  Otherwise `400` (`"Invalid card number"`); the number is never echoed back in the error.
+- `expiry`: required, `YYYY-MM`, not before the current month (`400` `"Card expired"`).
+- `holder`: required, max 100 characters. It is passed to the gateway and not stored.
+- Missing fields → `400` with `fieldErrors`; a malformed `expiry` → `400`.
+- The client's first method becomes the default; later ones do not.
+
+Make default — `PATCH /payment-methods/7` with `{ "default": true }` → `200` + the method. The
+client's previous default stops being the default. Only `true` is accepted; `false` or a missing
+`default` → `400` (`"Only {"default": true} is supported"`): to change the default, make another method
+the default.
+
+Remove — `DELETE /payment-methods/7` → `204`. The method is no longer listed or usable; if it was the
+default, the client has no default until they choose one.
+
+`404` (`"Payment method 7 not found"`) for an id that does not exist, belongs to another client or was
+removed.
+
+### Payment gateway (mocked)
+
+The gateway is mocked: no network calls and no real money. It tokenises cards as above and charges a
+token an amount (`APPROVED` or `DECLINED`). Test cards:
+
+| Card number | Result |
+|---|---|
+| `4242 4242 4242 4242` | VISA, charges approved |
+| `5555 5555 5555 4444` | MASTERCARD, charges approved |
+| `4000 0000 0002 0000` | VISA; any card ending in `0000` is **declined** on charge |
+| `4242 4242 4242 4241` | Rejected on add: fails the Luhn check |
+
+---
+
 ## Out of MVP scope (future resources)
 
 Optional features would add their own resources without changing the above: `/payments`, `/reviews`, `/notifications`, multi-venue (`/venues`). The contract is designed so these extend rather than break it.
