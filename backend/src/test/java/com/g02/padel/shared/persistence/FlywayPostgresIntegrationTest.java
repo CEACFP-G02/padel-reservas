@@ -1,9 +1,12 @@
 package com.g02.padel.shared.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationState;
@@ -11,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -42,7 +46,7 @@ class FlywayPostgresIntegrationTest {
         assertThat(applied).allSatisfy(m -> assertThat(m.getState()).isEqualTo(MigrationState.SUCCESS));
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(Arrays.stream(applied).map(m -> m.getVersion().getVersion()))
-                .containsExactly("1", "2", "3");
+                .containsExactly("1", "2", "3", "4");
     }
 
     @Test
@@ -51,13 +55,35 @@ class FlywayPostgresIntegrationTest {
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", String.class);
 
         assertThat(tables).contains(
-                "app_user", "court", "schedule", "opening_hours", "booking", "booking_slot", "court_block");
+                "app_user", "court", "schedule", "opening_hours", "booking", "booking_slot", "court_block",
+                "credit_pack");
     }
 
     @Test
     void storesMoneyAsDecimal8Scale2() {
         assertMoneyColumn("booking", "total_price");
         assertMoneyColumn("booking_slot", "price");
+        assertMoneyColumn("credit_pack", "price");
+    }
+
+    @Test
+    void seedsTheFourCreditPacks() {
+        List<Map<String, Object>> packs =
+                jdbc.queryForList("SELECT pack_size, price FROM credit_pack ORDER BY pack_size");
+
+        assertThat(packs).extracting(row -> row.get("pack_size")).containsExactly(5, 10, 15, 20);
+        assertThat(packs).extracting(row -> ((BigDecimal) row.get("price")).toPlainString())
+                .containsExactly("75.00", "140.00", "195.00", "240.00");
+    }
+
+    @Test
+    void onlyAllowsTheFourPackSizesOnceEachAndNonNegativePrices() {
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO credit_pack (pack_size, price) VALUES (7, 10.00)"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO credit_pack (pack_size, price) VALUES (5, 10.00)"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("UPDATE credit_pack SET price = -1 WHERE pack_size = 5"))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     private void assertMoneyColumn(String table, String name) {

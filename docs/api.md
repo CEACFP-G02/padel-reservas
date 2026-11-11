@@ -388,6 +388,45 @@ Summary — `GET /dashboard/summary` → `200`. No query parameters; a CLIENT ge
 
 ---
 
+## Credit packs — `/api/v1/credit-packs`
+
+Prepaid packs of reservations the owner offers. There are exactly four packs, one per size
+(`5`, `10`, `15` and `20` reservations); the owner only sets their prices. Packs cannot be created or
+deleted. Every endpoint here is OWNER-only (a CLIENT gets `403`). Buying a pack is out of scope here.
+
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| GET | `/credit-packs` | OWNER | The four packs, by size |
+| PATCH | `/credit-packs/{id}` | OWNER | Update a pack's price. Body: `{ price }` |
+
+CreditPack:
+```json
+{ "id": 2, "size": 10, "price": 140.00 }
+```
+- `size` (integer): number of reservations in the pack — one of `5`, `10`, `15`, `20`. Read-only.
+- `price` (money): total price of the pack, EUR, `>= 0` with at most 2 decimals (`DECIMAL(8,2)`).
+
+The packs start with these prices (the price per reservation goes down as the pack grows):
+
+| size | price | per reservation |
+|---|---|---|
+| 5 | 75.00 | 15.00 |
+| 10 | 140.00 | 14.00 |
+| 15 | 195.00 | 13.00 |
+| 20 | 240.00 | 12.00 |
+
+List — `GET /credit-packs` → `200` + an array of the four packs (not paginated), sorted by `size`.
+
+Update price — `PATCH /credit-packs/2` → `200` + the updated pack:
+```json
+{ "price": 130.00 }
+```
+- `price` is required, `>= 0`, at most 2 decimals and at most `999999.99`; otherwise `400` with `fieldErrors`.
+- Only the price changes; any other field in the body (e.g. `size`) is ignored.
+- `404` if the pack does not exist.
+
+---
+
 ## Out of MVP scope (future resources)
 
 Optional features would add their own resources without changing the above: `/payments`, `/reviews`, `/notifications`, multi-venue (`/venues`). The contract is designed so these extend rather than break it.
