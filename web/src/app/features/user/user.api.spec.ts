@@ -1,13 +1,19 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { Booking, PageResponse, Role, User } from '../../shared/models';
+import { Booking, Client, PageResponse } from '../../shared/models';
 import { bookingFixture } from '../../testing/fixtures';
 import { API, pageOf, setUpHttp } from '../../testing/http';
 import { UserApi } from './user.api';
 
 describe('UserApi', () => {
-  const client: User = { id: 42, name: 'Ana López', email: 'ana@padel.test', phone: '600000000', role: Role.CLIENT };
+  const client: Client = {
+    id: 42,
+    name: 'Ana López',
+    email: 'ana@padel.test',
+    phone: '600000000',
+    active: true,
+  };
   let api: UserApi;
   let http: HttpTestingController;
 
@@ -19,7 +25,7 @@ describe('UserApi', () => {
   afterEach(() => http.verify());
 
   it('list GETs /users with search and pagination, returning a page', () => {
-    let page: PageResponse<User> | undefined;
+    let page: PageResponse<Client> | undefined;
     api.list({ search: 'ana', page: 2, size: 10 }).subscribe((p) => (page = p));
 
     const req = http.expectOne((r) => r.url === `${API}/users`);
@@ -36,7 +42,12 @@ describe('UserApi', () => {
   });
 
   it('create POSTs { name, email, password, phone }', () => {
-    const body = { name: 'Ana López', email: 'ana@padel.test', password: 's3cret-pass', phone: '600000000' };
+    const body = {
+      name: 'Ana López',
+      email: 'ana@padel.test',
+      password: 's3cret-pass',
+      phone: '600000000',
+    };
     api.create(body).subscribe();
 
     const req = http.expectOne(`${API}/users`);

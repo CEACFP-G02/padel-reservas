@@ -5,12 +5,12 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Booking,
+  Client,
   ClientQuery,
   CreateClientRequest,
   PageRequest,
   PageResponse,
   UpdateClientRequest,
-  User,
 } from '../../shared/models';
 import { toHttpParams } from '../../shared/util/http-params';
 
@@ -20,20 +20,20 @@ export class UserApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/users`;
 
-  list(query: ClientQuery = {}): Observable<PageResponse<User>> {
-    return this.http.get<PageResponse<User>>(this.baseUrl, { params: toHttpParams(query) });
+  list(query: ClientQuery = {}): Observable<PageResponse<Client>> {
+    return this.http.get<PageResponse<Client>>(this.baseUrl, { params: toHttpParams(query) });
   }
 
-  get(id: number): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/${id}`);
+  get(id: number): Observable<Client> {
+    return this.http.get<Client>(`${this.baseUrl}/${id}`);
   }
 
-  create(body: CreateClientRequest): Observable<User> {
-    return this.http.post<User>(this.baseUrl, body);
+  create(body: CreateClientRequest): Observable<Client> {
+    return this.http.post<Client>(this.baseUrl, body);
   }
 
-  update(id: number, body: UpdateClientRequest): Observable<User> {
-    return this.http.patch<User>(`${this.baseUrl}/${id}`, body);
+  update(id: number, body: UpdateClientRequest): Observable<Client> {
+    return this.http.patch<Client>(`${this.baseUrl}/${id}`, body);
   }
 
   delete(id: number): Observable<void> {
@@ -41,6 +41,8 @@ export class UserApi {
   }
 
   bookings(id: number, page: PageRequest = {}): Observable<PageResponse<Booking>> {
-    return this.http.get<PageResponse<Booking>>(`${this.baseUrl}/${id}/bookings`, { params: toHttpParams(page) });
+    return this.http.get<PageResponse<Booking>>(`${this.baseUrl}/${id}/bookings`, {
+      params: toHttpParams(page),
+    });
   }
 }

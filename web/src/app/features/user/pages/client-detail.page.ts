@@ -15,7 +15,9 @@ import { UserFacade } from '../user.facade';
       <mat-card>
         <mat-card-header>
           <mat-card-title>{{ client.name }}</mat-card-title>
-          <mat-card-subtitle>{{ client.email }} · {{ client.phone ?? 'sin teléfono' }}</mat-card-subtitle>
+          <mat-card-subtitle
+            >{{ client.email }} · {{ client.phone ?? 'sin teléfono' }}</mat-card-subtitle
+          >
         </mat-card-header>
       </mat-card>
 
@@ -23,7 +25,9 @@ import { UserFacade } from '../user.facade';
       <table mat-table [dataSource]="facade.clientBookings()">
         <ng-container matColumnDef="id">
           <th mat-header-cell *matHeaderCellDef>#</th>
-          <td mat-cell *matCellDef="let b"><a [routerLink]="['/bookings', b.id]">{{ b.id }}</a></td>
+          <td mat-cell *matCellDef="let b">
+            <a [routerLink]="['/bookings', b.id]">{{ b.id }}</a>
+          </td>
         </ng-container>
         <ng-container matColumnDef="date">
           <th mat-header-cell *matHeaderCellDef>Fecha</th>

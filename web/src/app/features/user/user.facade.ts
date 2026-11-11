@@ -1,25 +1,71 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
+import { Observable, firstValueFrom } from 'rxjs';
 
 import {
+  ApiError,
   Booking,
+  Client,
   ClientQuery,
   CreateClientRequest,
   PageMeta,
   PageRequest,
   UpdateClientRequest,
-  User,
 } from '../../shared/models';
 import { todo } from '../../shared/util/todo';
 import { UserApi } from './user.api';
+
+export type ClientField = 'name' | 'email' | 'password' | 'phone';
+
+/** A failed client write, with Spanish messages for the form. */
+export class ClientError extends Error {
+  constructor(
+    message: string,
+    readonly fieldErrors: Partial<Record<ClientField, string>> = {},
+  ) {
+    super(message);
+  }
+}
+
+const DUPLICATE_EMAIL = 'Ya existe un usuario con ese email.';
+
+const FIELD_MESSAGES: Record<ClientField, string> = {
+  name: 'El nombre es obligatorio (máximo 200 caracteres).',
+  email: 'Introduce un email válido.',
+  password: 'La contraseña debe tener entre 8 y 72 caracteres.',
+  phone: 'El teléfono admite como máximo 30 caracteres.',
+};
+
+/** Maps the documented errors (docs/api.md#users--clients--apiv1users) to Spanish. */
+function clientErrorOf(error: unknown): ClientError {
+  const status = error instanceof HttpErrorResponse ? error.status : undefined;
+  if (status === 409) {
+    return new ClientError('Revisa los datos del cliente.', { email: DUPLICATE_EMAIL });
+  }
+  if (status === 404) {
+    return new ClientError('El cliente ya no existe.');
+  }
+  if (status === 400) {
+    const apiFields = ((error as HttpErrorResponse).error as ApiError | null)?.fieldErrors ?? {};
+    const fieldErrors = Object.fromEntries(
+      Object.keys(apiFields)
+        .filter((field): field is ClientField => field in FIELD_MESSAGES)
+        .map((field) => [field, FIELD_MESSAGES[field]]),
+    );
+    return new ClientError('Revisa los datos del cliente.', fieldErrors);
+  }
+  return new ClientError('No se pudo guardar el cliente.');
+}
 
 /** OWNER use cases on client accounts. */
 @Injectable({ providedIn: 'root' })
 export class UserFacade {
   private readonly api = inject(UserApi);
 
-  private readonly _clients = signal<User[]>([]);
+  private readonly _clients = signal<Client[]>([]);
   private readonly _page = signal<PageMeta | null>(null);
-  private readonly _selected = signal<User | null>(null);
+  private readonly _filters = signal<ClientQuery>({});
+  private readonly _selected = signal<Client | null>(null);
   private readonly _clientBookings = signal<Booking[]>([]);
   private readonly _clientBookingsPage = signal<PageMeta | null>(null);
   private readonly _loading = signal(false);
@@ -27,41 +73,64 @@ export class UserFacade {
 
   readonly clients = this._clients.asReadonly();
   readonly page = this._page.asReadonly();
+  readonly filters = this._filters.asReadonly();
   readonly selected = this._selected.asReadonly();
   readonly clientBookings = this._clientBookings.asReadonly();
   readonly clientBookingsPage = this._clientBookingsPage.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
-  /** UC: List clients (search + pagination). */
+  /** UC: List clients (search + pagination), active and inactive. */
   async listClients(query: ClientQuery = {}): Promise<void> {
-    // TODO: api.list(query) -> _clients.set(page.content), _page.set(meta) — see docs/api.md#users--clients--apiv1users
-    todo('UserFacade.listClients', 'users--clients--apiv1users');
+    this._filters.set(query);
+    this._loading.set(true);
+    this._error.set(null);
+    try {
+      const { content, ...meta } = await firstValueFrom(this.api.list(query));
+      this._clients.set(content);
+      this._page.set(meta);
+    } catch {
+      this._clients.set([]);
+      this._page.set(null);
+      this._error.set('No se pudieron cargar los clientes.');
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /** Reloads the list with the last query. */
+  refresh(): Promise<void> {
+    return this.listClients(this._filters());
   }
 
   /** UC: Get client. */
   async getClient(id: number): Promise<void> {
-    // TODO: api.get(id) -> _selected — see docs/api.md#users--clients--apiv1users
-    todo('UserFacade.getClient', 'users--clients--apiv1users');
+    this._selected.set(await firstValueFrom(this.api.get(id)));
   }
 
-  /** UC: Create client. */
-  async createClient(request: CreateClientRequest): Promise<void> {
-    // TODO: api.create(request) -> append to _clients (409/400 on duplicate email)
-    //  — see docs/api.md#users--clients--apiv1users
-    todo('UserFacade.createClient', 'users--clients--apiv1users');
+  /** UC: Create client. Rejects with a {@link ClientError}. */
+  async createClient(request: CreateClientRequest): Promise<Client> {
+    const client = await this.write(this.api.create(request));
+    this._clients.update((clients) => [...clients, client]);
+    return client;
   }
 
-  /** UC: Update client (PATCH: only the changed fields). */
-  async updateClient(id: number, request: UpdateClientRequest): Promise<void> {
-    // TODO: api.update(id, request) -> replace in _clients / _selected — see docs/api.md#users--clients--apiv1users
-    todo('UserFacade.updateClient', 'users--clients--apiv1users');
+  /** UC: Update client (PATCH: only the changed fields). Rejects with a {@link ClientError}. */
+  async updateClient(id: number, request: UpdateClientRequest): Promise<Client> {
+    const client = await this.write(this.api.update(id, request));
+    this._clients.update((clients) => clients.map((c) => (c.id === id ? client : c)));
+    if (this._selected()?.id === id) {
+      this._selected.set(client);
+    }
+    return client;
   }
 
-  /** UC: Delete client. */
+  /**
+   * UC: Delete client. The server deactivates a client with bookings and deletes one without, so the caller
+   * refreshes the list afterwards. Rejects with a {@link ClientError}.
+   */
   async deleteClient(id: number): Promise<void> {
-    // TODO: api.delete(id) -> drop from _clients — see docs/api.md#users--clients--apiv1users
-    todo('UserFacade.deleteClient', 'users--clients--apiv1users');
+    await this.write(this.api.delete(id));
   }
 
   /** UC: List a client's bookings. */
@@ -69,5 +138,13 @@ export class UserFacade {
     // TODO: api.bookings(id, page) -> _clientBookings.set(page.content), _clientBookingsPage.set(meta)
     //  — see docs/api.md#users--clients--apiv1users
     todo('UserFacade.listClientBookings', 'users--clients--apiv1users');
+  }
+
+  private async write<T>(request: Observable<T>): Promise<T> {
+    try {
+      return await firstValueFrom(request);
+    } catch (error) {
+      throw clientErrorOf(error);
+    }
   }
 }
