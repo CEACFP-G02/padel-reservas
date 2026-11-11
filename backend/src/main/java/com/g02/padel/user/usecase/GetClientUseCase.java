@@ -1,7 +1,8 @@
 package com.g02.padel.user.usecase;
 
+import com.g02.padel.user.UserMapper;
 import com.g02.padel.user.UserRepository;
-import com.g02.padel.user.dto.UserResponse;
+import com.g02.padel.user.dto.ClientResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +17,7 @@ public class GetClientUseCase {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse execute(Long id) {
-        // TODO: findById, must be a CLIENT, else NotFoundException — see docs/api.md#get-apiv1usersid
-        throw new UnsupportedOperationException("TODO: GetClient — see docs/api.md#get-apiv1usersid");
+    public ClientResponse execute(Long id) {
+        return UserMapper.toClientResponse(ClientLookup.clientOrThrow(userRepository, id));
     }
 }

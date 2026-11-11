@@ -14,4 +14,10 @@ Base path: `/api/v1/users` — all endpoints require role `OWNER`.
 | Delete client | `DeleteClientUseCase` | `DELETE /{id}` |
 | List a client's bookings | `ListBookingsUseCase` (booking feature, `userId` filter) | `GET /{id}/bookings` (paged) |
 
+Rules (details in `docs/api.md`):
+- Only `CLIENT` accounts are managed here; an owner id is `404`, like an unknown one.
+- Emails are normalized (trimmed, lower-case, `auth.usecase.Emails`) and unique → `409`.
+- Delete is soft (`active=false`, bookings kept) when the client has bookings, otherwise a real delete.
+  An inactive client cannot log in; `PATCH { "active": true }` reactivates it.
+
 Contract details: `docs/api.md`.

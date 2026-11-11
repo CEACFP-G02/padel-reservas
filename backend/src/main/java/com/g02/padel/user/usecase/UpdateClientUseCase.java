@@ -1,12 +1,15 @@
 package com.g02.padel.user.usecase;
 
+import com.g02.padel.auth.usecase.Emails;
+import com.g02.padel.shared.exception.ConflictException;
+import com.g02.padel.user.UserMapper;
 import com.g02.padel.user.UserRepository;
+import com.g02.padel.user.dto.ClientResponse;
 import com.g02.padel.user.dto.UpdateClientRequest;
-import com.g02.padel.user.dto.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (owner): update a client profile. */
+/** UC (owner): update a client (PATCH: only the fields present change). */
 @Service
 public class UpdateClientUseCase {
 
@@ -17,9 +20,24 @@ public class UpdateClientUseCase {
     }
 
     @Transactional
-    public UserResponse execute(Long id, UpdateClientRequest request) {
-        // TODO: load client (NotFoundException), apply non-null fields (reject duplicate email), save
-        //  — see docs/api.md#users--clients--apiv1users
-        throw new UnsupportedOperationException("TODO: UpdateClient — see docs/api.md#users--clients--apiv1users");
+    public ClientResponse execute(Long id, UpdateClientRequest request) {
+        var client = ClientLookup.clientOrThrow(userRepository, id);
+        if (request.name() != null) {
+            client.setName(request.name().trim());
+        }
+        if (request.email() != null) {
+            String email = Emails.normalize(request.email());
+            if (userRepository.existsByEmailAndIdNot(email, id)) {
+                throw new ConflictException("Email " + email + " is already registered");
+            }
+            client.setEmail(email);
+        }
+        if (request.phone() != null) {
+            client.setPhone(ClientLookup.phoneOrNull(request.phone()));
+        }
+        if (request.active() != null) {
+            client.setActive(request.active());
+        }
+        return UserMapper.toClientResponse(client);
     }
 }

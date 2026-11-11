@@ -1,22 +1,29 @@
 package com.g02.padel.user.usecase;
 
+import com.g02.padel.booking.BookingRepository;
 import com.g02.padel.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (owner): delete a client. */
+/** UC (owner): remove a client. Soft delete (inactive) if it has bookings, so they are kept; otherwise for good. */
 @Service
 public class DeleteClientUseCase {
 
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
-    public DeleteClientUseCase(UserRepository userRepository) {
+    public DeleteClientUseCase(UserRepository userRepository, BookingRepository bookingRepository) {
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     @Transactional
     public void execute(Long id) {
-        // TODO: load client (NotFoundException); soft-delete (active=false) if it has bookings, else delete — see docs/api.md#delete-apiv1usersid
-        throw new UnsupportedOperationException("TODO: DeleteClient — see docs/api.md#delete-apiv1usersid");
+        var client = ClientLookup.clientOrThrow(userRepository, id);
+        if (bookingRepository.existsByUserId(id)) {
+            client.setActive(false);
+        } else {
+            userRepository.delete(client);
+        }
     }
 }

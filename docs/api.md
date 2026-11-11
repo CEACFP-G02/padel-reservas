@@ -272,12 +272,53 @@ Blocks remove the covered slots from availability.
 |---|---|---|---|
 | GET | `/users` | OWNER | List clients. Query: `search`, pagination |
 | GET | `/users/{id}` | OWNER | Single client |
-| POST | `/users` | OWNER | Create client |
-| PATCH | `/users/{id}` | OWNER | Update client |
-| DELETE | `/users/{id}` | OWNER | Remove client |
+| POST | `/users` | OWNER | Create client. Body: `{ name, email, password, phone? }` |
+| PATCH | `/users/{id}` | OWNER | Update client. Body: any of `{ name, email, phone, active }` |
+| DELETE | `/users/{id}` | OWNER | Remove client (deactivate if it has bookings) |
 | GET | `/users/{id}/bookings` | OWNER | A client's bookings |
 
 Self profile edits go through `/auth/me` (PATCH) rather than `/users/{id}`.
+
+Every endpoint here is OWNER-only (a CLIENT gets `403`) and works on **clients only**: an OWNER account
+is never listed, and `GET`/`PATCH`/`DELETE /users/{id}` of an owner id is `404`, the same as an
+unknown id.
+
+Client response (`GET /users/{id}`, `POST`, `PATCH`, and the items of `GET /users`):
+```json
+{ "id": 42, "name": "Ana López", "email": "ana@padel.test", "phone": "600000000", "active": true }
+```
+`phone` is `null` when not given. `active: false` means the client was removed but kept because it has
+bookings; an inactive client cannot log in.
+
+List — `GET /users?search=ana&page=0&size=20` → `200` + `PageResponse<Client>`:
+- Active and inactive clients, sorted by `name` ascending unless `sort` is given.
+- `search` (optional) matches clients whose name, email or phone contains it, ignoring case.
+
+Create — `POST /users` → `201` + the client:
+```json
+{ "name": "Ana López", "email": "ana@padel.test", "password": "s3cret-pass", "phone": "600000000" }
+```
+- Same body and rules as `POST /auth/register`: `name` required, not blank, max 200; `email` required,
+  a valid email; `password` required, 8–72 characters (the owner hands it to the client); `phone`
+  optional, max 30. Otherwise `400` with `fieldErrors`.
+- The account is always a `CLIENT` and starts active, whatever else the body contains.
+- Emails are stored trimmed and lower-cased. An email any user already has → `409`
+  (`"Email ana@padel.test is already registered"`).
+
+Update — `PATCH /users/{id}` → `200` + the client. Only the fields present change:
+```json
+{ "phone": "611111111" }
+```
+- `name` must not be blank (max 200), `email` must be a valid email, `phone` max 30 (`""` clears it),
+  `active: true` reactivates a removed client. Otherwise `400` with `fieldErrors`.
+- Changing `email` to one another user already has → `409` (same message as create). Keeping the
+  client's own email is fine.
+- The password and the role cannot be changed here.
+
+Remove — `DELETE /users/{id}` → `204`:
+- A client with bookings (any status) is **soft-deleted**, like courts: it becomes `active: false` and
+  its bookings are kept. Removing an already inactive client is also `204`.
+- A client without bookings is deleted for good.
 
 ---
 

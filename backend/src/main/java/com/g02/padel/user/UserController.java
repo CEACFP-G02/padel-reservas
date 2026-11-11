@@ -1,8 +1,8 @@
 package com.g02.padel.user;
 
+import com.g02.padel.user.dto.ClientResponse;
 import com.g02.padel.user.dto.CreateClientRequest;
 import com.g02.padel.user.dto.UpdateClientRequest;
-import com.g02.padel.user.dto.UserResponse;
 import com.g02.padel.user.usecase.CreateClientUseCase;
 import com.g02.padel.user.usecase.DeleteClientUseCase;
 import com.g02.padel.user.usecase.GetClientUseCase;
@@ -46,24 +46,24 @@ public class UserController {
     }
 
     @GetMapping
-    public PageResponse<UserResponse> list(@RequestParam(required = false) String search,
-                                           @PageableDefault(size = 20) Pageable pageable) {
+    public PageResponse<ClientResponse> list(@RequestParam(required = false) String search,
+                                           @PageableDefault(size = 20, sort = "name") Pageable pageable) {
         return PageResponse.of(listClients.execute(search, pageable));
     }
 
     @GetMapping("/{id}")
-    public UserResponse get(@PathVariable Long id) {
+    public ClientResponse get(@PathVariable Long id) {
         return getClient.execute(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse create(@Valid @RequestBody CreateClientRequest request) {
+    public ClientResponse create(@Valid @RequestBody CreateClientRequest request) {
         return createClient.execute(request);
     }
 
     @PatchMapping("/{id}")
-    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UpdateClientRequest request) {
+    public ClientResponse update(@PathVariable Long id, @Valid @RequestBody UpdateClientRequest request) {
         return updateClient.execute(id, request);
     }
 
