@@ -192,10 +192,11 @@ Create body:
   "courtId": 3,
   "date": "2026-06-08",
   "slots": [ { "start": "07:00", "end": "08:00" } ],
-  "clientId": 42
+  "clientId": 42,
+  "paymentMethodId": 7
 }
 ```
-`courtId` is required: it is one of the `courtIds` the availability endpoint reported free for those slots. `clientId` is optional/ignored for CLIENT (taken from token) and required for OWNER manual booking. One booking covers one court with one or more consecutive slots. Returns `409` if any slot is no longer free on that court.
+`courtId` is required: it is one of the `courtIds` the availability endpoint reported free for those slots. `clientId` is optional/ignored for CLIENT (taken from token) and required for OWNER manual booking. `paymentMethodId` is optional: one of the CLIENT's saved cards (see *Payment methods*), needed only when credits do not cover every slot (see *Paying a client booking* below); it is ignored for the OWNER. One booking covers one court with one or more consecutive slots. Returns `409` if any slot is no longer free on that court.
 
 Create rules (`201` + the booking response below):
 - Each slot must be one of the court's schedule slots for that weekday (same `start`/`end` as `GET /courts/{id}/availability` lists), and the slots must be consecutive (any order in the body). Otherwise `400` (e.g. `"12:00-13:00 is outside the schedule of court 3"`, `"Slots must be consecutive"`), also when the court has no schedule.
@@ -204,6 +205,31 @@ Create rules (`201` + the booking response below):
 - Each slot's `price` is the schedule price at this moment (snapshot); `totalPrice` is their sum.
 - `404` if the court does not exist — or, for a CLIENT, is inactive (an OWNER gets `400 "Court 3 is inactive"`) — or if an OWNER's `clientId` is not a client. An OWNER without `clientId` → `400`.
 - An OWNER booking for an **inactive** client (one removed with `DELETE /users/{id}`, see Users) → `400` (`"Client 42 is inactive"`); nothing is booked. Reactivate the client first with `PATCH /users/{id} { "active": true }`. This rule is checked before the slots, so it wins over a `409`.
+
+Paying a client booking (CLIENT only) — **credit first, then money**:
+- With `N` requested slots and a credit balance `B` (see *Credits*), `k = min(B, N)` slots are paid with credits:
+  **one** `CONSUMPTION` transaction of `-k` is written to the client's ledger (none when `k = 0`). Credits cover
+  the earliest `k` slots.
+- The other `N - k` slots are paid in money: the sum of their slot price snapshots (`slots[].price`) is charged to
+  `paymentMethodId` through the payment gateway (test cards in *Payment methods*). A remainder priced `0.00` is
+  not charged.
+- Credits cover every slot → nothing is charged and `paymentMethodId` is not needed (if sent, it is ignored).
+- A money remainder without `paymentMethodId` → `400` (`"paymentMethodId is required to pay the 2 slots not covered by credits"`).
+- `paymentMethodId` that does not exist, was removed or belongs to another client → `404` (`"Payment method 7 not found"`).
+- Charge declined → `402` (`"Payment declined: the booking was not made"`).
+- **All or nothing:** on any error (`400`, `402`, `404`, `409`) nothing happens — no booking, no slot taken, no
+  credit consumed, no money charged. The slot rules (`400`/`409`) are checked before the payment. Only on full
+  success are the booking (with its per-slot price snapshots), the `CONSUMPTION` and the charge all made.
+- The create response is the booking response below plus a `payment` object:
+  ```json
+  "payment": { "creditsUsed": 1, "slotsChargedInMoney": 1, "amountCharged": 16.00, "paymentMethodId": 7,
+               "chargeReference": "ch_mock_3f1c…" }
+  ```
+  `creditsUsed` (integer, `k`), `slotsChargedInMoney` (integer, `N - k`), `amountCharged` (money, `0.00` when
+  nothing was charged), `paymentMethodId` and `chargeReference` (the gateway's charge id) are `null` when nothing
+  was charged. `payment` appears only in the `201` of a CLIENT's `POST /bookings`.
+- **OWNER manual booking is unaffected:** a booking the OWNER makes for a `clientId` does not use the client's
+  credits nor charge any card, and its response has no `payment`.
 
 Booking response (also returned by `GET /bookings/{id}`, and as the items of the paginated lists):
 ```json
@@ -497,8 +523,8 @@ token an amount (`APPROVED` or `DECLINED`). Test cards:
 A client buys a credit pack (see *Credit packs*) with one of their saved cards (see *Payment methods*)
 and gets credits: **1 credit = 1 prepaid reservation**. Credits never expire.
 
-Credits are a ledger of transactions: a `PURCHASE` adds the pack's `size`; a `CONSUMPTION` (spending
-credits on reservations, not part of this API yet) subtracts them. The balance is the sum of the
+Credits are a ledger of transactions: a `PURCHASE` adds the pack's `size`; a `CONSUMPTION` subtracts the
+credits a client's booking used (see *Paying a client booking* under Bookings). The balance is the sum of the
 client's transactions. Every endpoint here is CLIENT-only and works on the caller's own credits: an
 OWNER gets `403`, an anonymous caller `401`.
 

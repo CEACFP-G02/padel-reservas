@@ -21,6 +21,13 @@ Rules:
 - Status: `CONFIRMED` → `CANCELLED` (soft cancel, row kept, `cancelledAt` set) or `COMPLETED`;
   only a `CONFIRMED` booking can be cancelled or rescheduled, otherwise **409**.
 - A taken or blocked slot → `SlotNotAvailableException` → **409 Conflict**.
+- A CLIENT's booking is paid by `BookingCheckout`, **credit first, then money**: of N slots, k = min(balance, N)
+  (the earliest) are paid with one `CONSUMPTION` of −k in the credit ledger, linked to the booking; the price
+  snapshots of the rest are charged to the client's `paymentMethodId` through `PaymentGateway` (missing → 400,
+  not theirs → 404, declined → 402). The slots are checked first, the charge is made last, and everything runs
+  in the booking's transaction, so any error leaves no booking, no consumption and no charge. The booking
+  records `creditsUsed`, `amountCharged`, the card and the charge reference. An OWNER manual booking is not paid
+  (no credits, no charge; those columns stay null).
 - `BookableSlots` validates requested times (consecutive, inside the schedule grid, not started)
   and prices them; free/taken comes from `availability.CourtDaySlotCalculator`, never re-implemented.
   Booking locks the court row (`CourtRepository.findByIdForUpdate`) so two concurrent requests

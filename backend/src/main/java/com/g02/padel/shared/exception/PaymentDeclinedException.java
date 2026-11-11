@@ -4,6 +4,10 @@ package com.g02.padel.shared.exception;
 public class PaymentDeclinedException extends RuntimeException {
 
     public PaymentDeclinedException() {
-        super("Payment declined: no credits were added");
+        this("Payment declined: no credits were added");
+    }
+
+    public PaymentDeclinedException(String message) {
+        super(message);
     }
 }

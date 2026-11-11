@@ -63,6 +63,10 @@ public class CreditTransaction {
     @Column(name = "charge_reference", length = 100, updatable = false)
     private String chargeReference;
 
+    /** The booking a consumption paid for; null for a purchase. */
+    @Column(name = "booking_id", updatable = false)
+    private Long bookingId;
+
     /** UTC. */
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now(ZoneOffset.UTC);

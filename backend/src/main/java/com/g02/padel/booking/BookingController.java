@@ -1,5 +1,6 @@
 package com.g02.padel.booking;
 
+import com.g02.padel.booking.dto.BookingCreatedResponse;
 import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.booking.dto.CreateBookingRequest;
 import com.g02.padel.booking.dto.RescheduleBookingRequest;
@@ -55,7 +56,8 @@ public class BookingController {
 
     @PostMapping("/bookings")
     @ResponseStatus(HttpStatus.CREATED)
-    public BookingResponse create(Authentication authentication, @Valid @RequestBody CreateBookingRequest request) {
+    public BookingCreatedResponse create(Authentication authentication,
+                                         @Valid @RequestBody CreateBookingRequest request) {
         return createBooking.execute(authentication.getName(), request);
     }
 

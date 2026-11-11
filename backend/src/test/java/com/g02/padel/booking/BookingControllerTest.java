@@ -14,6 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.g02.padel.booking.dto.BookingCreatedResponse;
+import com.g02.padel.booking.dto.BookingPaymentResponse;
 import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.booking.dto.BookingSlotResponse;
 import com.g02.padel.booking.dto.CreateBookingRequest;
@@ -28,6 +30,7 @@ import com.g02.padel.booking.usecase.RescheduleBookingUseCase;
 import com.g02.padel.shared.enums.BookingStatus;
 import com.g02.padel.shared.exception.ConflictException;
 import com.g02.padel.shared.exception.NotFoundException;
+import com.g02.padel.shared.exception.PaymentDeclinedException;
 import com.g02.padel.shared.exception.SlotNotAvailableException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -96,12 +99,41 @@ class BookingControllerTest {
     @Test
     void createReturns201WithTheDocsShape() throws Exception {
         var request = new CreateBookingRequest(3L, DATE,
-                List.of(new TimeSlotRequest(LocalTime.of(7, 0), LocalTime.of(8, 0))), 42L);
-        when(createBooking.execute("ana@padel.test", request)).thenReturn(BOOKING);
+                List.of(new TimeSlotRequest(LocalTime.of(7, 0), LocalTime.of(8, 0))), 42L, null);
+        when(createBooking.execute("ana@padel.test", request)).thenReturn(new BookingCreatedResponse(BOOKING, null));
 
         mvc.perform(post("/api/v1/bookings").contentType(MediaType.APPLICATION_JSON).content(CREATE_BODY))
                 .andExpect(status().isCreated())
                 .andExpect(content().json(BOOKING_JSON, true));
+    }
+
+    @Test
+    void aClientsCreateAlsoSaysHowItWasPaid() throws Exception {
+        var request = new CreateBookingRequest(3L, DATE,
+                List.of(new TimeSlotRequest(LocalTime.of(7, 0), LocalTime.of(8, 0))), null, 7L);
+        when(createBooking.execute("ana@padel.test", request)).thenReturn(new BookingCreatedResponse(BOOKING,
+                new BookingPaymentResponse(0, 1, new BigDecimal("16.00"), 7L, "ch_mock_1")));
+
+        mvc.perform(post("/api/v1/bookings").contentType(MediaType.APPLICATION_JSON).content("""
+                        { "courtId": 3, "date": "%s", "slots": [ { "start": "07:00", "end": "08:00" } ],
+                          "paymentMethodId": 7 }
+                        """.formatted(DATE)))
+                .andExpect(status().isCreated())
+                .andExpect(content().json(BOOKING_JSON.replaceFirst("\\}\\s*$", """
+                        , "payment": { "creditsUsed": 0, "slotsChargedInMoney": 1, "amountCharged": 16.00,
+                                       "paymentMethodId": 7, "chargeReference": "ch_mock_1" } }
+                        """), true));
+    }
+
+    @Test
+    void aDeclinedChargeIs402() throws Exception {
+        when(createBooking.execute(eq("ana@padel.test"), any()))
+                .thenThrow(new PaymentDeclinedException("Payment declined: the booking was not made"));
+
+        mvc.perform(post("/api/v1/bookings").contentType(MediaType.APPLICATION_JSON).content(CREATE_BODY))
+                .andExpect(status().isPaymentRequired())
+                .andExpect(jsonPath("$.status").value(402))
+                .andExpect(jsonPath("$.message").value("Payment declined: the booking was not made"));
     }
 
     @Test

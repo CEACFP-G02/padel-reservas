@@ -8,11 +8,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.g02.padel.court.Court;
+import com.g02.padel.credit.CreditTransaction;
+import com.g02.padel.credit.CreditTransactionRepository;
 import com.g02.padel.court.CourtRepository;
 import com.g02.padel.schedule.OpeningHours;
 import com.g02.padel.schedule.Schedule;
 import com.g02.padel.schedule.ScheduleRepository;
 import com.g02.padel.shared.enums.CourtType;
+import com.g02.padel.shared.enums.CreditTransactionType;
 import com.g02.padel.shared.enums.Role;
 import com.g02.padel.user.User;
 import com.g02.padel.user.UserRepository;
@@ -31,7 +34,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Shared data for booking integration tests: two clients, an owner and a court open 08:00-12:00 on DATE. */
+/**
+ * Shared data for booking integration tests: two clients, an owner and a court open 08:00-12:00 on DATE. Both
+ * clients hold credits, so their bookings are paid by credit and need no card (paying is covered by
+ * ClientBookingPaymentIntegrationTest).
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -54,6 +61,8 @@ abstract class BookingIntegrationSupport {
     UserRepository userRepository;
     @Autowired
     BookingRepository bookingRepository;
+    @Autowired
+    CreditTransactionRepository creditTransactionRepository;
 
     Court court;
     Schedule schedule;
@@ -64,6 +73,8 @@ abstract class BookingIntegrationSupport {
     void setUp() {
         client = user(CLIENT_EMAIL, "Ana Client", Role.CLIENT);
         other = user(OTHER_EMAIL, "Other Client", Role.CLIENT);
+        giveCredits(client, 20);
+        giveCredits(other, 20);
         user(OWNER_EMAIL, "Owner", Role.OWNER);
         court = new Court();
         court.setName("Court " + UUID.randomUUID());
@@ -88,6 +99,16 @@ abstract class BookingIntegrationSupport {
                     .append("{ \"start\": \"%s\", \"end\": \"%s\" }".formatted(times[i], times[i + 1]));
         }
         return "{ \"courtId\": %d, \"date\": \"%s\", \"slots\": [ %s ] }".formatted(court.getId(), DATE, slots);
+    }
+
+    void giveCredits(User owner, int credits) {
+        var purchase = new CreditTransaction();
+        purchase.setUser(owner);
+        purchase.setType(CreditTransactionType.PURCHASE);
+        purchase.setCredits(credits);
+        purchase.setAmount(new BigDecimal("0.00"));
+        purchase.setPackSize(credits);
+        creditTransactionRepository.save(purchase);
     }
 
     User user(String email, String name, Role role) {

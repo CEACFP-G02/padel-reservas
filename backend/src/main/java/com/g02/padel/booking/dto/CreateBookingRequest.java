@@ -11,11 +11,13 @@ import java.util.List;
 /**
  * {@code courtId} is one of the slot's free {@code courtIds} from {@code GET /availability}.
  * {@code clientId} is ignored for CLIENT (taken from the token) and required for an OWNER manual booking.
+ * {@code paymentMethodId} is the CLIENT's card for the slots their credits do not cover; ignored for the OWNER.
  */
 public record CreateBookingRequest(
         @NotNull Long courtId,
         @NotNull @FutureOrPresent LocalDate date,
         @NotEmpty List<@Valid TimeSlotRequest> slots,
-        Long clientId
+        Long clientId,
+        Long paymentMethodId
 ) {
 }

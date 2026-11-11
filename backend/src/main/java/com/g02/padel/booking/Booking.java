@@ -1,6 +1,7 @@
 package com.g02.padel.booking;
 
 import com.g02.padel.court.Court;
+import com.g02.padel.credit.PaymentMethod;
 import com.g02.padel.shared.enums.BookingStatus;
 import com.g02.padel.shared.exception.ConflictException;
 import com.g02.padel.user.User;
@@ -63,6 +64,21 @@ public class Booking {
 
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    /** Credits a client's booking consumed; null when not paid in the app (owner manual booking). */
+    @Column(name = "credits_used")
+    private Integer creditsUsed;
+
+    /** Money charged to the card for the slots credits did not cover; null when not paid in the app. */
+    @Column(name = "amount_charged", precision = 8, scale = 2)
+    private BigDecimal amountCharged;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_method_id")
+    private PaymentMethod paymentMethod;
+
+    @Column(name = "charge_reference", length = 100)
+    private String chargeReference;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("startTime")

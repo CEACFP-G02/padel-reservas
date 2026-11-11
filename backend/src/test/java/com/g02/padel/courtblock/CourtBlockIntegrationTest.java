@@ -52,6 +52,9 @@ class CourtBlockIntegrationTest {
 
     private Court court;
 
+    @Autowired
+    com.g02.padel.credit.CreditTransactionRepository creditTransactionRepository;
+
     @BeforeEach
     void setUp() {
         court = new Court();
@@ -107,6 +110,14 @@ class CourtBlockIntegrationTest {
         client.setPasswordHash("x");
         client.setRole(com.g02.padel.shared.enums.Role.CLIENT);
         userRepository.save(client);
+        // ... paid with a credit, so no card is needed ...
+        var credit = new com.g02.padel.credit.CreditTransaction();
+        credit.setUser(client);
+        credit.setType(com.g02.padel.shared.enums.CreditTransactionType.PURCHASE);
+        credit.setCredits(5);
+        credit.setAmount(new java.math.BigDecimal("0.00"));
+        credit.setPackSize(5);
+        creditTransactionRepository.save(credit);
         mvc.perform(post("/api/v1/bookings").contentType(MediaType.APPLICATION_JSON).content("""
                         { "courtId": %d, "date": "%s", "slots": [ { "start": "09:00", "end": "10:00" } ] }
                         """.formatted(court.getId(), DATE)))

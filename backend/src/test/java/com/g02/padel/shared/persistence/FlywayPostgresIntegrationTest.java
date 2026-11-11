@@ -46,7 +46,7 @@ class FlywayPostgresIntegrationTest {
         assertThat(applied).allSatisfy(m -> assertThat(m.getState()).isEqualTo(MigrationState.SUCCESS));
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(Arrays.stream(applied).map(m -> m.getVersion().getVersion()))
-                .containsExactly("1", "2", "3", "4", "5", "6");
+                .containsExactly("1", "2", "3", "4", "5", "6", "7");
     }
 
     @Test
@@ -101,12 +101,25 @@ class FlywayPostgresIntegrationTest {
                 "SELECT column_name FROM information_schema.columns WHERE table_name = 'credit_transaction'",
                 String.class);
         assertThat(columns).containsExactlyInAnyOrder("id", "user_id", "type", "credits", "amount", "pack_size",
-                "payment_method_id", "charge_reference", "created_at");
+                "payment_method_id", "charge_reference", "created_at", "booking_id");
 
         var amount = jdbc.queryForMap("""
                 SELECT data_type, numeric_precision, numeric_scale, is_nullable FROM information_schema.columns
                 WHERE table_name = 'credit_transaction' AND column_name = 'amount'""");
         // Money of a purchase; empty for a consumption.
+        assertThat(amount).containsEntry("data_type", "numeric").containsEntry("numeric_precision", 8)
+                .containsEntry("numeric_scale", 2).containsEntry("is_nullable", "YES");
+    }
+
+    @Test
+    void recordsHowABookingWasPaid() {
+        List<String> columns = jdbc.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'booking'", String.class);
+        assertThat(columns).contains("credits_used", "amount_charged", "payment_method_id", "charge_reference");
+        var amount = jdbc.queryForMap("""
+                SELECT data_type, numeric_precision, numeric_scale, is_nullable FROM information_schema.columns
+                WHERE table_name = 'booking' AND column_name = 'amount_charged'""");
+        // Null: an owner manual booking, or one made before payments existed.
         assertThat(amount).containsEntry("data_type", "numeric").containsEntry("numeric_precision", 8)
                 .containsEntry("numeric_scale", 2).containsEntry("is_nullable", "YES");
     }

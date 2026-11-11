@@ -58,12 +58,13 @@ class BookingJsonTest {
                   "courtId": 3,
                   "date": "2026-06-08",
                   "slots": [ { "start": "07:00", "end": "08:00" } ],
-                  "clientId": 42
+                  "clientId": 42,
+                  "paymentMethodId": 7
                 }
                 """);
 
         assertThat(request).isEqualTo(new CreateBookingRequest(
-                3L, LocalDate.of(2026, 6, 8), List.of(new TimeSlotRequest(LocalTime.of(7, 0), LocalTime.of(8, 0))), 42L));
+                3L, LocalDate.of(2026, 6, 8), List.of(new TimeSlotRequest(LocalTime.of(7, 0), LocalTime.of(8, 0))), 42L, 7L));
     }
 
     @Test
