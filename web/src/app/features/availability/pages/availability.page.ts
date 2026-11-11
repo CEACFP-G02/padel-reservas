@@ -13,9 +13,13 @@ import { Booking, BookingStatus, IsoDate } from '../../../shared/models';
 import { ConfirmDialog, ConfirmDialogData } from '../../../shared/ui/confirm-dialog/confirm.dialog';
 import { toIsoDate } from '../../../shared/util/date';
 import { BookingError, BookingFacade } from '../../booking/booking.facade';
+import {
+  ManualBookingDialog,
+  ManualBookingDialogData,
+} from '../../booking/pages/manual-booking.dialog';
 import { CourtFacade } from '../../court/court.facade';
 import { AvailabilityFacade } from '../availability.facade';
-import { occupancyGrid } from '../occupancy-grid';
+import { OccupancyCell, occupancyGrid } from '../occupancy-grid';
 
 const SNACK_DURATION = { duration: 4000 };
 
@@ -88,6 +92,9 @@ function bookingRange(booking: Booking): string {
                   @switch (cell.state) {
                     @case ('free') {
                       <span class="state">Libre</span>
+                      <button matButton type="button" data-testid="book-slot" (click)="book(cell)">
+                        Reservar
+                      </button>
                     }
                     @case ('unavailable') {
                       <span class="state">No disponible</span>
@@ -206,6 +213,30 @@ export class AvailabilityPage {
 
   protected range(booking: Booking): string {
     return bookingRange(booking);
+  }
+
+  /** Manual booking of a free slot for a client; the grid is refreshed once it is booked. */
+  protected book(cell: OccupancyCell): void {
+    const day = this.availability.dayAvailability();
+    if (!day) {
+      return;
+    }
+    const data: ManualBookingDialogData = {
+      courtId: day.courtId,
+      courtName: day.courtName,
+      date: day.date,
+      start: cell.start,
+      end: cell.end,
+    };
+    this.dialog
+      .open<ManualBookingDialog, ManualBookingDialogData, Booking>(ManualBookingDialog, { data })
+      .afterClosed()
+      .subscribe(async (booking) => {
+        if (booking) {
+          this.notify(`Reserva creada para ${booking.userName}.`);
+          await this.reload();
+        }
+      });
   }
 
   protected cancel(booking: Booking): void {

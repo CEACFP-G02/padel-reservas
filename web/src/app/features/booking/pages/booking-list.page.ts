@@ -33,7 +33,9 @@ import { BookingFormDialog } from './booking-form.dialog';
   template: `
     <header class="page-header">
       <h1>Reservas</h1>
-      <button matButton="filled" (click)="openCreate()"><mat-icon>add</mat-icon> Reserva manual</button>
+      <button matButton="filled" (click)="openCreate()">
+        <mat-icon>add</mat-icon> Reserva manual
+      </button>
     </header>
 
     <mat-form-field>
@@ -50,7 +52,9 @@ import { BookingFormDialog } from './booking-form.dialog';
     <table mat-table [dataSource]="facade.bookings()">
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef>#</th>
-        <td mat-cell *matCellDef="let b"><a [routerLink]="[b.id]">{{ b.id }}</a></td>
+        <td mat-cell *matCellDef="let b">
+          <a [routerLink]="[b.id]">{{ b.id }}</a>
+        </td>
       </ng-container>
       <ng-container matColumnDef="date">
         <th mat-header-cell *matHeaderCellDef>Fecha</th>
@@ -77,10 +81,20 @@ import { BookingFormDialog } from './booking-form.dialog';
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let b">
-          <button matIconButton (click)="openReschedule(b)" [disabled]="b.status !== confirmed" aria-label="Reprogramar">
+          <button
+            matIconButton
+            (click)="openReschedule(b)"
+            [disabled]="b.status !== confirmed"
+            aria-label="Reprogramar"
+          >
             <mat-icon>edit_calendar</mat-icon>
           </button>
-          <button matIconButton (click)="cancel(b)" [disabled]="b.status !== confirmed" aria-label="Cancelar">
+          <button
+            matIconButton
+            (click)="cancel(b)"
+            [disabled]="b.status !== confirmed"
+            aria-label="Cancelar"
+          >
             <mat-icon>cancel</mat-icon>
           </button>
         </td>
@@ -108,11 +122,19 @@ export class BookingListPage {
   }
 
   protected filterByDate(date: Date | null): void {
-    void this.facade.listBookings({ ...this.facade.filters(), date: date ? toIsoDate(date) : undefined, page: 0 });
+    void this.facade.listBookings({
+      ...this.facade.filters(),
+      date: date ? toIsoDate(date) : undefined,
+      page: 0,
+    });
   }
 
   protected changePage(event: PageEvent): void {
-    void this.facade.listBookings({ ...this.facade.filters(), page: event.pageIndex, size: event.pageSize });
+    void this.facade.listBookings({
+      ...this.facade.filters(),
+      page: event.pageIndex,
+      size: event.pageSize,
+    });
   }
 
   protected openCreate(): void {

@@ -134,6 +134,58 @@ describe('BookingFacade', () => {
   });
 
   it.todo('getBooking sets the selected booking');
-  it.todo('createBooking appends the booking and reports 409 as an error');
+  describe('createBooking', () => {
+    const request = {
+      courtId: 3,
+      date: '2026-06-08',
+      slots: [{ start: '07:00', end: '08:00' }],
+      clientId: 42,
+    };
+
+    async function failingWith(status: number, message: string): Promise<BookingError> {
+      const creating = facade.createBooking(request);
+      http.expectOne(url).flush({ status, message }, { status, statusText: 'Error' });
+      return errorOf(creating);
+    }
+
+    it('POSTs the manual booking for the client, appends it and resolves with it', async () => {
+      await loaded([other]);
+
+      const creating = facade.createBooking(request);
+      const req = http.expectOne(url);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(request);
+      req.flush(bookingFixture);
+
+      expect(await creating).toEqual(bookingFixture);
+      expect(facade.bookings()).toEqual([other, bookingFixture]);
+    });
+
+    it('explains a slot taken meanwhile (409)', async () => {
+      const error = await failingWith(409, '07:00-08:00 is not available on court 3');
+
+      expect(error).toBeInstanceOf(BookingError);
+      expect(error.message).toBe('Ese turno acaba de ocuparse en esta pista. Elige otro.');
+    });
+
+    it('explains an inactive client (400)', async () => {
+      expect((await failingWith(400, 'Client 42 is inactive')).message).toBe(
+        'El cliente está dado de baja. Reactívalo en Clientes antes de reservar.',
+      );
+    });
+
+    it('explains any other rejected slot (400)', async () => {
+      expect((await failingWith(400, 'Cannot book a slot that has already started')).message).toBe(
+        'Ese turno ya no se puede reservar (ya ha empezado o está fuera del horario).',
+      );
+    });
+
+    it('explains a missing court or client (404) and any other failure', async () => {
+      expect((await failingWith(404, 'Client 42 not found')).message).toBe(
+        'La pista o el cliente ya no existen.',
+      );
+      expect((await failingWith(500, 'boom')).message).toBe('No se pudo crear la reserva.');
+    });
+  });
   it.todo('rescheduleBooking replaces date/slots');
 });

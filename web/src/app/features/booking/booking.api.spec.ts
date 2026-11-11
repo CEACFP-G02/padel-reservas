@@ -20,7 +20,15 @@ describe('BookingApi', () => {
   it('list GETs /bookings with filters and pagination, returning a page', () => {
     let page: PageResponse<Booking> | undefined;
     api
-      .list({ date: '2026-06-08', courtId: 3, userId: 42, status: BookingStatus.CONFIRMED, page: 1, size: 10, sort: 'date,desc' })
+      .list({
+        date: '2026-06-08',
+        courtId: 3,
+        userId: 42,
+        status: BookingStatus.CONFIRMED,
+        page: 1,
+        size: 10,
+        sort: 'date,desc',
+      })
       .subscribe((p) => (page = p));
 
     const req = http.expectOne((r) => r.url === `${API}/bookings`);
@@ -40,7 +48,12 @@ describe('BookingApi', () => {
   });
 
   it('create POSTs a manual booking for a client', () => {
-    const body = { courtId: 3, date: '2026-06-08', slots: [{ start: '07:00', end: '08:00' }], clientId: 42 };
+    const body = {
+      courtId: 3,
+      date: '2026-06-08',
+      slots: [{ start: '07:00', end: '08:00' }],
+      clientId: 42,
+    };
     api.create(body).subscribe();
 
     const req = http.expectOne(`${API}/bookings`);

@@ -15,7 +15,10 @@ describe('BookingDetailPage', () => {
         provideRouter([]),
         {
           provide: BookingFacade,
-          useValue: { selected: signal<Booking | null>(bookingFixture), getBooking: vi.fn().mockResolvedValue(undefined) },
+          useValue: {
+            selected: signal<Booking | null>(bookingFixture),
+            getBooking: vi.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     });

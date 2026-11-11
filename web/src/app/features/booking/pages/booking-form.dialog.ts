@@ -11,9 +11,18 @@ import { Booking } from '../../../shared/models';
 /** Manual booking (no data) or reschedule (data = booking). */
 @Component({
   selector: 'app-booking-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule],
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatButtonModule,
+  ],
   template: `
-    <h2 mat-dialog-title>{{ booking ? 'Reprogramar reserva #' + booking.id : 'Nueva reserva manual' }}</h2>
+    <h2 mat-dialog-title>
+      {{ booking ? 'Reprogramar reserva #' + booking.id : 'Nueva reserva manual' }}
+    </h2>
     <form [formGroup]="form" (ngSubmit)="submit()">
       <mat-dialog-content>
         @if (!booking) {
@@ -47,7 +56,13 @@ import { Booking } from '../../../shared/models';
       </mat-dialog-actions>
     </form>
   `,
-  styles: `mat-dialog-content { display: flex; flex-direction: column; min-width: 320px; }`,
+  styles: `
+    mat-dialog-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 320px;
+    }
+  `,
 })
 export class BookingFormDialog {
   protected readonly booking = inject<Booking | null>(MAT_DIALOG_DATA, { optional: true });

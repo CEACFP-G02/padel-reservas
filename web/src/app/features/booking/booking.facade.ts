@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import {
+  ApiError,
   Booking,
   BookingFilters,
   BookingStatus,
@@ -15,6 +16,26 @@ import { BookingApi } from './booking.api';
 
 /** A failed booking write, with a Spanish message for the UI. */
 export class BookingError extends Error {}
+
+/** Maps the documented create errors (docs/api.md#bookings--apiv1bookings) to Spanish. */
+function createErrorOf(error: unknown): BookingError {
+  const status = error instanceof HttpErrorResponse ? error.status : undefined;
+  if (status === 409) {
+    return new BookingError('Ese turno acaba de ocuparse en esta pista. Elige otro.');
+  }
+  if (status === 400) {
+    const message = ((error as HttpErrorResponse).error as ApiError | null)?.message ?? '';
+    return new BookingError(
+      /^Client \d+ is inactive$/.test(message)
+        ? 'El cliente está dado de baja. Reactívalo en Clientes antes de reservar.'
+        : 'Ese turno ya no se puede reservar (ya ha empezado o está fuera del horario).',
+    );
+  }
+  if (status === 404) {
+    return new BookingError('La pista o el cliente ya no existen.');
+  }
+  return new BookingError('No se pudo crear la reserva.');
+}
 
 /** Maps the documented cancel errors (docs/api.md#bookings--apiv1bookings) to Spanish. */
 function cancelErrorOf(error: unknown): BookingError {
@@ -71,10 +92,18 @@ export class BookingFacade {
     todo('BookingFacade.getBooking', 'bookings--apiv1bookings');
   }
 
-  /** UC: Create booking (manual, on behalf of `clientId`). 409 = slot taken on that court. */
-  async createBooking(request: CreateBookingRequest): Promise<void> {
-    // TODO: api.create(request) -> prepend; surface 409 via _error — see docs/api.md#bookings--apiv1bookings
-    todo('BookingFacade.createBooking', 'bookings--apiv1bookings');
+  /**
+   * UC: Create booking (manual, on behalf of `clientId`). Rejects with a {@link BookingError}:
+   * 409 = the slot was taken meanwhile, 400 = inactive client or a slot that can no longer be booked.
+   */
+  async createBooking(request: CreateBookingRequest): Promise<Booking> {
+    try {
+      const booking = await firstValueFrom(this.api.create(request));
+      this._bookings.update((bookings) => [...bookings, booking]);
+      return booking;
+    } catch (error) {
+      throw createErrorOf(error);
+    }
   }
 
   /**

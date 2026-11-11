@@ -18,6 +18,7 @@ import { bookingFixture } from '../../../testing/fixtures';
 import { BookingError, BookingFacade } from '../../booking/booking.facade';
 import { CourtFacade } from '../../court/court.facade';
 import { AvailabilityFacade } from '../availability.facade';
+import { ManualBookingDialog } from '../../booking/pages/manual-booking.dialog';
 import { AvailabilityPage } from './availability.page';
 
 describe('AvailabilityPage', () => {
@@ -142,7 +143,7 @@ describe('AvailabilityPage', () => {
     expect(cells(element)).toEqual([
       '07:00 – 08:00 Reservada Demo Client Reserva 07:00 – 09:00 · €16.00 Cancelar reserva',
       '08:00 – 09:00 Reservada Demo Client Reserva 07:00 – 09:00 · €18.00 Cancelar reserva',
-      '09:00 – 10:00 Libre',
+      '09:00 – 10:00 Libre Reservar',
       '10:00 – 11:00 No disponible',
     ]);
     expect(cell(element, 0).classList).toContain('booked');
@@ -221,6 +222,61 @@ describe('AvailabilityPage', () => {
     fixture.detectChanges();
 
     expect(element.textContent).toContain('Todavía no hay pistas.');
+  });
+
+  describe('manual booking', () => {
+    it('opens the booking dialog for a free slot, then confirms and refreshes the grid', async () => {
+      const element = render();
+      dialogClosingWith({ ...booking, userName: 'Carla Ruiz' });
+      availability.getCourtDayAvailability.mockClear();
+      bookings.listBookings.mockClear();
+
+      click(cell(element, 2).querySelector('[data-testid="book-slot"]'));
+      await flush();
+
+      expect(dialog.open).toHaveBeenCalledWith(
+        ManualBookingDialog,
+        expect.objectContaining({
+          data: {
+            courtId: 3,
+            courtName: 'Pista 3',
+            date: '2026-06-08',
+            start: '09:00',
+            end: '10:00',
+          },
+        }),
+      );
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Reserva creada para Carla Ruiz.',
+        'OK',
+        expect.anything(),
+      );
+      expect(availability.getCourtDayAvailability).toHaveBeenCalledWith(3, '2026-06-08');
+      expect(bookings.listBookings).toHaveBeenCalledWith({
+        date: '2026-06-08',
+        courtId: 3,
+        size: 100,
+      });
+    });
+
+    it('only free slots can be booked', () => {
+      const element = render();
+
+      expect(cell(element, 0).querySelector('[data-testid="book-slot"]')).toBeNull();
+      expect(cell(element, 3).querySelector('[data-testid="book-slot"]')).toBeNull();
+    });
+
+    it('does nothing when the dialog is cancelled', async () => {
+      const element = render();
+      dialogClosingWith(undefined);
+      availability.getCourtDayAvailability.mockClear();
+
+      click(cell(element, 2).querySelector('[data-testid="book-slot"]'));
+      await flush();
+
+      expect(snackBar.open).not.toHaveBeenCalled();
+      expect(availability.getCourtDayAvailability).not.toHaveBeenCalled();
+    });
   });
 
   describe('cancel flow', () => {

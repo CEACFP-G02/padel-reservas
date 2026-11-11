@@ -14,13 +14,20 @@ import { BookingFacade } from '../booking.facade';
       <mat-card>
         <mat-card-header>
           <mat-card-title>Reserva #{{ booking.id }} · {{ booking.status }}</mat-card-title>
-          <mat-card-subtitle>{{ booking.courtName }} · {{ booking.date }} ·
-            <a data-testid="booking-client" [routerLink]="['/clients', booking.userId]">{{ booking.userName }}</a></mat-card-subtitle>
+          <mat-card-subtitle
+            >{{ booking.courtName }} · {{ booking.date }} ·
+            <a data-testid="booking-client" [routerLink]="['/clients', booking.userId]">{{
+              booking.userName
+            }}</a></mat-card-subtitle
+          >
         </mat-card-header>
         <mat-card-content>
           <mat-list>
             @for (slot of booking.slots; track slot.start) {
-              <mat-list-item>{{ slot.start }} – {{ slot.end }} · {{ slot.price | currency: 'EUR' }}</mat-list-item>
+              <mat-list-item
+                >{{ slot.start }} – {{ slot.end }} ·
+                {{ slot.price | currency: 'EUR' }}</mat-list-item
+              >
             }
           </mat-list>
           <p>Total: {{ booking.totalPrice | currency: 'EUR' }}</p>
