@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { provideSpanishLocale } from '../../../core/locale/spanish-locale';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -78,6 +79,7 @@ describe('CourtBlocksPage', () => {
     TestBed.configureTestingModule({
       imports: [CourtBlocksPage],
       providers: [
+        provideSpanishLocale(),
         provideRouter([]),
         { provide: CourtBlockFacade, useValue: facade },
         { provide: CourtFacade, useValue: courts },

@@ -15,13 +15,21 @@ import { todo } from '../../shared/util/todo';
 import { BookingApi } from './booking.api';
 
 /** A failed booking write, with a Spanish message for the UI. */
-export class BookingError extends Error {}
+export class BookingError extends Error {
+  /** `slotTaken`: a create failed because the slot was booked meanwhile (409), so the grid is stale. */
+  constructor(
+    message: string,
+    readonly slotTaken = false,
+  ) {
+    super(message);
+  }
+}
 
 /** Maps the documented create errors (docs/api.md#bookings--apiv1bookings) to Spanish. */
 function createErrorOf(error: unknown): BookingError {
   const status = error instanceof HttpErrorResponse ? error.status : undefined;
   if (status === 409) {
-    return new BookingError('Ese turno acaba de ocuparse en esta pista. Elige otro.');
+    return new BookingError('Ese turno acaba de ocuparse en esta pista. Elige otro.', true);
   }
   if (status === 400) {
     const message = ((error as HttpErrorResponse).error as ApiError | null)?.message ?? '';

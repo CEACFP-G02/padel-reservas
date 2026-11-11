@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { provideSpanishLocale } from '../../../core/locale/spanish-locale';
 import { DashboardSummary } from '../../../shared/models';
 import { DashboardFacade } from '../dashboard.facade';
 import { DashboardPage } from './dashboard.page';
@@ -32,7 +33,7 @@ describe('DashboardPage', () => {
     };
     TestBed.configureTestingModule({
       imports: [DashboardPage],
-      providers: [{ provide: DashboardFacade, useValue: facade }],
+      providers: [provideSpanishLocale(), { provide: DashboardFacade, useValue: facade }],
     });
     fixture = TestBed.createComponent(DashboardPage);
     fixture.detectChanges();
@@ -63,8 +64,8 @@ describe('DashboardPage', () => {
       ['Pistas activas', '4'],
       ['Reservas hoy', '12'],
       ['Próximos 7 días', '37'],
-      ['Ocupación hoy', '41.7 %'],
-      ['Ingresos hoy', '€192.00'],
+      ['Ocupación hoy', '41,7 %'],
+      ['Ingresos hoy', '192,00\u00a0€'],
     ]);
   });
 

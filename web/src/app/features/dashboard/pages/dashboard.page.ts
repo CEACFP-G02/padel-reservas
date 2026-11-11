@@ -1,25 +1,11 @@
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
-import { IsoDate } from '../../../shared/models';
 import { DashboardFacade } from '../dashboard.facade';
-
-const LONG_DATE = new Intl.DateTimeFormat('es-ES', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-
-/** `2026-06-08` → `lunes, 8 de junio de 2026` (parsed as a local date, no timezone shift). */
-function longDate(date: IsoDate): string {
-  const [year, month, day] = date.split('-').map(Number);
-  return LONG_DATE.format(new Date(year, month - 1, day));
-}
 
 /** OWNER landing page: today's KPIs as stat tiles. */
 @Component({
@@ -31,13 +17,14 @@ function longDate(date: IsoDate): string {
     MatProgressBarModule,
     CurrencyPipe,
     DecimalPipe,
+    DatePipe,
   ],
   template: `
     <header class="page-header">
       <div>
         <h1>Resumen de hoy</h1>
-        @if (date(); as date) {
-          <p class="date" data-testid="date">{{ date }}</p>
+        @if (facade.summary(); as summary) {
+          <p class="date" data-testid="date">{{ summary.date | date: 'fullDate' }}</p>
         }
       </div>
       <span class="spacer"></span>
@@ -146,10 +133,6 @@ function longDate(date: IsoDate): string {
 })
 export class DashboardPage {
   protected readonly facade = inject(DashboardFacade);
-  protected readonly date = computed(() => {
-    const summary = this.facade.summary();
-    return summary ? longDate(summary.date) : null;
-  });
 
   constructor() {
     this.load();

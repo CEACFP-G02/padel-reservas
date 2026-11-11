@@ -1,7 +1,8 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { Client } from '../../shared/models';
+import { Booking, BookingStatus, Client } from '../../shared/models';
+import { bookingFixture } from '../../testing/fixtures';
 import { API, pageOf, setUpHttp } from '../../testing/http';
 import { ClientError, UserFacade } from './user.facade';
 
@@ -99,12 +100,80 @@ describe('UserFacade', () => {
     });
   });
 
-  it('getClient sets the selected client', async () => {
-    const loading = facade.getClient(42);
-    http.expectOne(`${url}/42`).flush(ana);
-    await loading;
+  describe('getClient', () => {
+    it('sets the selected client', async () => {
+      const loading = facade.getClient(42);
+      http.expectOne(`${url}/42`).flush(ana);
+      await loading;
 
-    expect(facade.selected()).toEqual(ana);
+      expect(facade.selected()).toEqual(ana);
+      expect(facade.selectedError()).toBeNull();
+    });
+
+    it('clears the selection and explains a missing client (404) or any other failure', async () => {
+      const first = facade.getClient(42);
+      http.expectOne(`${url}/42`).flush(ana);
+      await first;
+
+      const missing = facade.getClient(7);
+      http.expectOne(`${url}/7`).flush({ status: 404 }, { status: 404, statusText: 'Not Found' });
+      await missing;
+      expect(facade.selected()).toBeNull();
+      expect(facade.selectedError()).toBe('Ese cliente no existe.');
+
+      const failing = facade.getClient(7);
+      http.expectOne(`${url}/7`).flush(null, { status: 500, statusText: 'Error' });
+      await failing;
+      expect(facade.selectedError()).toBe('No se pudo cargar el cliente.');
+    });
+  });
+
+  describe('listClientBookings', () => {
+    const cancelled: Booking = { ...bookingFixture, id: 5002, status: BookingStatus.CANCELLED };
+
+    it('loads one page of the client bookings and keeps the page metadata', async () => {
+      const loading = facade.listClientBookings(42, { page: 1, size: 10 });
+      expect(facade.clientBookingsLoading()).toBe(true);
+
+      const req = http.expectOne((r) => r.url === `${url}/42/bookings`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.toString()).toBe('page=1&size=10');
+      req.flush(pageOf([bookingFixture, cancelled], 1, 10));
+      await loading;
+
+      expect(facade.clientBookings()).toEqual([bookingFixture, cancelled]);
+      expect(facade.clientBookingsPage()).toEqual({
+        page: 1,
+        size: 10,
+        totalElements: 2,
+        totalPages: 1,
+      });
+      expect(facade.clientBookingsLoading()).toBe(false);
+      expect(facade.clientBookingsError()).toBeNull();
+    });
+
+    it('clears the list and sets a Spanish error on failure (404 = not a client)', async () => {
+      const first = facade.listClientBookings(42);
+      http.expectOne((r) => r.url === `${url}/42/bookings`).flush(pageOf([bookingFixture]));
+      await first;
+
+      const missing = facade.listClientBookings(7);
+      http
+        .expectOne((r) => r.url === `${url}/7/bookings`)
+        .flush({ status: 404 }, { status: 404, statusText: 'Not Found' });
+      await missing;
+      expect(facade.clientBookings()).toEqual([]);
+      expect(facade.clientBookingsPage()).toBeNull();
+      expect(facade.clientBookingsError()).toBe('Ese cliente no existe.');
+
+      const failing = facade.listClientBookings(42);
+      http
+        .expectOne((r) => r.url === `${url}/42/bookings`)
+        .flush(null, { status: 500, statusText: 'Error' });
+      await failing;
+      expect(facade.clientBookingsError()).toBe('No se pudieron cargar las reservas del cliente.');
+      expect(facade.clientBookingsLoading()).toBe(false);
+    });
   });
 
   describe('createClient', () => {
@@ -234,6 +303,4 @@ describe('UserFacade', () => {
       expect((await errorOf(deleting)).message).toBe('El cliente ya no existe.');
     });
   });
-
-  it.todo('listClientBookings loads one page of the client bookings');
 });

@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { provideSpanishLocale } from '../../../core/locale/spanish-locale';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -100,6 +101,7 @@ describe('AvailabilityPage', () => {
       imports: [AvailabilityPage],
       providers: [
         provideNativeDateAdapter(),
+        provideSpanishLocale(),
         { provide: AvailabilityFacade, useValue: availability },
         { provide: BookingFacade, useValue: bookings },
         { provide: CourtFacade, useValue: courtFacade },
@@ -119,8 +121,11 @@ describe('AvailabilityPage', () => {
   const cell = (element: HTMLElement, index: number) =>
     element.querySelectorAll('[data-testid="slot"]')[index];
   const click = (element: Element | null | undefined) => (element as HTMLElement).click();
-  const dialogClosingWith = (value: unknown) =>
-    dialog.open.mockReturnValueOnce({ afterClosed: () => of(value) });
+  const dialogClosingWith = (value: unknown, slotTaken = false) =>
+    dialog.open.mockReturnValueOnce({
+      afterClosed: () => of(value),
+      componentInstance: { slotTaken: () => slotTaken },
+    });
   const flush = () => new Promise((resolve) => setTimeout(resolve));
 
   it('lists every court (history included) and loads the first one for today', () => {
@@ -139,10 +144,10 @@ describe('AvailabilityPage', () => {
     const element = render();
 
     expect(element.querySelector('h1')?.textContent).toContain('Ocupación');
-    expect(element.querySelector('[data-testid="occupancy"]')?.textContent).toContain('75%');
+    expect(element.querySelector('[data-testid="occupancy"]')?.textContent).toContain('75\u00a0%');
     expect(cells(element)).toEqual([
-      '07:00 – 08:00 Reservada Demo Client Reserva 07:00 – 09:00 · €16.00 Cancelar reserva',
-      '08:00 – 09:00 Reservada Demo Client Reserva 07:00 – 09:00 · €18.00 Cancelar reserva',
+      '07:00 – 08:00 Reservada Demo Client Reserva 07:00 – 09:00 · 16,00\u00a0€ Cancelar reserva',
+      '08:00 – 09:00 Reservada Demo Client Reserva 07:00 – 09:00 · 18,00\u00a0€ Cancelar reserva',
       '09:00 – 10:00 Libre Reservar',
       '10:00 – 11:00 No disponible',
     ]);
@@ -264,6 +269,28 @@ describe('AvailabilityPage', () => {
 
       expect(cell(element, 0).querySelector('[data-testid="book-slot"]')).toBeNull();
       expect(cell(element, 3).querySelector('[data-testid="book-slot"]')).toBeNull();
+    });
+
+    it('refreshes the grid when the dialog closes after the slot was just taken (409)', async () => {
+      const element = render();
+      dialogClosingWith(undefined, true);
+      availability.getCourtDayAvailability.mockClear();
+      bookings.listBookings.mockClear();
+
+      click(cell(element, 2).querySelector('[data-testid="book-slot"]'));
+      await flush();
+
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Ese turno ya estaba ocupado. Calendario actualizado.',
+        'OK',
+        expect.anything(),
+      );
+      expect(availability.getCourtDayAvailability).toHaveBeenCalledWith(3, '2026-06-08');
+      expect(bookings.listBookings).toHaveBeenCalledWith({
+        date: '2026-06-08',
+        courtId: 3,
+        size: 100,
+      });
     });
 
     it('does nothing when the dialog is cancelled', async () => {

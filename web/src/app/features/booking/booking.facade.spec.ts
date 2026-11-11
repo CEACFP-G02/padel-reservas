@@ -166,12 +166,15 @@ describe('BookingFacade', () => {
 
       expect(error).toBeInstanceOf(BookingError);
       expect(error.message).toBe('Ese turno acaba de ocuparse en esta pista. Elige otro.');
+      expect(error.slotTaken).toBe(true);
     });
 
     it('explains an inactive client (400)', async () => {
-      expect((await failingWith(400, 'Client 42 is inactive')).message).toBe(
+      const error = await failingWith(400, 'Client 42 is inactive');
+      expect(error.message).toBe(
         'El cliente está dado de baja. Reactívalo en Clientes antes de reservar.',
       );
+      expect(error.slotTaken).toBe(false);
     });
 
     it('explains any other rejected slot (400)', async () => {

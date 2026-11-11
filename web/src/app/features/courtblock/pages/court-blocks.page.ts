@@ -1,5 +1,7 @@
+import { DatePipe, formatDate } from '@angular/common';
 import {
   Component,
+  LOCALE_ID,
   computed,
   effect,
   inject,
@@ -21,7 +23,6 @@ import { RouterLink } from '@angular/router';
 import { CourtBlock } from '../../../shared/models';
 import { ConfirmDialog, ConfirmDialogData } from '../../../shared/ui/confirm-dialog/confirm.dialog';
 import { toIsoDate } from '../../../shared/util/date';
-import { longDate } from '../../../shared/util/long-date';
 import { CourtFacade } from '../../court/court.facade';
 import { CourtBlockError, CourtBlockFacade } from '../courtblock.facade';
 import { BlockFormDialog, BlockFormDialogData } from './block-form.dialog';
@@ -39,6 +40,7 @@ const SNACK_DURATION = { duration: 4000 };
     MatProgressBarModule,
     MatTooltipModule,
     RouterLink,
+    DatePipe,
   ],
   template: `
     <header class="page-header">
@@ -70,7 +72,7 @@ const SNACK_DURATION = { duration: 4000 };
     <table mat-table [dataSource]="facade.blocks()">
       <ng-container matColumnDef="date">
         <th mat-header-cell *matHeaderCellDef>Fecha</th>
-        <td mat-cell *matCellDef="let block" class="date">{{ day(block) }}</td>
+        <td mat-cell *matCellDef="let block" class="date">{{ block.date | date: 'fullDate' }}</td>
       </ng-container>
       <ng-container matColumnDef="range">
         <th mat-header-cell *matHeaderCellDef>Horario</th>
@@ -134,6 +136,7 @@ export class CourtBlocksPage {
   private readonly courts = inject(CourtFacade);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly locale = inject(LOCALE_ID);
   readonly courtId = input.required({ transform: numberAttribute });
   protected readonly columns = ['date', 'range', 'reason', 'actions'];
   protected readonly showPast = signal(false);
@@ -155,10 +158,6 @@ export class CourtBlocksPage {
     });
   }
 
-  protected day(block: CourtBlock): string {
-    return longDate(block.date);
-  }
-
   protected openCreate(): void {
     const data: BlockFormDialogData = { courtId: this.courtId(), courtName: this.courtName() };
     this.dialog
@@ -175,7 +174,7 @@ export class CourtBlocksPage {
   protected remove(block: CourtBlock): void {
     const data: ConfirmDialogData = {
       title: 'Quitar bloqueo',
-      message: `Se quitará el bloqueo del ${longDate(block.date)} (${block.start} – ${block.end}) y esos turnos volverán a estar disponibles.`,
+      message: `Se quitará el bloqueo del ${formatDate(block.date, 'fullDate', this.locale)} (${block.start} – ${block.end}) y esos turnos volverán a estar disponibles.`,
       confirmLabel: 'Quitar',
     };
     this.dialog

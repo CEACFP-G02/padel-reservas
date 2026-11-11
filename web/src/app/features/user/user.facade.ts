@@ -12,7 +12,6 @@ import {
   PageRequest,
   UpdateClientRequest,
 } from '../../shared/models';
-import { todo } from '../../shared/util/todo';
 import { UserApi } from './user.api';
 
 export type ClientField = 'name' | 'email' | 'password' | 'phone';
@@ -28,6 +27,10 @@ export class ClientError extends Error {
 }
 
 const DUPLICATE_EMAIL = 'Ya existe un usuario con ese email.';
+/** `/users/{id}` and `/users/{id}/bookings` answer 404 for an unknown id or a non-client. */
+const NOT_A_CLIENT = 'Ese cliente no existe.';
+
+const isNotFound = (error: unknown) => error instanceof HttpErrorResponse && error.status === 404;
 
 const FIELD_MESSAGES: Record<ClientField, string> = {
   name: 'El nombre es obligatorio (máximo 200 caracteres).',
@@ -68,6 +71,9 @@ export class UserFacade {
   private readonly _selected = signal<Client | null>(null);
   private readonly _clientBookings = signal<Booking[]>([]);
   private readonly _clientBookingsPage = signal<PageMeta | null>(null);
+  private readonly _clientBookingsLoading = signal(false);
+  private readonly _clientBookingsError = signal<string | null>(null);
+  private readonly _selectedError = signal<string | null>(null);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
 
@@ -77,6 +83,10 @@ export class UserFacade {
   readonly selected = this._selected.asReadonly();
   readonly clientBookings = this._clientBookings.asReadonly();
   readonly clientBookingsPage = this._clientBookingsPage.asReadonly();
+  readonly clientBookingsLoading = this._clientBookingsLoading.asReadonly();
+  readonly clientBookingsError = this._clientBookingsError.asReadonly();
+  /** Why the last getClient failed, in Spanish. */
+  readonly selectedError = this._selectedError.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
@@ -105,7 +115,13 @@ export class UserFacade {
 
   /** UC: Get client. */
   async getClient(id: number): Promise<void> {
-    this._selected.set(await firstValueFrom(this.api.get(id)));
+    this._selectedError.set(null);
+    try {
+      this._selected.set(await firstValueFrom(this.api.get(id)));
+    } catch (error) {
+      this._selected.set(null);
+      this._selectedError.set(isNotFound(error) ? NOT_A_CLIENT : 'No se pudo cargar el cliente.');
+    }
   }
 
   /** UC: Create client. Rejects with a {@link ClientError}. */
@@ -135,9 +151,21 @@ export class UserFacade {
 
   /** UC: List a client's bookings. */
   async listClientBookings(id: number, page: PageRequest = {}): Promise<void> {
-    // TODO: api.bookings(id, page) -> _clientBookings.set(page.content), _clientBookingsPage.set(meta)
-    //  — see docs/api.md#users--clients--apiv1users
-    todo('UserFacade.listClientBookings', 'users--clients--apiv1users');
+    this._clientBookingsLoading.set(true);
+    this._clientBookingsError.set(null);
+    try {
+      const { content, ...meta } = await firstValueFrom(this.api.bookings(id, page));
+      this._clientBookings.set(content);
+      this._clientBookingsPage.set(meta);
+    } catch (error) {
+      this._clientBookings.set([]);
+      this._clientBookingsPage.set(null);
+      this._clientBookingsError.set(
+        isNotFound(error) ? NOT_A_CLIENT : 'No se pudieron cargar las reservas del cliente.',
+      );
+    } finally {
+      this._clientBookingsLoading.set(false);
+    }
   }
 
   private async write<T>(request: Observable<T>): Promise<T> {

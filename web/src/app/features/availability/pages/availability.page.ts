@@ -228,15 +228,21 @@ export class AvailabilityPage {
       start: cell.start,
       end: cell.end,
     };
-    this.dialog
-      .open<ManualBookingDialog, ManualBookingDialogData, Booking>(ManualBookingDialog, { data })
-      .afterClosed()
-      .subscribe(async (booking) => {
-        if (booking) {
-          this.notify(`Reserva creada para ${booking.userName}.`);
-          await this.reload();
-        }
-      });
+    const dialogRef = this.dialog.open<ManualBookingDialog, ManualBookingDialogData, Booking>(
+      ManualBookingDialog,
+      { data },
+    );
+    dialogRef.afterClosed().subscribe(async (booking) => {
+      if (booking) {
+        this.notify(`Reserva creada para ${booking.userName}.`);
+      } else if (dialogRef.componentInstance?.slotTaken()) {
+        // However the dialog was closed after a 409, the slot shown as free is stale.
+        this.notify('Ese turno ya estaba ocupado. Calendario actualizado.');
+      } else {
+        return;
+      }
+      await this.reload();
+    });
   }
 
   protected cancel(booking: Booking): void {

@@ -1,6 +1,7 @@
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { signal } from '@angular/core';
+import { provideSpanishLocale } from '../../../core/locale/spanish-locale';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatButtonHarness } from '@angular/material/button/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -77,6 +78,7 @@ describe('ManualBookingDialog', () => {
     TestBed.configureTestingModule({
       imports: [ManualBookingDialog],
       providers: [
+        provideSpanishLocale(),
         { provide: UserFacade, useValue: users },
         { provide: ScheduleFacade, useValue: schedules },
         { provide: BookingFacade, useValue: bookings },
@@ -117,7 +119,7 @@ describe('ManualBookingDialog', () => {
     expect(text('slot-court')).toBe('Pista 3');
     expect(text('slot-date')).toBe('lunes, 8 de junio de 2026');
     expect(text('slot-time')).toBe('07:00 – 08:00');
-    expect(text('slot-price')).toBe('€16.00');
+    expect(text('slot-price')).toBe('16,00\u00a0€');
   });
 
   it('loads the clients and offers only the active ones', async () => {
@@ -161,15 +163,17 @@ describe('ManualBookingDialog', () => {
     expect(dialogRef.close).toHaveBeenCalledWith(bookingFixture);
   });
 
-  it('shows a slot taken meanwhile (409) inline and stays open', async () => {
+  it('shows a slot taken meanwhile (409) inline, stays open and remembers it for the calendar', async () => {
+    expect(fixture.componentInstance.slotTaken()).toBe(false);
     bookings.createBooking.mockRejectedValue(
-      new BookingError('Ese turno acaba de ocuparse en esta pista. Elige otro.'),
+      new BookingError('Ese turno acaba de ocuparse en esta pista. Elige otro.', true),
     );
     await select('Ana López');
     await (await reserve()).click();
 
     expect(text('booking-error')).toBe('Ese turno acaba de ocuparse en esta pista. Elige otro.');
     expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.slotTaken()).toBe(true);
   });
 
   it('shows an inactive client (400) inline and stays open', async () => {
@@ -183,6 +187,7 @@ describe('ManualBookingDialog', () => {
       'El cliente está dado de baja. Reactívalo en Clientes antes de reservar.',
     );
     expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.slotTaken()).toBe(false);
   });
 
   it('closes empty on Cancelar', async () => {

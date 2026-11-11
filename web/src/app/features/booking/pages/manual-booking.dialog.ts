@@ -1,4 +1,4 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, PendingTasks, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -24,18 +24,6 @@ export interface ManualBookingDialogData {
 
 const CLIENTS_PAGE = 20;
 
-const LONG_DATE = new Intl.DateTimeFormat('es-ES', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-
-function longDate(date: IsoDate): string {
-  const [year, month, day] = date.split('-').map(Number);
-  return LONG_DATE.format(new Date(year, month - 1, day));
-}
-
 /**
  * Owner books one free slot for a client. Closes with the booking; on 409/400 it stays open showing the
  * reason. Closes empty on cancel.
@@ -51,6 +39,7 @@ function longDate(date: IsoDate): string {
     MatListModule,
     MatProgressBarModule,
     CurrencyPipe,
+    DatePipe,
   ],
   template: `
     <h2 mat-dialog-title>Reserva manual</h2>
@@ -59,7 +48,7 @@ function longDate(date: IsoDate): string {
         <dt>Pista</dt>
         <dd data-testid="slot-court">{{ data.courtName }}</dd>
         <dt>Fecha</dt>
-        <dd data-testid="slot-date">{{ day }}</dd>
+        <dd data-testid="slot-date">{{ data.date | date: 'fullDate' }}</dd>
         <dt>Hora</dt>
         <dd data-testid="slot-time">{{ data.start }} – {{ data.end }}</dd>
         <dt>Precio</dt>
@@ -173,7 +162,6 @@ export class ManualBookingDialog {
   private readonly pendingTasks = inject(PendingTasks);
   protected readonly dialogRef = inject(MatDialogRef<ManualBookingDialog, Booking>);
   protected readonly data = inject<ManualBookingDialogData>(MAT_DIALOG_DATA);
-  protected readonly day = longDate(this.data.date);
 
   /** Inactive clients cannot be booked for (the API answers 400), so they are not offered. */
   protected readonly activeClients = computed(() =>
@@ -182,6 +170,8 @@ export class ManualBookingDialog {
   protected readonly selected = signal<Client | null>(null);
   protected readonly saving = signal(false);
   protected readonly failure = signal<string | null>(null);
+  /** A booking attempt hit a 409: whoever opened the dialog should refresh its view of the slot. */
+  readonly slotTaken = signal(false);
 
   constructor() {
     void this.schedules.getSchedule(this.data.courtId);
@@ -219,6 +209,9 @@ export class ManualBookingDialog {
       this.failure.set(
         error instanceof BookingError ? error.message : 'No se pudo crear la reserva.',
       );
+      if (error instanceof BookingError && error.slotTaken) {
+        this.slotTaken.set(true);
+      }
     } finally {
       this.saving.set(false);
       done();

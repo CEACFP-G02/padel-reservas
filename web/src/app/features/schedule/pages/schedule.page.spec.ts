@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { provideSpanishLocale } from '../../../core/locale/spanish-locale';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -59,6 +60,7 @@ describe('SchedulePage', () => {
     TestBed.configureTestingModule({
       imports: [SchedulePage],
       providers: [
+        provideSpanishLocale(),
         provideRouter([]),
         { provide: ScheduleFacade, useValue: scheduleFacade },
         { provide: CourtFacade, useValue: courtFacade },
@@ -91,7 +93,7 @@ describe('SchedulePage', () => {
     const element = render();
 
     expect(element.querySelector('[data-testid="summary"]')?.textContent).toContain(
-      'Turnos de 90 min · €16.00 por turno',
+      'Turnos de 90 min · 16,00\u00a0€ por turno',
     );
     expect(rows(element)).toEqual([
       ['Lunes', '08:00–14:00, 17:00–22:00'],
