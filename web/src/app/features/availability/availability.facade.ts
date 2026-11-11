@@ -1,7 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { CourtDayAvailability, IsoDate } from '../../shared/models';
-import { todo } from '../../shared/util/todo';
 import { AvailabilityApi } from './availability.api';
 
 /** OWNER use case: occupancy grid of a court for one day (admin calendar). */
@@ -25,7 +26,19 @@ export class AvailabilityFacade {
 
   /** UC: Get court-day availability. */
   async getCourtDayAvailability(courtId: number, date: IsoDate): Promise<void> {
-    // TODO: api.getCourtDay(courtId, date) -> _dayAvailability — see docs/api.md#availability--apiv1availability-
-    todo('AvailabilityFacade.getCourtDayAvailability', 'availability--apiv1availability-');
+    this._loading.set(true);
+    this._error.set(null);
+    try {
+      this._dayAvailability.set(await firstValueFrom(this.api.getCourtDay(courtId, date)));
+    } catch (error) {
+      this._dayAvailability.set(null);
+      this._error.set(
+        error instanceof HttpErrorResponse && error.status === 404
+          ? 'La pista no existe.'
+          : 'No se pudo cargar la ocupación.',
+      );
+    } finally {
+      this._loading.set(false);
+    }
   }
 }

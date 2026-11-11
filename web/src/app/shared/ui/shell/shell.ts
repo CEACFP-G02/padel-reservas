@@ -13,7 +13,7 @@ import { NavItem, NavList } from '../nav-list/nav-list';
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', link: '/dashboard' },
-  { label: 'Disponibilidad', icon: 'calendar_month', link: '/availability' },
+  { label: 'Ocupación', icon: 'calendar_month', link: '/availability' },
   { label: 'Reservas', icon: 'event', link: '/bookings' },
   { label: 'Pistas', icon: 'sports_tennis', link: '/courts' },
   { label: 'Clientes', icon: 'group', link: '/clients' },
