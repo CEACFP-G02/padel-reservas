@@ -55,6 +55,8 @@ class ApiRoutesTest {
     @MockBean
     private UpdateClientUseCase updateClient;
     @MockBean
+    private com.g02.padel.user.usecase.ListClientBookingsUseCase listClientBookings;
+    @MockBean
     private RemoveBlockUseCase removeBlock;
     @MockBean
     private UpdateProfileUseCase updateProfile;
@@ -121,8 +123,7 @@ class ApiRoutesTest {
 
     @Test
     void listsAClientsBookingsPaginated() throws Exception {
-        when(listBookings.execute(isNull(), isNull(), eq(42L), isNull(), eq(PageRequest.of(1, 5))))
-                .thenReturn(Page.empty(PageRequest.of(1, 5)));
+        when(listClientBookings.execute(42L, PageRequest.of(1, 5))).thenReturn(Page.empty(PageRequest.of(1, 5)));
 
         mvc.perform(get("/api/v1/users/42/bookings").param("page", "1").param("size", "5"))
                 .andExpect(status().isOk())

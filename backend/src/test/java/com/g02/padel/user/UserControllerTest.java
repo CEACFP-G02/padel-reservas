@@ -22,6 +22,7 @@ import com.g02.padel.user.dto.UpdateClientRequest;
 import com.g02.padel.user.usecase.CreateClientUseCase;
 import com.g02.padel.user.usecase.DeleteClientUseCase;
 import com.g02.padel.user.usecase.GetClientUseCase;
+import com.g02.padel.user.usecase.ListClientBookingsUseCase;
 import com.g02.padel.user.usecase.ListClientsUseCase;
 import com.g02.padel.user.usecase.UpdateClientUseCase;
 import java.util.List;
@@ -64,6 +65,8 @@ class UserControllerTest {
     private UpdateClientUseCase updateClient;
     @MockBean
     private DeleteClientUseCase deleteClient;
+    @MockBean
+    private ListClientBookingsUseCase listClientBookings;
 
     @Test
     void listsClientsWithSearchAndPagination() throws Exception {
@@ -189,8 +192,31 @@ class UserControllerTest {
     }
 
     @Test
+    void listsAClientsBookingsPaged() throws Exception {
+        var pageable = PageRequest.of(1, 5);
+        when(listClientBookings.execute(42L, pageable)).thenReturn(new PageImpl<>(List.of(), pageable, 6));
+
+        mvc.perform(get("/api/v1/users/42/bookings").param("page", "1").param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(6));
+    }
+
+    @Test
+    void clientBookingsAnswer404ForAnUnknownClient() throws Exception {
+        when(listClientBookings.execute(eq(99L), any())).thenThrow(NotFoundException.of("Client", 99L));
+
+        mvc.perform(get("/api/v1/users/99/bookings"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Client 99 not found"));
+    }
+
+    @Test
     @WithMockUser(username = "ana@padel.test", roles = "CLIENT")
     void aClientGets403OnEveryEndpoint() throws Exception {
+        mvc.perform(get("/api/v1/users/42/bookings")).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/users")).andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
         mvc.perform(get("/api/v1/users/42")).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/users").contentType(MediaType.APPLICATION_JSON).content(CREATE_BODY))
@@ -199,7 +225,7 @@ class UserControllerTest {
                 .andExpect(status().isForbidden());
         mvc.perform(delete("/api/v1/users/42")).andExpect(status().isForbidden());
 
-        verifyNoInteractions(listClients, getClient, createClient, updateClient, deleteClient);
+        verifyNoInteractions(listClients, getClient, createClient, updateClient, deleteClient, listClientBookings);
     }
 
     @Test

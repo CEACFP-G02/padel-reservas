@@ -350,6 +350,12 @@ Remove — `DELETE /users/{id}` → `204`:
   its bookings are kept. Removing an already inactive client is also `204`.
 - A client without bookings is deleted for good.
 
+A client's bookings — `GET /users/{id}/bookings?page=0&size=20` → `200` + `PageResponse<Booking>` (items are
+the booking response of *Bookings*):
+- Every booking of that client, any status (`CONFIRMED`, `CANCELLED`, `COMPLETED`), also for an inactive client.
+- Most recent first (`date` desc, then `id` desc) unless `sort` is given — the same order as `GET /bookings`.
+- `404` if the id does not exist or is not a client (`"Client 7 not found"`); a CLIENT gets `403`.
+
 ---
 
 ## Dashboard — `/api/v1/dashboard`

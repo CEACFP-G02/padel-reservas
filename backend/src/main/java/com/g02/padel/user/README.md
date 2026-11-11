@@ -12,7 +12,7 @@ Base path: `/api/v1/users` — all endpoints require role `OWNER`.
 | Create client | `CreateClientUseCase` | `POST /` |
 | Update client | `UpdateClientUseCase` | `PATCH /{id}` |
 | Delete client | `DeleteClientUseCase` | `DELETE /{id}` |
-| List a client's bookings | `ListBookingsUseCase` (booking feature, `userId` filter) | `GET /{id}/bookings` (paged) |
+| List a client's bookings | `ListClientBookingsUseCase` | `GET /{id}/bookings` (paged, most recent first) |
 
 Rules (details in `docs/api.md`):
 - Only `CLIENT` accounts are managed here; an owner id is `404`, like an unknown one.

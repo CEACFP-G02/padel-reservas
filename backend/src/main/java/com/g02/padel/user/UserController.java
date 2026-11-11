@@ -1,11 +1,13 @@
 package com.g02.padel.user;
 
+import com.g02.padel.booking.dto.BookingResponse;
 import com.g02.padel.user.dto.ClientResponse;
 import com.g02.padel.user.dto.CreateClientRequest;
 import com.g02.padel.user.dto.UpdateClientRequest;
 import com.g02.padel.user.usecase.CreateClientUseCase;
 import com.g02.padel.user.usecase.DeleteClientUseCase;
 import com.g02.padel.user.usecase.GetClientUseCase;
+import com.g02.padel.user.usecase.ListClientBookingsUseCase;
 import com.g02.padel.user.usecase.ListClientsUseCase;
 import com.g02.padel.user.usecase.UpdateClientUseCase;
 import com.g02.padel.shared.web.PageResponse;
@@ -35,14 +37,17 @@ public class UserController {
     private final CreateClientUseCase createClient;
     private final UpdateClientUseCase updateClient;
     private final DeleteClientUseCase deleteClient;
+    private final ListClientBookingsUseCase listClientBookings;
 
     public UserController(ListClientsUseCase listClients, GetClientUseCase getClient, CreateClientUseCase createClient,
-                          UpdateClientUseCase updateClient, DeleteClientUseCase deleteClient) {
+                          UpdateClientUseCase updateClient, DeleteClientUseCase deleteClient,
+                          ListClientBookingsUseCase listClientBookings) {
         this.listClients = listClients;
         this.getClient = getClient;
         this.createClient = createClient;
         this.updateClient = updateClient;
         this.deleteClient = deleteClient;
+        this.listClientBookings = listClientBookings;
     }
 
     @GetMapping
@@ -71,5 +76,10 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         deleteClient.execute(id);
+    }
+
+    @GetMapping("/{id}/bookings")
+    public PageResponse<BookingResponse> bookings(@PathVariable Long id, @PageableDefault(size = 20) Pageable pageable) {
+        return PageResponse.of(listClientBookings.execute(id, pageable));
     }
 }

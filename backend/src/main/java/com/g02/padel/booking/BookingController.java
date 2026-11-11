@@ -86,13 +86,6 @@ public class BookingController {
         return PageResponse.of(getMyBookings.execute(authentication.getName(), status, from, to, pageable));
     }
 
-    @GetMapping("/users/{userId}/bookings")
-    @PreAuthorize("hasRole('OWNER')")
-    public PageResponse<BookingResponse> clientBookings(@PathVariable Long userId,
-                                                        @PageableDefault(size = 20) Pageable pageable) {
-        return PageResponse.of(listBookings.execute(null, null, userId, null, pageable));
-    }
-
     /** Soft-cancel: the booking stays, with status CANCELLED. */
     @DeleteMapping("/bookings/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
