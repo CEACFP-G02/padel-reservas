@@ -46,7 +46,7 @@ class FlywayPostgresIntegrationTest {
         assertThat(applied).allSatisfy(m -> assertThat(m.getState()).isEqualTo(MigrationState.SUCCESS));
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(Arrays.stream(applied).map(m -> m.getVersion().getVersion()))
-                .containsExactly("1", "2", "3", "4", "5");
+                .containsExactly("1", "2", "3", "4", "5", "6");
     }
 
     @Test
@@ -56,7 +56,7 @@ class FlywayPostgresIntegrationTest {
 
         assertThat(tables).contains(
                 "app_user", "court", "schedule", "opening_hours", "booking", "booking_slot", "court_block",
-                "credit_pack", "payment_method");
+                "credit_pack", "payment_method", "credit_transaction");
     }
 
     @Test
@@ -93,6 +93,22 @@ class FlywayPostgresIntegrationTest {
 
         assertThat(columns).containsExactlyInAnyOrder("id", "user_id", "brand", "last4", "exp_month", "exp_year",
                 "gateway_token", "is_default", "active", "created_at");
+    }
+
+    @Test
+    void storesAnAuditableCreditLedger() {
+        List<String> columns = jdbc.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'credit_transaction'",
+                String.class);
+        assertThat(columns).containsExactlyInAnyOrder("id", "user_id", "type", "credits", "amount", "pack_size",
+                "payment_method_id", "charge_reference", "created_at");
+
+        var amount = jdbc.queryForMap("""
+                SELECT data_type, numeric_precision, numeric_scale, is_nullable FROM information_schema.columns
+                WHERE table_name = 'credit_transaction' AND column_name = 'amount'""");
+        // Money of a purchase; empty for a consumption.
+        assertThat(amount).containsEntry("data_type", "numeric").containsEntry("numeric_precision", 8)
+                .containsEntry("numeric_scale", 2).containsEntry("is_nullable", "YES");
     }
 
     private void assertMoneyColumn(String table, String name) {

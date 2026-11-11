@@ -19,7 +19,7 @@ REST API consumed by the admin web panel and the mobile app. This document is th
   ```json
   { "timestamp": "2026-06-08T07:00:00Z", "status": 404, "error": "Not Found", "message": "Court 12 not found", "path": "/api/v1/courts/12" }
   ```
-- **Status codes:** 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict (e.g. slot already booked).
+- **Status codes:** 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 402 Payment Required (card charge declined), 403 Forbidden, 404 Not Found, 409 Conflict (e.g. slot already booked).
 
 Availability model: **computed** (option B). Only opening hours (schedule) and bookings are stored; free slots are derived on the fly by subtracting bookings and blocks from the court schedule.
 
@@ -488,6 +488,64 @@ token an amount (`APPROVED` or `DECLINED`). Test cards:
 | `5555 5555 5555 4444` | MASTERCARD, charges approved |
 | `4000 0000 0002 0000` | VISA; any card ending in `0000` is **declined** on charge |
 | `4242 4242 4242 4241` | Rejected on add: fails the Luhn check |
+
+
+---
+
+## Credits — `/api/v1/credit`
+
+A client buys a credit pack (see *Credit packs*) with one of their saved cards (see *Payment methods*)
+and gets credits: **1 credit = 1 prepaid reservation**. Credits never expire.
+
+Credits are a ledger of transactions: a `PURCHASE` adds the pack's `size`; a `CONSUMPTION` (spending
+credits on reservations, not part of this API yet) subtracts them. The balance is the sum of the
+client's transactions. Every endpoint here is CLIENT-only and works on the caller's own credits: an
+OWNER gets `403`, an anonymous caller `401`.
+
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| POST | `/credit/purchases` | CLIENT | Buy a pack. Body: `{ packId, paymentMethodId }` |
+| GET | `/credit/balance` | CLIENT | The caller's current balance |
+| GET | `/credit/transactions` | CLIENT | The caller's transactions, paginated |
+
+CreditTransaction:
+```json
+{ "id": 31, "type": "PURCHASE", "credits": 10, "amount": 140.00, "packSize": 10, "paymentMethodId": 7,
+  "createdAt": "2026-06-08T10:15:00Z" }
+```
+- `type`: `PURCHASE` or `CONSUMPTION`.
+- `credits` (integer): change in the balance, in reservations — positive for a purchase (`+packSize`),
+  negative for a consumption.
+- `amount` (money): what was charged to the card for a purchase (the pack's price at that moment);
+  `null` for a consumption.
+- `packSize` (integer): the size of the pack bought; `null` for a consumption.
+- `paymentMethodId`: the card charged for a purchase; `null` for a consumption.
+- `createdAt` (timestamp): when it happened.
+
+Buy — `POST /credit/purchases` → `201`:
+```json
+{ "packId": 2, "paymentMethodId": 7 }
+```
+```json
+{ "balance": 15, "transaction": { "id": 31, "type": "PURCHASE", "credits": 10, "amount": 140.00,
+  "packSize": 10, "paymentMethodId": 7, "createdAt": "2026-06-08T10:15:00Z" } }
+```
+- The pack's current price is charged to the card through the payment gateway. If the charge is
+  approved, a `PURCHASE` transaction adds `packSize` credits and the response has the new `balance` and
+  that transaction. A pack priced `0.00` is not charged; its credits are added directly.
+- Charge declined → `402` (`"Payment declined: no credits were added"`) and nothing changes.
+- `packId` and `paymentMethodId` are required → otherwise `400` with `fieldErrors`.
+- `404` if the pack does not exist (`"Credit pack 2 not found"`) or the payment method does not exist, was
+  removed or belongs to another client (`"Payment method 7 not found"`).
+
+Balance — `GET /credit/balance` → `200`:
+```json
+{ "balance": 15 }
+```
+`0` for a client who never bought credits.
+
+Transactions — `GET /credit/transactions?page=0&size=20` → `200` + `PageResponse<CreditTransaction>`,
+most recent first (`createdAt` then `id`, descending). The order is fixed; `sort` is ignored.
 
 ---
 
