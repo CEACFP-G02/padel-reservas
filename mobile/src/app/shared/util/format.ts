@@ -13,3 +13,15 @@ export function formatDay(date: IsoDate): string {
 export function formatPrice(amount: number): string {
   return EUR.format(amount);
 }
+
+const SHORT_DATE = new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'Europe/Madrid',
+});
+
+/** `2026-06-08T10:15:00Z` → `8 jun 2026` (the club's local day). */
+export function formatTimestamp(timestamp: string): string {
+  return SHORT_DATE.format(new Date(timestamp)).replace('.', '');
+}

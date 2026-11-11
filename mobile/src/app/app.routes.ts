@@ -12,6 +12,7 @@ export const routes: Routes = [
     children: [
       { path: 'availability', loadChildren: () => import('./features/availability/availability.routes') },
       { path: 'bookings', loadChildren: () => import('./features/booking/booking.routes') },
+      { path: 'wallet', loadChildren: () => import('./features/wallet/wallet.routes') },
       { path: 'profile', loadChildren: () => import('./features/profile/profile.routes') },
       { path: '', pathMatch: 'full', redirectTo: 'availability' },
     ],

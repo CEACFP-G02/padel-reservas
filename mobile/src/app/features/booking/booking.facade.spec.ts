@@ -222,4 +222,54 @@ describe('BookingFacade', () => {
       expect(facade.error()).toBe('No se pudo cancelar la reserva.');
     });
   });
+
+  describe('paying with credit first, then a card (docs/api.md, "Paying a client booking")', () => {
+    const fail = (status: number, message: string) =>
+      http.expectOne(`${environment.apiBaseUrl}/bookings`).flush({ status, message }, { status, statusText: 'Error' });
+
+    it('sends the chosen card and keeps how the booking was paid', async () => {
+      const paid = bookingFixture({
+        payment: { creditsUsed: 0, slotsChargedInMoney: 1, amountCharged: 16, paymentMethodId: 7, chargeReference: 'ch_mock_1' },
+      });
+      const pending = facade.createBooking({ ...request, paymentMethodId: 7 });
+      const req = http.expectOne(`${environment.apiBaseUrl}/bookings`);
+      expect(req.request.body).toEqual({ ...request, paymentMethodId: 7 });
+      req.flush(paid);
+
+      await expect(pending).resolves.toEqual(paid);
+    });
+
+    it('a declined card (402) is "Pago rechazado"', async () => {
+      const pending = facade.createBooking({ ...request, paymentMethodId: 7 });
+      fail(402, 'Payment declined: the booking was not made');
+
+      await expect(pending).resolves.toBeNull();
+      expect(facade.error()).toBe('Pago rechazado: la reserva no se ha hecho. Prueba con otra tarjeta.');
+      expect(facade.slotTaken()).toBe(false);
+    });
+
+    it('a missing card for the money remainder (400) asks to choose one', async () => {
+      const pending = facade.createBooking(request);
+      fail(400, 'paymentMethodId is required to pay the 1 slot not covered by credits');
+
+      await pending;
+      expect(facade.error()).toBe('No tienes créditos suficientes: elige una tarjeta para pagar el importe.');
+    });
+
+    it('a card that is no longer usable (404) says so', async () => {
+      const pending = facade.createBooking({ ...request, paymentMethodId: 9 });
+      fail(404, 'Payment method 9 not found');
+
+      await pending;
+      expect(facade.error()).toBe('Esa tarjeta ya no está disponible. Elige otra.');
+    });
+
+    it('a court that is gone (404) keeps its message', async () => {
+      const pending = facade.createBooking(request);
+      fail(404, 'Court 3 not found');
+
+      await pending;
+      expect(facade.error()).toBe('Esa pista ya no está disponible. Vuelve a buscar.');
+    });
+  });
 });

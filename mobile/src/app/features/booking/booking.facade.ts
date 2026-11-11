@@ -8,9 +8,21 @@ import { BookingApi } from './booking.api';
 /** Spanish messages for the documented POST /bookings rejections (the API's own messages are in English). */
 const BOOKING_ERRORS: Record<number, string> = {
   400: 'Ese turno ya no se puede reservar. Vuelve a buscar.',
+  402: 'Pago rechazado: la reserva no se ha hecho. Prueba con otra tarjeta.',
   404: 'Esa pista ya no está disponible. Vuelve a buscar.',
   409: 'Ese turno ya no está libre en esa pista. Vuelve a buscar.',
 };
+
+/** Spanish message for a failed POST /bookings: the payment 400/404 are told apart by the API's message. */
+function createErrorOf(status: number, message: string): string {
+  if (status === 400 && message.startsWith('paymentMethodId is required')) {
+    return 'No tienes créditos suficientes: elige una tarjeta para pagar el importe.';
+  }
+  if (status === 404 && message.startsWith('Payment method')) {
+    return 'Esa tarjeta ya no está disponible. Elige otra.';
+  }
+  return BOOKING_ERRORS[status] ?? 'No se pudo crear la reserva.';
+}
 
 const TOO_LATE_TO_CANCEL =
   'Ya no puedes cancelar esta reserva: solo se puede cancelar hasta 24 horas antes de que empiece.';
@@ -48,7 +60,10 @@ export class BookingFacade {
   /** The last createBooking failed because the slot was taken meanwhile (409): refresh availability. */
   readonly slotTaken = this._slotTaken.asReadonly();
 
-  /** UC: Create booking (for self) on one court. Resolves to `null` on failure, with `error` set. */
+  /**
+   * UC: Create booking (for self) on one court, paid credit first and then with `paymentMethodId` for the rest.
+   * Resolves to `null` on failure, with `error` set.
+   */
   async createBooking(request: CreateBookingRequest): Promise<Booking | null> {
     this._loading.set(true);
     this._error.set(null);
@@ -59,8 +74,9 @@ export class BookingFacade {
       return booking;
     } catch (err) {
       const status = err instanceof HttpErrorResponse ? err.status : 0;
+      const message = err instanceof HttpErrorResponse ? ((err.error as ApiError | null)?.message ?? '') : '';
       this._slotTaken.set(status === 409);
-      this._error.set(BOOKING_ERRORS[status] ?? 'No se pudo crear la reserva.');
+      this._error.set(createErrorOf(status, message));
       return null;
     } finally {
       this._loading.set(false);

@@ -1,4 +1,4 @@
-import { formatDay, formatPrice } from './format';
+import { formatDay, formatPrice, formatTimestamp } from './format';
 
 describe('formatDay', () => {
   it('shows an ISO date as a Spanish weekday, day and month', () => {
@@ -14,5 +14,12 @@ describe('formatPrice', () => {
   it('shows euros the Spanish way', () => {
     expect(formatPrice(16)).toBe('16,00 €');
     expect(formatPrice(24.5)).toBe('24,50 €');
+  });
+});
+
+describe('formatTimestamp', () => {
+  it('shows a UTC timestamp as a short Spanish date in Madrid time', () => {
+    expect(formatTimestamp('2026-06-08T10:15:00Z')).toBe('8 jun 2026');
+    expect(formatTimestamp('2026-06-08T22:30:00Z')).toBe('9 jun 2026');
   });
 });
