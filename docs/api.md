@@ -418,11 +418,12 @@ Summary — `GET /dashboard/summary` → `200`. No query parameters; a CLIENT ge
 
 Prepaid packs of reservations the owner offers. There are exactly four packs, one per size
 (`5`, `10`, `15` and `20` reservations); the owner only sets their prices. Packs cannot be created or
-deleted. Every endpoint here is OWNER-only (a CLIENT gets `403`). Buying a pack is out of scope here.
+deleted. Listing is open to OWNER and CLIENT (a client lists the packs to buy one, see *Credits*); changing a
+price is OWNER-only (a CLIENT gets `403`).
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| GET | `/credit-packs` | OWNER | The four packs, by size |
+| GET | `/credit-packs` | OWNER, CLIENT | The four packs, by size |
 | PATCH | `/credit-packs/{id}` | OWNER | Update a pack's price. Body: `{ price }` |
 
 CreditPack:

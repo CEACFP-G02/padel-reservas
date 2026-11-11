@@ -112,11 +112,12 @@ class CreditPackControllerTest {
 
     @Test
     @WithMockUser(username = "ana@padel.test", roles = "CLIENT")
-    void clientCannotListPacks() throws Exception {
+    void clientCanListThePacksToBuyOne() throws Exception {
+        when(listPacks.execute()).thenReturn(List.of(TEN));
+
         mvc.perform(get("/api/v1/credit-packs"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403));
-        verify(listPacks, never()).execute();
+                .andExpect(status().isOk())
+                .andExpect(content().json("[ { \"id\": 2, \"size\": 10, \"price\": 140.00 } ]", true));
     }
 
     @Test

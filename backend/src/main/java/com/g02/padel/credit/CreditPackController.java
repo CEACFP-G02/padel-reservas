@@ -17,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/credit-packs")
-@PreAuthorize("hasRole('OWNER')")
 public class CreditPackController {
 
     private final ListCreditPacksUseCase listPacks;
@@ -28,12 +27,15 @@ public class CreditPackController {
         this.updatePrice = updatePrice;
     }
 
+    /** A client lists the packs to buy one (see /credit/purchases). */
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'CLIENT')")
     public List<CreditPackResponse> list() {
         return listPacks.execute();
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
     public CreditPackResponse updatePrice(@PathVariable Long id,
                                           @Valid @RequestBody UpdateCreditPackPriceRequest request) {
         return updatePrice.execute(id, request);
