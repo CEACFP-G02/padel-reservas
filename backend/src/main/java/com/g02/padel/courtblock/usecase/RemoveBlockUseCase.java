@@ -1,10 +1,11 @@
 package com.g02.padel.courtblock.usecase;
 
 import com.g02.padel.courtblock.CourtBlockRepository;
+import com.g02.padel.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC (owner): remove a court block. */
+/** UC (owner): remove a court block; its slots become bookable again. */
 @Service
 public class RemoveBlockUseCase {
 
@@ -16,8 +17,7 @@ public class RemoveBlockUseCase {
 
     @Transactional
     public void execute(Long id) {
-        // TODO: findById else NotFoundException; delete — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks
-        throw new UnsupportedOperationException(
-                "TODO: RemoveBlock — see docs/api.md#court-blocks-maintenance--apiv1courtsidblocks");
+        courtBlockRepository.delete(
+                courtBlockRepository.findById(id).orElseThrow(() -> NotFoundException.of("Court block", id)));
     }
 }

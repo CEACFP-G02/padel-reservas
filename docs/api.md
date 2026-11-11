@@ -259,11 +259,40 @@ Reschedule — `PATCH /bookings/{id}` → `200` + the booking response. Body (re
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| GET | `/courts/{id}/blocks` | OWNER, CLIENT | Blocks for a court |
-| POST | `/courts/{id}/blocks` | OWNER | Create. Body: `{ date, start, end, reason }` |
+| GET | `/courts/{id}/blocks` | OWNER | Blocks for a court. Query: `from`, `to` (optional) |
+| POST | `/courts/{id}/blocks` | OWNER | Create. Body: `{ date, start, end, reason? }` |
 | DELETE | `/court-blocks/{id}` | OWNER | Remove block |
 
-Blocks remove the covered slots from availability.
+Blocks remove the covered slots from availability: a slot that overlaps a block (even partly) is not
+free. Every endpoint here is OWNER-only (a CLIENT gets `403`); clients only see the effect on availability.
+
+A block covers one time range of one day on one court (`start`/`end` are local times on `date`):
+```json
+{ "id": 9, "courtId": 3, "date": "2026-06-08", "start": "07:00", "end": "09:00", "reason": "Mantenimiento" }
+```
+`reason` is optional (`null` when not given).
+
+List — `GET /courts/3/blocks?from=2026-06-01&to=2026-06-30` → `200` + an array of blocks (not paginated):
+- Sorted by `date`, then `start`. `from`/`to` are optional and inclusive; without them every block of the
+  court is returned, past ones included. `from` after `to` → `400`.
+- `404` if the court does not exist (active or inactive courts can both be blocked).
+
+Create — `POST /courts/3/blocks` → `201` + the block:
+```json
+{ "date": "2026-06-08", "start": "07:00", "end": "09:00", "reason": "Mantenimiento" }
+```
+- `date`, `start` and `end` are required (`HH:mm`); `reason` max 255. Otherwise `400` with `fieldErrors`.
+- `end` must be after `start` → otherwise `400` (`"Block end must be after its start"`).
+- Not in the past: the block must end after now (server clock) → otherwise `400`
+  (`"Block 07:00-09:00 on 2026-06-08 is in the past"`). A block that has already started but not ended
+  is fine (it blocks the rest of the range).
+- **Overlap policy:** a block may not cover a `CONFIRMED` booking of that court — cancel or reschedule the
+  booking first. Otherwise `409` (`"Block 07:00-09:00 overlaps booking 5001 (08:00-09:00) on court 3"`).
+  Overlapping another block is allowed. Cancelled bookings do not count.
+- `404` if the court does not exist.
+
+Remove — `DELETE /court-blocks/{id}` → `204`; the covered slots become free again (unless booked or
+covered by another block). `404` if the block does not exist.
 
 ---
 

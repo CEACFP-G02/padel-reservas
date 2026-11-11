@@ -24,6 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@PreAuthorize("hasRole('OWNER')")
 public class CourtBlockController {
 
     private final ListBlocksUseCase listBlocks;
@@ -40,20 +41,19 @@ public class CourtBlockController {
     @GetMapping("/courts/{courtId}/blocks")
     public List<CourtBlockResponse> list(
             @PathVariable Long courtId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return listBlocks.execute(courtId, date);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return listBlocks.execute(courtId, from, to);
     }
 
     @PostMapping("/courts/{courtId}/blocks")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('OWNER')")
     public CourtBlockResponse create(@PathVariable Long courtId, @Valid @RequestBody CourtBlockRequest request) {
         return createBlock.execute(courtId, request);
     }
 
     @DeleteMapping("/court-blocks/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('OWNER')")
     public void remove(@PathVariable Long id) {
         removeBlock.execute(id);
     }
