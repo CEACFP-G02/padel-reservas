@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import {
   IonContent,
   IonHeader,
+  IonIcon,
   IonItem,
   IonLabel,
   IonList,
@@ -14,12 +15,16 @@ import {
   IonToolbar,
   ViewWillEnter,
 } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { alertCircleOutline } from 'ionicons/icons';
 
 import { BookingStatusBadgeComponent } from '../../../shared/ui/booking-status-badge.component';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { formatDay, formatPrice } from '../../../shared/util/format';
 import { BookingFacade } from '../booking.facade';
 import { splitBookings, timeRange } from '../booking-time';
+
+addIcons({ alertCircleOutline });
 
 @Component({
   selector: 'app-my-bookings',
@@ -38,6 +43,7 @@ import { splitBookings, timeRange } from '../booking-time';
     IonText,
     BookingStatusBadgeComponent,
     EmptyStateComponent,
+    IonIcon,
   ],
   template: `
     <ion-header>
@@ -48,21 +54,27 @@ import { splitBookings, timeRange } from '../booking-time';
         }
       </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content class="ion-padding">
+      <div class="page">
       @if (facade.error(); as error) {
-        <ion-text color="danger" class="ion-padding"><p>{{ error }}</p></ion-text>
+        <div class="state-error" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true" />
+          <ion-text><p>{{ error }}</p></ion-text>
+        </div>
       }
 
-      <ion-list data-testid="upcoming">
+      <ion-list class="cards" lines="none" data-testid="upcoming">
         <ion-list-header>Próximas</ion-list-header>
         @for (booking of split().upcoming; track booking.id) {
-          <ion-item data-testid="booking" [routerLink]="[booking.id]" detail>
+          <ion-item class="tap-card" data-testid="booking" [routerLink]="[booking.id]" detail>
             <ion-label>
               <h2>{{ booking.courtName }}</h2>
               <p>{{ day(booking.date) }} · {{ range(booking) }}</p>
             </ion-label>
-            <ion-note slot="end">{{ price(booking.totalPrice) }}</ion-note>
-            <app-booking-status-badge slot="end" [status]="booking.status" />
+            <div slot="end" class="meta">
+              <ion-note class="price">{{ price(booking.totalPrice) }}</ion-note>
+              <app-booking-status-badge [status]="booking.status" />
+            </div>
           </ion-item>
         } @empty {
           <app-empty-state icon="calendar-outline" message="No tienes reservas próximas." />
@@ -70,21 +82,40 @@ import { splitBookings, timeRange } from '../booking-time';
       </ion-list>
 
       @if (split().past.length) {
-        <ion-list data-testid="past">
+        <ion-list class="cards past" lines="none" data-testid="past">
           <ion-list-header>Historial</ion-list-header>
           @for (booking of split().past; track booking.id) {
-            <ion-item data-testid="booking" [routerLink]="[booking.id]" detail>
+            <ion-item class="tap-card" data-testid="booking" [routerLink]="[booking.id]" detail>
               <ion-label>
                 <h2>{{ booking.courtName }}</h2>
                 <p>{{ day(booking.date) }} · {{ range(booking) }}</p>
               </ion-label>
-              <ion-note slot="end">{{ price(booking.totalPrice) }}</ion-note>
-              <app-booking-status-badge slot="end" [status]="booking.status" />
+              <div slot="end" class="meta">
+                <ion-note class="price">{{ price(booking.totalPrice) }}</ion-note>
+                <app-booking-status-badge [status]="booking.status" />
+              </div>
             </ion-item>
           }
         </ion-list>
       }
+      </div>
     </ion-content>
+  `,
+  styles: `
+    ion-list-header {
+      margin-top: var(--app-space-1);
+    }
+    .meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      margin-inline-start: var(--app-space-1);
+    }
+    .past ion-item.tap-card {
+      --background: var(--app-neutral-soft);
+      box-shadow: none;
+    }
   `,
 })
 export class MyBookingsPage implements ViewWillEnter {

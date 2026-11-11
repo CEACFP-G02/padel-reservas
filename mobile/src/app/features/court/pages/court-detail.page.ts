@@ -27,7 +27,7 @@ import { CourtFacade } from '../court.facade';
     </ion-header>
     <ion-content class="ion-padding">
       @if (facade.selected(); as court) {
-        <ion-card>
+        <ion-card class="page">
           <ion-card-header>
             <ion-card-title>{{ court.name }}</ion-card-title>
             <ion-card-subtitle>{{ court.type }} · {{ court.indoor ? 'Cubierta' : 'Exterior' }}</ion-card-subtitle>

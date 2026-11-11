@@ -26,10 +26,10 @@ import { CourtFacade } from '../court.facade';
         <ion-title>Pistas</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content>
-      <ion-list>
+    <ion-content class="ion-padding">
+      <ion-list class="cards page" lines="none">
         @for (court of facade.courts(); track court.id) {
-          <ion-item [routerLink]="[court.id]" detail>
+          <ion-item class="tap-card" [routerLink]="[court.id]" detail>
             <ion-label>{{ court.name }}</ion-label>
             <ion-note slot="end">{{ court.type }} · {{ court.indoor ? 'Cubierta' : 'Exterior' }}</ion-note>
           </ion-item>

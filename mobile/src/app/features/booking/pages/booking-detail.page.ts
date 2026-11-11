@@ -12,6 +12,7 @@ import {
   IonCardTitle,
   IonContent,
   IonHeader,
+  IonIcon,
   IonItem,
   IonLabel,
   IonList,
@@ -21,11 +22,15 @@ import {
   IonToolbar,
   ToastController,
 } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { alertCircleOutline } from 'ionicons/icons';
 
 import { BookingStatusBadgeComponent } from '../../../shared/ui/booking-status-badge.component';
 import { formatDay, formatPrice } from '../../../shared/util/format';
 import { BookingFacade } from '../booking.facade';
 import { isUpcoming, timeRange } from '../booking-time';
+
+addIcons({ alertCircleOutline });
 
 @Component({
   selector: 'app-booking-detail',
@@ -48,6 +53,7 @@ import { isUpcoming, timeRange } from '../booking-time';
     IonText,
     IonButton,
     BookingStatusBadgeComponent,
+    IonIcon,
   ],
   template: `
     <ion-header>
@@ -57,6 +63,7 @@ import { isUpcoming, timeRange } from '../booking-time';
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
+      <div class="page">
       @if (facade.selected(); as booking) {
         <ion-card>
           <ion-card-header>
@@ -65,7 +72,7 @@ import { isUpcoming, timeRange } from '../booking-time';
             <app-booking-status-badge [status]="booking.status" />
           </ion-card-header>
           <ion-card-content>
-            <ion-list>
+            <ion-list lines="full" class="slots">
               @for (slot of booking.slots; track slot.start) {
                 <ion-item>
                   <ion-label>{{ slot.start }} – {{ slot.end }}</ion-label>
@@ -74,7 +81,7 @@ import { isUpcoming, timeRange } from '../booking-time';
               }
               <ion-item>
                 <ion-label><strong>Total</strong></ion-label>
-                <ion-note slot="end"><strong>{{ price(booking.totalPrice) }}</strong></ion-note>
+                <ion-note slot="end" class="price"><strong>{{ price(booking.totalPrice) }}</strong></ion-note>
               </ion-item>
             </ion-list>
           </ion-card-content>
@@ -83,6 +90,7 @@ import { isUpcoming, timeRange } from '../booking-time';
           <ion-button
             expand="block"
             color="danger"
+            fill="outline"
             data-testid="cancel"
             [disabled]="facade.loading()"
             (click)="confirmCancel(booking.id)"
@@ -90,9 +98,35 @@ import { isUpcoming, timeRange } from '../booking-time';
           >
         }
       } @else if (facade.error(); as error) {
-        <ion-text color="danger"><p>{{ error }}</p></ion-text>
+        <div class="state-error" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true" />
+          <ion-text><p>{{ error }}</p></ion-text>
+        </div>
       }
+      </div>
     </ion-content>
+  `,
+  styles: `
+    ion-card-header {
+      gap: var(--app-space-1);
+      align-items: flex-start;
+    }
+    ion-card-title {
+      font-size: 22px;
+    }
+    .slots {
+      padding: 0;
+      background: transparent;
+    }
+    .slots ion-item {
+      --background: transparent;
+      --padding-start: 0;
+    }
+    .slots ion-note {
+      color: var(--ion-text-color);
+      font-size: 15px;
+      font-weight: 500;
+    }
   `,
 })
 export class BookingDetailPage {

@@ -13,8 +13,9 @@ import { ProfileFacade } from '../profile.facade';
       <ion-toolbar><ion-title>Perfil</ion-title></ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
+      <div class="page">
       <form [formGroup]="form" (ngSubmit)="save()">
-        <ion-list>
+        <ion-list inset="true">
           <ion-item>
             <ion-input label="Nombre" labelPlacement="stacked" formControlName="name" />
           </ion-item>
@@ -28,6 +29,7 @@ import { ProfileFacade } from '../profile.facade';
         <ion-button expand="block" type="submit" [disabled]="facade.saving()">Guardar</ion-button>
       </form>
       <ion-button expand="block" fill="outline" color="medium" (click)="auth.logout()">Cerrar sesión</ion-button>
+      </div>
     </ion-content>
   `,
 })

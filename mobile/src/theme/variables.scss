@@ -1,2 +1,146 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+// Pádel Reservas theme — the same system as the web admin panel: teal primary, amber accent
+// (secondary, highlights only), slate neutrals, very light surfaces, clear success/warning/danger.
+// See https://ionicframework.com/docs/theming/
+
+:root {
+  --ion-color-primary: #0f766e;
+  --ion-color-primary-rgb: 15, 118, 110;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0d6861;
+  --ion-color-primary-tint: #27847c;
+
+  --ion-color-secondary: #f59e0b;
+  --ion-color-secondary-rgb: 245, 158, 11;
+  --ion-color-secondary-contrast: #1f1300;
+  --ion-color-secondary-contrast-rgb: 31, 19, 0;
+  --ion-color-secondary-shade: #d88b0a;
+  --ion-color-secondary-tint: #f6a823;
+
+  --ion-color-tertiary: #0e7490;
+  --ion-color-tertiary-rgb: 14, 116, 144;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #0c667f;
+  --ion-color-tertiary-tint: #26829b;
+
+  --ion-color-success: #16a34a;
+  --ion-color-success-rgb: 22, 163, 74;
+  --ion-color-success-contrast: #000000;
+  --ion-color-success-contrast-rgb: 0, 0, 0;
+  --ion-color-success-shade: #138f41;
+  --ion-color-success-tint: #2dac5c;
+
+  --ion-color-warning: #d97706;
+  --ion-color-warning-rgb: 217, 119, 6;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #bf6905;
+  --ion-color-warning-tint: #dd851f;
+
+  --ion-color-danger: #dc2626;
+  --ion-color-danger-rgb: 220, 38, 38;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #c22121;
+  --ion-color-danger-tint: #e03c3c;
+
+  --ion-color-light: #f1f5f9;
+  --ion-color-light-rgb: 241, 245, 249;
+  --ion-color-light-contrast: #000000;
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: #d4d8db;
+  --ion-color-light-tint: #f2f6fa;
+
+  --ion-color-medium: #64748b;
+  --ion-color-medium-rgb: 100, 116, 139;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #58667a;
+  --ion-color-medium-tint: #748297;
+
+  --ion-color-dark: #0f172a;
+  --ion-color-dark-rgb: 15, 23, 42;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #0d1425;
+  --ion-color-dark-tint: #272e3f;
+  // Typography: Inter with a system fallback.
+  --ion-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  // Light slate surfaces.
+  --ion-background-color: #f8fafc;
+  --ion-background-color-rgb: 248, 250, 252;
+  --ion-text-color: #0f172a;
+  --ion-text-color-rgb: 15, 23, 42;
+  --ion-toolbar-background: #ffffff;
+  --ion-toolbar-border-color: #e2e8f0;
+  --ion-tab-bar-background: #ffffff;
+  --ion-tab-bar-border-color: #e2e8f0;
+  --ion-tab-bar-color: #64748b;
+  --ion-tab-bar-color-selected: #0f766e;
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-border-color: #e2e8f0;
+
+  // App tokens: 8px spacing, 10–12px radius, soft shadows, soft status fills.
+  --app-space-1: 8px;
+  --app-space-2: 16px;
+  --app-space-3: 24px;
+  --app-space-4: 32px;
+  --app-radius: 12px;
+  --app-radius-sm: 10px;
+  --app-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --app-shadow: 0 1px 3px rgb(15 23 42 / 0.08), 0 1px 2px rgb(15 23 42 / 0.04);
+  --app-shadow-lg: 0 12px 32px rgb(15 23 42 / 0.12);
+  --app-surface: #ffffff;
+  --app-border: #e2e8f0;
+  --app-muted: #64748b;
+  --app-primary-soft: #ccfbf1;
+  --app-on-primary-soft: #134e4a;
+  --app-accent-soft: #fef3c7;
+  --app-on-accent-soft: #92400e;
+  --app-success-soft: #dcfce7;
+  --app-on-success-soft: #166534;
+  --app-danger-soft: #fee2e2;
+  --app-on-danger-soft: #991b1b;
+  --app-neutral-soft: #f1f5f9;
+}
+
+// Dark mode (system preference, see global.scss): brighter brand colors and slate surfaces.
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #2dd4bf;
+    --ion-color-primary-rgb: 45, 212, 191;
+    --ion-color-primary-contrast: #042f2e;
+    --ion-color-primary-contrast-rgb: 4, 47, 46;
+    --ion-color-primary-shade: #28baa8;
+    --ion-color-primary-tint: #42d8c5;
+    --ion-tab-bar-color-selected: #2dd4bf;
+
+    --app-surface: #0f172a;
+    --app-border: #334155;
+    --app-muted: #94a3b8;
+    --app-primary-soft: #134e4a;
+    --app-on-primary-soft: #ccfbf1;
+    --app-accent-soft: #422006;
+    --app-on-accent-soft: #fcd34d;
+    --app-success-soft: #052e16;
+    --app-on-success-soft: #86efac;
+    --app-danger-soft: #450a0a;
+    --app-on-danger-soft: #fca5a5;
+    --app-neutral-soft: #1e293b;
+  }
+  :root.md,
+  :root.ios {
+    --ion-background-color: #0b1220;
+    --ion-background-color-rgb: 11, 18, 32;
+    --ion-toolbar-background: #0f172a;
+    --ion-tab-bar-background: #0f172a;
+    --ion-item-background: #0f172a;
+    --ion-card-background: #0f172a;
+    --ion-toolbar-border-color: #334155;
+    --ion-tab-bar-border-color: #334155;
+    --ion-border-color: #334155;
+  }
+}

@@ -1,21 +1,30 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { IonButton, IonContent, IonHeader, IonInput, IonItem, IonList, IonText, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonButton, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonList, IonText, IonTitle, IonToolbar } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { alertCircleOutline, tennisballOutline } from 'ionicons/icons';
 
 import { AuthFacade } from '../../../core/auth/auth.facade';
+
+addIcons({ alertCircleOutline, tennisballOutline });
 
 /** Public login page for the CLIENT: page → AuthFacade (core) → AuthApi. */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonInput, IonButton, IonText],
+  imports: [ReactiveFormsModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonInput, IonButton, IonText, IonIcon],
   template: `
     <ion-header>
       <ion-toolbar><ion-title>Iniciar sesión</ion-title></ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content class="ion-padding auth-content">
+      <div class="auth-form">
+        <div class="app-brand">
+          <span class="app-brand-badge"><ion-icon name="tennisball-outline" aria-hidden="true" /></span>
+          <p class="app-brand-name">Pádel <strong>Reservas</strong></p>
+        </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
-        <ion-list>
+        <ion-list inset="true">
           <ion-item>
             <ion-input label="Email" labelPlacement="stacked" type="email" autocomplete="email" formControlName="email" />
           </ion-item>
@@ -24,11 +33,15 @@ import { AuthFacade } from '../../../core/auth/auth.facade';
           </ion-item>
         </ion-list>
         @if (error(); as message) {
-          <ion-text color="danger"><p role="alert" data-testid="login-error">{{ message }}</p></ion-text>
+          <div class="state-error">
+            <ion-icon name="alert-circle-outline" aria-hidden="true" />
+            <ion-text><p role="alert" data-testid="login-error">{{ message }}</p></ion-text>
+          </div>
         }
         <ion-button expand="block" type="submit" [disabled]="form.invalid || submitting()">Entrar</ion-button>
       </form>
       <ion-button expand="block" fill="clear" routerLink="/register">Crear cuenta</ion-button>
+      </div>
     </ion-content>
   `,
 })

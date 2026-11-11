@@ -9,11 +9,39 @@ import { calendarOutline, informationCircleOutline } from 'ionicons/icons';
   imports: [IonIcon, IonText],
   template: `
     <div class="empty-state">
-      <ion-icon [name]="icon()" size="large" color="medium" />
-      <ion-text color="medium"><p>{{ message() }}</p></ion-text>
+      <span class="empty-icon"><ion-icon [name]="icon()" aria-hidden="true" /></span>
+      <ion-text><p>{{ message() }}</p></ion-text>
     </div>
   `,
-  styles: `.empty-state { display: flex; flex-direction: column; align-items: center; padding: 32px 16px; text-align: center; }`,
+  styles: `
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--app-space-1);
+      margin: var(--app-space-1) 0;
+      padding: var(--app-space-4) var(--app-space-2);
+      border: 1px dashed var(--app-border);
+      border-radius: var(--app-radius);
+      background: var(--app-surface);
+      color: var(--app-muted);
+      text-align: center;
+    }
+    .empty-icon {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--app-primary-soft);
+      color: var(--app-on-primary-soft);
+      font-size: 28px;
+    }
+    p {
+      margin: 0;
+      font-weight: 500;
+    }
+  `,
 })
 export class EmptyStateComponent {
   constructor() {
