@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+export GCP_PROJECT="padel-reservas"
+export REGION="europe-west1"
+export SERVICE="padel-api"
+export SQL_INSTANCE="padel-db"
+export SQL_CONN="${GCP_PROJECT}:${REGION}:${SQL_INSTANCE}"
+export DB_NAME="padel"
+export DB_USER="padel"
+export DB_PASSWORD="CAMBIA_ESTA_CLAVE"
+export JWT_SECRET="CAMBIA_POR_UN_SECRETO_LARGO_ALEATORIO"
+export FIREBASE_PROJECT="${GCP_PROJECT}"
+export APP_ORIGIN="https://localhost"
+export API_URL="${API_URL:-}"
