@@ -48,6 +48,13 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Cloud SQL on Cloud Run: DB_URL=jdbc:postgresql:///<db>?cloudSqlInstance=<conn>&socketFactory=com.google.cloud.sql.postgres.SocketFactory -->
+        <dependency>
+            <groupId>com.google.cloud.sql</groupId>
+            <artifactId>postgres-socket-factory</artifactId>
+            <version>1.30.2</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
