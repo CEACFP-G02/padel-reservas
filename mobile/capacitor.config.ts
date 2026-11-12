@@ -6,11 +6,12 @@ const config: CapacitorConfig = {
   // Angular build output (angular.json → outputPath.base, browser: '').
   webDir: 'www',
   server: {
-    // Release: the WebView is served from https://localhost so calls to the HTTPS Cloud Run API are not mixed
-    // content. For the emulator against a plain-HTTP local backend (npm run build:android → http://10.0.2.2:8080),
-    // switch this to 'http' locally; cleartext is allowed only for 10.0.2.2/localhost
-    // (android/app/src/main/res/xml/network_security_config.xml).
-    androidScheme: 'https',
+    // Serve the WebView from http://localhost (not the default https://localhost). That one origin works in both
+    // places: on the emulator it may call the local plain-HTTP backend (http://10.0.2.2:8080) without being blocked
+    // as mixed content, and in production it calls the HTTPS Cloud Run API, which an http origin is always allowed
+    // to do. Cleartext is permitted only for 10.0.2.2 and localhost (android/app/src/main/res/xml/
+    // network_security_config.xml); every other host, the API included, must be HTTPS.
+    androidScheme: 'http',
   },
 };
 
