@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "public": "dist/padel-web/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      {
+        "source": "**/*.apk",
+        "headers": [{ "key": "Content-Type", "value": "application/vnd.android.package-archive" }]
+      }
+    ]
+  }
+}
