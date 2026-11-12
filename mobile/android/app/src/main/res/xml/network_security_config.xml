@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Development only: the emulator reaches the backend on the host over plain HTTP (http://10.0.2.2:8080).
-  Cleartext stays blocked for every other host. Remove the domain-config for a release that uses an HTTPS API.
+  Cleartext (plain HTTP) is intentionally allowed only for 10.0.2.2 and localhost, in both development and
+  release builds: 10.0.2.2 is how the emulator reaches the local backend (http://10.0.2.2:8080), and localhost is
+  the WebView's own origin (androidScheme 'http' in capacitor.config.ts). Every other host, the production
+  Cloud Run API included, must use HTTPS.
 -->
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
